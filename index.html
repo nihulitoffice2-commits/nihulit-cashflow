@@ -346,6 +346,21 @@ body.bz .pill{border-radius:3px}
 .bz-fin svg{grid-row:span 2;stroke:var(--bz-navy);fill:none;stroke-width:1.4}
 .bz-fin span{color:var(--bz-navy);font-size:15px} .bz-fin b{font-size:17px}
 .bz-donuts{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:14px 16px}
+.bz-donuts.v2{grid-template-columns:minmax(0,1fr) 70px minmax(0,1fr);gap:14px;position:relative;align-items:start}
+.bz-dn path{transition:transform .18s ease,filter .18s;cursor:pointer;stroke:#fff;stroke-width:1.5}
+.bz-dn path.on{transform:translate(var(--tx),var(--ty));filter:drop-shadow(0 2px 4px rgba(2,34,88,.25))}
+.bz-dn svg{overflow:visible}
+.bz-ratio{display:grid;justify-items:center;gap:6px;padding-top:18px;cursor:default}
+.bz-ratio .bars{display:flex;align-items:flex-end;gap:6px;height:130px;border-bottom:1px solid var(--bz-line);padding:0 4px}
+.bz-ratio .bars i{display:block;width:16px;border-radius:4px 4px 0 0;transition:height .3s}
+.bz-ratio b{font-size:16px;color:#022258}
+.bz-ratio span{font-size:12.5px;color:#6d7d8b;text-align:center;line-height:1.3}
+.bz-donut tr.off td{opacity:.45}
+.bz-donut tr.on td{background:#f1f6f9}
+.bz-donut input[type=checkbox]{width:15px;height:15px;margin:0 0 0 6px;vertical-align:-2px;accent-color:#16a4b5}
+.bz-dtip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--bz-line);box-shadow:0 4px 14px rgba(2,34,88,.18);padding:8px 12px;font-size:14px;min-width:150px;z-index:5;border-radius:6px}
+.bz-dtip .h{font-weight:700;color:#022258;margin-bottom:2px}
+.bz-sec .hint{font-size:13px}
 .bz-donut{display:grid;gap:10px;justify-items:center}
 .bz-donut table{width:100%;border-collapse:collapse;font-size:14.5px}
 .bz-donut td{padding:7px 4px;border-bottom:1px solid var(--bz-line)}
@@ -397,7 +412,8 @@ body.bz .pill{border-radius:3px}
   #bz-menu{display:inline-flex}
   #bz-side{transform:translateX(100%);transition:transform .2s;box-shadow:-8px 0 24px rgba(0,0,0,.2)}
   body.bz.bz-open #bz-side{transform:none}
-  .bz-fin,.bz-donuts{grid-template-columns:1fr}
+  .bz-fin,.bz-donuts,.bz-donuts.v2{grid-template-columns:1fr}
+  .bz-ratio{padding-top:0}.bz-ratio .bars{height:70px}
   .bz-title h1{font-size:24px}
 }
 @media (prefers-reduced-motion:reduce){ #bz-side{transition:none} }
@@ -2177,11 +2193,11 @@ function hfDaily(R,e){
       (r.items||[]).forEach(x=>liveEvents(x).forEach(ev=>{ const em=ev.date.slice(0,7); const j=ovIdx(em,R.months); if(j!==i) return;
         const d=ev.date<start?start:ev.date; dated+=ev.amount;
         const sure=r.sec==='in'&&(r.incKind==='chq'||r.incKind==='ccp'||CERT_RE.test(x.method||'')); if(r.sec==='in'){ allIn+=ev.amount; if(sure) certIn+=ev.amount; }
-        evs.push({d,amt:sign*ev.amount,name:(x.cust||r.label)+(ev.n>1?' ('+(ev.k+1)+'/'+ev.n+')':'')}); }));
+        evs.push({d,amt:sign*ev.amount,row:r.label,name:(x.cust||r.label)+(ev.n>1?' ('+(ev.k+1)+'/'+ev.n+')':'')}); }));
       const rest=(r.vals[i]||0)-dated; if(Math.abs(rest)<0.5) return;
       if(r.sec==='in') allIn+=rest;
       let d=r.sec==='in'?lastDayOf(m):m+'-01'; if(d<start) d=start;
-      evs.push({d,amt:sign*rest,name:r.label}); }); });
+      evs.push({d,amt:sign*rest,row:r.label,name:r.label}); }); });
   evs.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
   const days=[]; let bal=R.opening, k=0;
   while(k<evs.length&&evs[k].d<start){ bal+=evs[k].amt; k++; }
@@ -3220,16 +3236,58 @@ function bzBalChart(el,ctx){
     tip.hidden=false; const bw=el.clientWidth, px=X(i)*r.width/W; tip.style.top=Math.max(0,Y(p.bal)*r.height/H-40)+'px'; tip.style.left=Math.max(0,Math.min(bw-tip.offsetWidth,px>bw/2?px-tip.offsetWidth-12:px+12))+'px'; });
   svg.addEventListener('pointerleave',()=>{ tip.hidden=true; cu.setAttribute('visibility','hidden'); }); }
 
-/* --- דונאט --- */
+/* --- דונאט (בסגנון ביזיבוקס: פלח קופץ במעבר עכבר, חלונית עם סכום ומקור) --- */
 function bzDonut(parts,total,label,shades){
   const R=78, r=50, C=90; let a=-Math.PI/2, segs='';
   if(total<=0) return `<svg width="180" height="180" viewBox="0 0 180 180"><circle cx="${C}" cy="${C}" r="${(R+r)/2}" fill="none" stroke="#e3e9ee" stroke-width="${R-r}"/><text x="${C}" y="${C+5}" text-anchor="middle" style="font:700 16px Assistant;fill:#022258">${label}</text></svg>`;
-  parts.forEach((p,i)=>{ const f=p.v/total; if(f<=0) return; const b=a+f*2*Math.PI-(f<1?0.012:0), L=b-a>Math.PI?1:0;
+  parts.forEach(p=>{ const f=p.v/total; if(f<=0) return; const col=shades[p.i%shades.length];
     const pt=(rad,ang)=>[C+rad*Math.cos(ang),C+rad*Math.sin(ang)];
+    if(f>=0.999){ const [x1,y1]=pt(R,-Math.PI/2),[x2,y2]=pt(R,Math.PI/2),[x3,y3]=pt(r,Math.PI/2),[x4,y4]=pt(r,-Math.PI/2);
+      segs+=`<path data-dk="${p.i}" style="--tx:0px;--ty:0px" d="M${x1},${y1}A${R},${R} 0 1 1 ${x2},${y2}A${R},${R} 0 1 1 ${x1},${y1}M${x4},${y4}A${r},${r} 0 1 0 ${x3},${y3}A${r},${r} 0 1 0 ${x4},${y4}Z" fill-rule="evenodd" fill="${col}"/>`; a+=2*Math.PI; return; }
+    const b=a+f*2*Math.PI, L=b-a>Math.PI?1:0, m=(a+b)/2;
     const [x1,y1]=pt(R,a),[x2,y2]=pt(R,b),[x3,y3]=pt(r,b),[x4,y4]=pt(r,a);
-    segs+= f>=0.999?`<circle cx="${C}" cy="${C}" r="${(R+r)/2}" fill="none" stroke="${shades[i%shades.length]}" stroke-width="${R-r}"/>`:`<path d="M${x1},${y1}A${R},${R} 0 ${L} 1 ${x2},${y2}L${x3},${y3}A${r},${r} 0 ${L} 0 ${x4},${y4}Z" fill="${shades[i%shades.length]}"><title>${esc(p.n)}: ${fmt(p.v)} ₪</title></path>`;
-    a+=f*2*Math.PI; });
-  return `<svg width="180" height="180" viewBox="0 0 180 180" role="img" aria-label="${label}">${segs}<text x="${C}" y="${C-2}" text-anchor="middle" style="font:700 17px Assistant;fill:#022258">${label}</text><text x="${C}" y="${C+20}" text-anchor="middle" style="font:600 15px Assistant;fill:#4a5b6a">₪${fmt(total)}</text></svg>`; }
+    segs+=`<path data-dk="${p.i}" style="--tx:${(7*Math.cos(m)).toFixed(1)}px;--ty:${(7*Math.sin(m)).toFixed(1)}px" d="M${x1},${y1}A${R},${R} 0 ${L} 1 ${x2},${y2}L${x3},${y3}A${r},${r} 0 ${L} 0 ${x4},${y4}Z" fill="${col}"/>`;
+    a=b; });
+  return `<svg width="180" height="180" viewBox="0 0 180 180" role="img" aria-label="${label}: ₪${fmt(total)}">${segs}<text x="${C}" y="${C-2}" text-anchor="middle" style="font:700 17px Assistant;fill:#022258;pointer-events:none">${label}</text><text x="${C}" y="${C+20}" text-anchor="middle" style="font:600 15px Assistant;fill:#4a5b6a;pointer-events:none">₪${fmt(total)}</text></svg>`; }
+
+/* אזור פילוח: שתי עוגות + מחוון יחס באמצע + טבלה עם תיבות סימון */
+const BZ_DGS=['#155f45','#1f7d5c','#2b9a72','#55b48f','#86ccb0','#b9e2d1','#dcf1e8','#0f4a36','#3fa882','#a3d8c2'], BZ_DRS=['#c51d1d','#e23b3b','#ee6a6a','#f39191','#f6b2b2','#f9cfcf','#fbe3e3','#9e1616','#d84f4f','#f4a5a5'];
+const BZ_DS={}, BZ_DOFF={};
+function bzDsSet(id,dep,wd,lab){ const arr=o=>Object.entries(o).filter(([,v])=>v>0.5).map(([n,v])=>({n,v})).sort((a,b)=>b.v-a.v).map((x,i)=>({...x,i}));
+  BZ_DS[id]={dep:arr(dep),wd:arr(wd),lab:lab||['הפקדות','משיכות']}; if(!BZ_DOFF[id]) BZ_DOFF[id]=new Set(); }
+function bzDsHtml(id){ const S=BZ_DS[id], off=BZ_DOFF[id]; if(!S) return '';
+  const side=(A,sk,S2,lab)=>{ const on=A.filter(x=>!off.has(sk+x.n)), T=on.reduce((a,x)=>a+x.v,0);
+    const tb=`<table>${A.map(x=>{ const o=off.has(sk+x.n); return `<tr class="${o?'off':''}" data-dk="${x.i}"><td><label><input type="checkbox" data-doff="${esc(sk+x.n)}"${o?'':' checked'} aria-label="${esc(x.n)}"><i style="background:${S2[x.i%S2.length]}"></i>${esc(x.n)}</label></td><td class="n">${fmt(x.v)}</td><td class="n" style="color:#6d7d8b">${!o&&T?Math.round(x.v/T*100):0}%</td></tr>`; }).join('')||'<tr><td class="hint">אין תנועות בתקופה</td></tr>'}</table>`;
+    return {T,html:`<div class="bz-donut bz-dn" data-side="${sk}">${bzDonut(on,T,lab,S2)}${tb}</div>`}; };
+  const d=side(S.dep,'d',BZ_DGS,S.lab[0]), w=side(S.wd,'w',BZ_DRS,S.lab[1]), mx=Math.max(d.T,w.T,1);
+  const ratio=w.T?Math.round(d.T/w.T*100):null, diff=d.T-w.T;
+  const tipT=`יחס הכנסות להוצאות: ${ratio==null?'—':ratio+'%'}. ${diff>=0?'עודף':'גירעון'} של ₪${fmt(Math.abs(diff))}`;
+  return `${d.html}<div class="bz-ratio" title="${tipT}" aria-label="${tipT}"><b class="${diff<0?'bz-neg':'bz-pos'}">${ratio==null?'—':ratio+'%'}</b><div class="bars"><i style="height:${Math.round(d.T/mx*100)}%;background:#1f7d5c"></i><i style="height:${Math.round(w.T/mx*100)}%;background:#e23b3b"></i></div><span>יחס הכנסות<br>להוצאות</span><span class="${diff<0?'bz-neg':'bz-pos'}" style="font-weight:700">${diff>0?'+':''}${bzS(diff)}</span></div>${w.html}<div class="bz-dtip" hidden></div>`; }
+function bzDsBox(id){ return `<div class="bz-box bz-donuts v2" data-ds="${id}">${bzDsHtml(id)}</div>`; }
+function bzDsHover(box,side,k,ev){ const S=BZ_DS[box.dataset.ds]; if(!S) return; const tip=box.querySelector('.bz-dtip');
+  box.querySelectorAll('.on').forEach(x=>x.classList.remove('on'));
+  if(side==null){ tip.hidden=true; return; }
+  const sideEl=box.querySelector(`.bz-dn[data-side="${side}"]`); sideEl.querySelectorAll(`[data-dk="${k}"]`).forEach(x=>x.classList.add('on'));
+  const A=side==='d'?S.dep:S.wd, x=A.find(q=>q.i==k); if(!x) return; const off=BZ_DOFF[box.dataset.ds];
+  const T=A.filter(q=>!off.has(side+q.n)).reduce((a,q)=>a+q.v,0);
+  tip.innerHTML=`<div class="h">${esc(x.n)}</div><div class="${side==='d'?'bz-pos':'bz-neg'}" style="font-weight:700;font-size:16px">₪${fmt(x.v)}</div><div class="hint">${side==='d'?S.lab[0]:S.lab[1]} · <bdi>${T&&!off.has(side+x.n)?Math.round(x.v/T*100):0}%</bdi> מהסך</div>`;
+  tip.hidden=false; const br=box.getBoundingClientRect(); let L=ev.clientX-br.left+14, Tp=ev.clientY-br.top+14;
+  if(L+tip.offsetWidth>box.clientWidth) L=ev.clientX-br.left-tip.offsetWidth-14; tip.style.left=Math.max(0,L)+'px'; tip.style.top=Tp+'px'; }
+document.addEventListener('pointermove',e=>{ const box=e.target.closest&&e.target.closest('.bz-donuts.v2'); if(!box) return;
+  const seg=e.target.closest('path[data-dk],tr[data-dk]'); const side=seg&&seg.closest('.bz-dn')?seg.closest('.bz-dn').dataset.side:null;
+  if(seg&&seg.tagName==='TR'&&seg.classList.contains('off')) return bzDsHover(box,null);
+  bzDsHover(box,seg?side:null,seg?seg.dataset.dk:null,e); });
+document.addEventListener('pointerout',e=>{ const box=e.target.closest&&e.target.closest('.bz-donuts.v2'); if(box&&!box.contains(e.relatedTarget)) bzDsHover(box,null); });
+document.addEventListener('change',e=>{ const t=e.target; if(!t.dataset||t.dataset.doff==null) return; const box=t.closest('.bz-donuts.v2'), id=box.dataset.ds, o=BZ_DOFF[id];
+  if(t.checked) o.delete(t.dataset.doff); else o.add(t.dataset.doff); box.innerHTML=bzDsHtml(id); });
+
+/* תקופות */
+const BZ_PERS=[['day','היום האחרון'],['week','השבוע האחרון'],['month','מתחילת החודש'],['30','30 הימים האחרונים'],['90','3 החודשים האחרונים'],['180','6 החודשים האחרונים']];
+const BZ_FPERS=[['7','7 הימים הקרובים'],['eom','עד סוף החודש'],['30','30 הימים הקרובים'],['90','3 החודשים הקרובים'],['180','6 החודשים הקרובים']];
+function bzPerFrom(per,c,t0){ const last=(c.tx||[]).reduce((a,t)=>t.d&&t.d<=t0&&t.d>a?t.d:a,'')||t0;  // יום/שבוע אחרון: לפי התנועה האחרונה בבנק
+  if(per==='day') return last; if(per==='week') return isoAddDays(last,-6); if(per==='month') return thisYm()+'-01'; return isoAddDays(t0,-(+per)); }
+const bzPerLab=(per,from,c)=>per==='day'?fmtDate(from):fmtDate(from)+' עד '+fmtDate(isoAddDays(from,6));
+const bzPerSel=(id,val,L)=>`<select id="${id}" aria-label="תקופה" class="bz-tool">${L.map(([v,l])=>`<option value="${v}"${val===v?' selected':''}>${l}</option>`).join('')}</select>`;
 
 /* --- התראות --- */
 function bzAlerts(ctx){ const A=[], t0=todayIsoF(), c=ctx.c, D=ctx.D;
@@ -3249,7 +3307,7 @@ function bzAlerts(ctx){ const A=[], t0=todayIsoF(), c=ctx.c, D=ctx.D;
 function bzSeen(ids){ let seen={}; try{ seen=JSON.parse(localStorage.getItem('cashflow-bz-seen')||'{}'); }catch(e){} ids.forEach(i=>seen[i]=1); try{ localStorage.setItem('cashflow-bz-seen',JSON.stringify(seen)); }catch(e){} }
 
 /* --- סקירה כללית --- */
-let BZ_PER='month';
+let BZ_PER='month', BZ_PER2='month', BZ_FPER='30';
 function bzOverview(){ const el=$('#bz-ov'), ctx=bzCtx(); if(!ctx){ el.innerHTML=bzNoData(); return; }
   const {R,D,c}=ctx, t0=todayIsoF(), M=MATCH;
   const late=Object.values(M).filter(m=>m.st==='late'||m.st==='nobank').length;
@@ -3258,12 +3316,19 @@ function bzOverview(){ const el=$('#bz-ov'), ctx=bzCtx(); if(!ctx){ el.innerHTML
   const neg=D.days.slice(0,31).find(x=>x.bal<0);
   const A=bzAlerts(ctx);
   // הפקדות ומשיכות
-  const from=BZ_PER==='month'?thisYm()+'-01':isoAddDays(t0,BZ_PER==='30'?-30:-90);
-  const tx=(c.tx||[]).filter(t=>t.d>=from&&t.d<=t0), dep={}, wd={};
-  tx.forEach(t=>{ const o=t.amt>0?dep:wd, k=bzType(t.desc); o[k]=(o[k]||0)+Math.abs(t.amt); });
-  const arr=o=>Object.entries(o).map(([n,v])=>({n,v})).sort((a,b)=>b.v-a.v), dA=arr(dep), wA=arr(wd), dT=dA.reduce((a,x)=>a+x.v,0), wT=wA.reduce((a,x)=>a+x.v,0);
-  const GS=['#155f45','#1f7d5c','#2b9a72','#55b48f','#86ccb0','#b9e2d1','#dcf1e8'], RS=['#c51d1d','#e23b3b','#ee6a6a','#f39191','#f6b2b2','#f9cfcf','#fbe3e3'];
-  const lt=(A2,T,S)=>`<table>${A2.map((x,i)=>`<tr><td><i style="background:${S[i%S.length]}"></i>${esc(x.n)}</td><td class="n">${fmt(x.v)}</td><td class="n" style="color:#6d7d8b">${T?Math.round(x.v/T*100):0}%</td></tr>`).join('')||'<tr><td class="hint">אין תנועות בתקופה</td></tr>'}</table>`;
+  const from=bzPerFrom(BZ_PER,c,t0), dep={}, wd={};
+  (c.tx||[]).filter(t=>t.d>=from&&t.d<=t0).forEach(t=>{ const o=t.amt>0?dep:wd, k=bzType(t.desc); o[k]=(o[k]||0)+Math.abs(t.amt); });
+  bzDsSet('src',dep,wd);
+  // לפי סוג (קטגוריה)
+  const from2=bzPerFrom(BZ_PER2,c,t0), dep2={}, wd2={};
+  (c.tx||[]).filter(t=>t.d>=from2&&t.d<=t0&&t.cat!==IGNORE).forEach(t=>{ const o=t.amt>0?dep2:wd2, k=t.cat?catLabel(c,t.cat):'לא מסווג'; o[k]=(o[k]||0)+Math.abs(t.amt); });
+  bzDsSet('cat',dep2,wd2,['הכנסות','הוצאות']);
+  // צפי
+  const nF=BZ_FPER==='eom'?dDays(t0,lastDayOf(thisYm()))+1:+BZ_FPER, fd=D.days.filter(x=>x.d>=t0).slice(0,nF), dep3={}, wd3={};
+  fd.forEach(x=>x.ev.forEach(e=>{ const o=e.amt>0?dep3:wd3, k=e.row||e.name; o[k]=(o[k]||0)+Math.abs(e.amt); }));
+  if(R.late&&R.late.length) dep3['באיחור (טרם נגבה)']=(R.late||[]).reduce((a,l)=>a+l.amount,0);
+  bzDsSet('fc',dep3,wd3,['הכנסות צפויות','הוצאות צפויות']);
+  const fEnd=fd.length?fd[fd.length-1].d:t0;
   // ריכוז נתונים פיננסיים
   const ev30=D.days.slice(0,31).flatMap(x=>x.ev), sumRow=re=>ev30.filter(e=>re(e)).reduce((a,e)=>a+Math.abs(e.amt),0);
   const items=(ctx.e.incItems||[]);
@@ -3286,13 +3351,17 @@ function bzOverview(){ const el=$('#bz-ov'), ctx=bzCtx(); if(!ctx){ el.innerHTML
       ${A.length?A.map(a=>`<div class="bz-al"><span class="ex ${a.sev}" aria-hidden="true">${a.sev==='good'?'✓':'!'}</span><div><b>${esc(a.t)}</b><span>${esc(a.s)}</span><div class="act"><button class="bz-link" type="button" data-bzgo="${a.go}">לפרטים</button></div></div></div>`).join(''):`<div class="empty"><svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="#022258" stroke-width="1.6" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 21h4"/><circle cx="17" cy="6" r="3.2" fill="#022258"/><path d="M15.6 6l1 1 1.8-1.8" stroke="#fff"/></svg><span>אין לכם התראות חדשות, שיהיה יום טוב ומוצלח!</span></div>`}</div></div>
   </div>
   <div class="bz-row">
-    <div><div class="bz-sec"><h2>הפקדות ומשיכות</h2><select id="bz-per" aria-label="תקופה" class="bz-tool"><option value="month"${BZ_PER==='month'?' selected':''}>מתחילת החודש</option><option value="30"${BZ_PER==='30'?' selected':''}>30 הימים האחרונים</option><option value="90"${BZ_PER==='90'?' selected':''}>3 החודשים האחרונים</option></select></div>
-      <div class="bz-box bz-donuts"><div class="bz-donut">${bzDonut(dA,dT,'הפקדות',GS)}${lt(dA,dT,GS)}</div><div class="bz-donut">${bzDonut(wA,wT,'משיכות',RS)}${lt(wA,wT,RS)}</div></div></div>
+    <div><div class="bz-sec"><h2>הפקדות ומשיכות לפי מקור</h2>${/day|week/.test(BZ_PER)?`<span class="hint">${bzPerLab(BZ_PER,from,c)}</span>`:''}${bzPerSel('bz-per',BZ_PER,BZ_PERS)}</div>
+      ${bzDsBox('src')}</div>
     <div><div class="bz-sec"><h2>ריכוז נתונים פיננסיים</h2></div>
       <div class="bz-box bz-fin">${fi('chq',"צ'קים לפירעון",chq,'bz-pos')}${fi('ret','הוראות קבע (30 יום)',ret?ret.vals[0]:0,'bz-pos')}${fi('in','הכנסות צפויות (30 יום)',inc30,'bz-pos')}${fi('out','הוצאות צפויות (30 יום)',-out30,'bz-neg')}${fi('card','אשראי לחיוב',-(exp2?exp2.vals[0]:0),'bz-neg')}${fi('bank','יתרה בבנק',R.opening||0,R.opening<0?'bz-neg':'bz-pos')}</div>
       <div class="bz-sec" style="margin-top:18px"><h2>תנועות אחרונות</h2><button class="bz-link" data-bzgo="bank" type="button">לכל התנועות</button></div>
       <div class="bz-box bz-recent">${rec.map(t=>`<div><span class="d">${t.d===isoAddDays(t0,-1)?'אתמול':fmtDate(t.d).slice(0,5)}</span><span class="t">${esc(t.desc||'')}</span><b class="${t.amt<0?'bz-neg':'bz-pos'}" style="font-variant-numeric:tabular-nums">${bzM(t.amt)}</b></div>`).join('')||'<div class="hint">אין תנועות</div>'}</div></div>
-  </div>`;
+  </div>
+  <div class="bz-sec" style="margin-top:22px"><h2>הכנסות והוצאות לפי סוג</h2>${/day|week/.test(BZ_PER2)?`<span class="hint">${bzPerLab(BZ_PER2,from2,c)}</span>`:''}${bzPerSel('bz-per2',BZ_PER2,BZ_PERS)}</div>
+  ${bzDsBox('cat')}
+  <div class="bz-sec" style="margin-top:22px"><h2>צפי הכנסות והוצאות</h2><span class="hint">${fmtDate(t0)} עד ${fmtDate(fEnd)}</span>${bzPerSel('bz-fper',BZ_FPER,BZ_FPERS)}</div>
+  ${bzDsBox('fc')}`;
   bzBalChart($('#bz-balc'),ctx); }
 
 /* --- תזרים יומי --- */
@@ -3481,7 +3550,7 @@ document.addEventListener('click',ev=>{ const t=ev.target.closest('button'); if(
 });
 document.addEventListener('click',ev=>{ const dr=ev.target.closest('tr[data-bzday]'); if(dr&&!ev.target.closest('button')){ const d=dr.dataset.bzday; BZ_DOPEN.has(d)?BZ_DOPEN.delete(d):BZ_DOPEN.add(d); bzRender(); } });
 document.addEventListener('change',ev=>{ const t=ev.target;
-  if(t.id==='bz-per'){ BZ_PER=t.value; bzRender(); } else if(t.id==='bz-dn'){ BZ_DN=+t.value; bzRender(); }
+  if(t.id==='bz-per'){ BZ_PER=t.value; bzRender(); } else if(t.id==='bz-per2'){ BZ_PER2=t.value; bzRender(); } else if(t.id==='bz-fper'){ BZ_FPER=t.value; bzRender(); } else if(t.id==='bz-dn'){ BZ_DN=+t.value; bzRender(); }
   else if(t.id==='bz-client'){ const s=$('#client-sel'); if(s){ s.value=t.value; s.dispatchEvent(new Event('change',{bubbles:true})); } } });
 document.addEventListener('input',ev=>{ const t=ev.target; const keep=()=>{ const id=t.id, p=t.selectionStart; bzRender(); const n=$('#'+id); if(n){ n.focus(); try{ n.setSelectionRange(p,p); }catch(e){} } };
   if(t.id==='bz-dq'){ BZ_DQ=t.value; keep(); } else if(t.id==='bz-rq1'){ BZ_RQ1=t.value; keep(); } else if(t.id==='bz-rq2'){ BZ_RQ2=t.value; keep(); } else if(t.id==='bz-pq'){ BZ_PQ=t.value; keep(); } });

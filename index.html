@@ -366,6 +366,23 @@ body.bz .pill{border-radius:3px}
 .bz-mb rect[data-tipx]{cursor:pointer}.bz-mb rect[data-tipx]:hover{opacity:.82}
 .bz-up{color:#c51d1d;font-weight:600}.bz-dn2{color:#1f7d5c;font-weight:600}
 .bz-tbl td.st .hint{display:block}
+#ctl-ov .card{max-width:820px;width:100%;max-height:92vh;overflow:auto}
+#ctl-ov h3{font-size:16px;margin:16px 0 8px;color:#022258;display:flex;gap:8px;align-items:center}
+.ctl-it{border:1px solid var(--bz-line);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.ctl-it.chq{border-inline-start:4px solid #16a4b5}.ctl-it.in{border-inline-start:4px solid #1f7d5c}.ctl-it.out{border-inline-start:4px solid #c51d1d}
+.ctl-h{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.ctl-h>b{font-size:17px;white-space:nowrap}
+.ctl-a{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.ctl-c{margin-top:8px;border-top:1px dashed var(--bz-line);padding-top:6px}
+.ctl-c .inv-row{grid-template-columns:minmax(0,1fr) auto auto}
+.ctl-ed{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-top:8px}.ctl-ed .f{min-width:140px}
+.ctl-ok{background:#eef8f3;border:1px solid #b9e2d1;border-radius:8px;padding:10px 12px}
+.ctl-ok summary{cursor:pointer;font-weight:600;color:#1f7d5c}
+.ctl-ok .r{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #d6efe4;font-size:14px;align-items:center}
+.rc-tbl input,.rc-tbl select{width:100%;min-width:0;padding:5px 6px;font:inherit;border:1px solid var(--bz-line);border-radius:6px;background:#fff}
+.rc-tbl td{padding:5px 6px;vertical-align:middle}
+.rc-tbl .nm{min-width:130px}.rc-tbl .am{width:96px}.rc-tbl .dy{width:52px}.rc-tbl .mo{width:132px}.rc-tbl .gp{width:118px}
+.rc-tbl tfoot td{font-weight:700;border-top:2px solid var(--bz-line)}
+@media (max-width:700px){.rc-tbl .mo{width:130px}}
 .invacts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:3px}
 .invlink{font-size:13px;color:#16a4b5;font-weight:600;text-decoration:none}.invlink:hover{text-decoration:underline}
 #inv-ov .card{max-width:680px;width:100%;max-height:90vh;overflow:auto}
@@ -498,7 +515,7 @@ body.bz .pill{border-radius:3px}
         <button class="bz-it" data-bz="ccexp" type="button">הוצאות אשראי</button>
       </div></div>
     <div class="bz-grp" data-grp="flow"><button class="bz-it" data-bzg="flow" type="button" aria-expanded="false"><span class="chev" aria-hidden="true">▾</span>תחזית עסקית<svg width="24" height="24" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 9h.01M18 15h.01"/></svg></button>
-      <div class="bz-sub"><button class="bz-it" data-bz="half" type="button">תחזית חודשית</button><button class="bz-it" data-bz="daily" type="button">תזרים יומי</button><button class="bz-it" data-bz="recon" type="button">התאמות בנקים</button><button class="bz-it" data-bz="recur" type="button">תנועות קבועות</button></div></div>
+      <div class="bz-sub"><button class="bz-it" data-bz="fcov" type="button">סקירת תחזית</button><button class="bz-it" data-bz="half" type="button">תחזית חודשית</button><button class="bz-it" data-bz="daily" type="button">תזרים יומי</button><button class="bz-it" data-bz="recon" type="button">התאמות בנקים</button><button class="bz-it" data-bz="recur" type="button">תנועות קבועות</button></div></div>
     <button class="bz-it" data-bz="debts" type="button">חובות לקוחות<svg width="24" height="24" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v4h4"/><path d="M9 12h6M9 16h4"/></svg></button>
     <button class="bz-it" data-bz="clients" type="button">לקוחות וגיבוי<svg width="24" height="24" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/></svg></button>
   </nav>
@@ -540,6 +557,7 @@ body.bz .pill{border-radius:3px}
   <section class="panel" id="tab-cheques" role="tabpanel" hidden><div id="bz-cheques"></div></section>
   <section class="panel" id="tab-ccexp" role="tabpanel" hidden><div id="bz-ccexp"></div></section>
   <section class="panel" id="tab-debts" role="tabpanel" hidden><div id="bz-debts"></div></section>
+  <section class="panel" id="tab-fcov" role="tabpanel" hidden><div id="bz-fcov"></div></section>
   <section class="panel" id="tab-expov" role="tabpanel" hidden><div id="bz-expov"></div></section>
   <section class="panel" id="tab-incov" role="tabpanel" hidden><div id="bz-incov"></div></section>
   <!-- ===== FORECAST ===== -->
@@ -851,6 +869,12 @@ body.bz .pill{border-radius:3px}
       <button class="btn primary" type="submit">המשך</button>
     </form>
     <div id="bz-pay-res"></div>
+  </div>
+</div>
+<div class="overlay bz-modal" id="ctl-ov" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="ctl-h">
+    <div class="card-head"><div><h2 id="ctl-h">בקרת תחזית מול הבנק</h2><span class="hint" id="ctl-sub"></span></div><button class="btn sm" id="ctl-x" type="button">סגירה</button></div>
+    <div id="ctl-body"></div>
   </div>
 </div>
 <div class="overlay bz-modal" id="inv-ov" hidden>
@@ -1621,7 +1645,7 @@ function startMapping(rows,src,opt){
 let lastAuto=null;
 function autoImport(){
   const c=cur(), P=pending, {out,skipped}=parsePending(), r=importTx(c,out);
-  lastAuto={pending:P,ids:r.ids,cid:DB.current};
+  lastAuto={pending:P,ids:r.ids,cid:DB.current}; if(r.added) setTimeout(()=>{ try{ ctlMaybe(true); }catch(e){} },900);
   pending=null; renderMapping(); c.example=false; saveSoon(); renderHeader(); renderBank(); updateCalc();
   const nm=k=>P.map[k]>=0?esc(P.headers[P.map[k]]):null;
   const parts=[['תאריך',nm('date')],['תיאור',nm('desc')],['פירוט',nm('det')],['אסמכתא',nm('ref')],P.map.amount>=0?['סכום',nm('amount')]:null,P.map.credit>=0?['זכות',nm('credit')]:null,P.map.debit>=0?['חובה',nm('debit')]:null,['יתרה',nm('bal')]].filter(x=>x&&x[1]);
@@ -1673,7 +1697,7 @@ function previewMapping(){
 on('#map-fields','change',e=>{ const s=e.target.closest('select[data-map]'); if(!s) return; pending.map[s.dataset.map]=+s.value; previewMapping(); });
 on('#btn-map-cancel','click',()=>{ pending=null; renderMapping(); });
 on('#btn-import','click',()=>{
-  const c=cur(), {out}=parsePending(), r=importTx(c,out);
+  const c=cur(), {out}=parsePending(), r=importTx(c,out); if(r.added) setTimeout(()=>{ try{ ctlMaybe(true); }catch(e){} },900);
   pending=null; renderMapping(); c.example=false; saveSoon(); renderHeader(); renderBank(); updateCalc();
   toast('נוספו '+r.added+' תנועות חדשות'+(r.dup?' · '+r.dup+' כבר היו קיימות'+(r.filled?`, ול־${r.filled} מהן נוספו פירוט או אסמכתא`:''):''));
   $('#hist-card').scrollIntoView({behavior:'smooth',block:'start'});
@@ -2011,7 +2035,7 @@ const hfOpen=new Set();
   hfDb.collection('sumit').onSnapshot(snap=>{ SUMIT={}; snap.docs.forEach(d=>{ const v=d.data(); if(v) SUMIT[d.id]=v; }); try{ if(cur().tx.length) renderTxList(); }catch(e){} },()=>{});
 })();
 const hfKey=()=>cur().ccKey;
-const hfEdits=k=>{ const e=HFE[k]||{}; return {overrides:JSON.parse(JSON.stringify(e.overrides||{})),items:(e.items||[]).map(x=>({...x})),opening:e.opening==null?null:+e.opening,incomeBase:e.incomeBase||null,incomeAvg:e.incomeAvg||null,incomeMonths:Array.isArray(e.incomeMonths)&&e.incomeMonths.length?e.incomeMonths.slice():null,debts:JSON.parse(JSON.stringify(e.debts||{})),cardRows:JSON.parse(JSON.stringify(e.cardRows||CARD_ROWS0)),range:e.range?{...e.range}:null,incItems:(e.incItems||[]).map(x=>JSON.parse(JSON.stringify(x))),incCats:(e.incCats||[]).slice(),reconOk:(e.reconOk||[]).slice(),...(e.chqFile?{chqFile:{...e.chqFile}}:{})}; };
+const hfEdits=k=>{ const e=HFE[k]||{}; return {overrides:JSON.parse(JSON.stringify(e.overrides||{})),items:(e.items||[]).map(x=>({...x})),opening:e.opening==null?null:+e.opening,incomeBase:e.incomeBase||null,incomeAvg:e.incomeAvg||null,incomeMonths:Array.isArray(e.incomeMonths)&&e.incomeMonths.length?e.incomeMonths.slice():null,debts:JSON.parse(JSON.stringify(e.debts||{})),cardRows:JSON.parse(JSON.stringify(e.cardRows||CARD_ROWS0)),range:e.range?{...e.range}:null,incItems:(e.incItems||[]).map(x=>JSON.parse(JSON.stringify(x))),incCats:(e.incCats||[]).slice(),reconOk:(e.reconOk||[]).slice(),...(e.chqFile?{chqFile:{...e.chqFile}}:{}),...['recur','recurInit','snap','ccOk'].reduce((o,q)=>{ if(e[q]!=null) o[q]=JSON.parse(JSON.stringify(e[q])); return o; },{})}; };
 let hfSaving=Promise.resolve();
 // שלוש שורות הכנסה למילוי: ממוצע אשראי (לפי מספר חודשים שבוחרים), צ'קים, לקוחות - תשלומים שונים
 const CARD_ROWS0=[{label:'ממוצע אשראי',src:'card',n:3},{label:"צ'קים",src:'manual'},{label:'לקוחות - תשלומים שונים',src:'manual'}];
@@ -2040,20 +2064,64 @@ function hfMonths(f){ const k=hfKey(), r=k&&HFE[k]&&HFE[k].range, tm=thisYm();
 const INC_KIND={1:'chq',2:'cust',3:'ccp'};
 function isoAddMonths(iso,k){ const [y,m,d]=String(iso).slice(0,10).split('-').map(Number); const t=new Date(y,m-1+k,1), last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(Math.min(d,last)).padStart(2,'0'); }
 function itemEvents(x){ const out=[]; if(!x.date||!(+x.amount)) return out; const n=Math.max(1,Math.min(60,Math.round(+x.n||1)));
-  for(let k=0;k<n;k++){ if(x.skip&&x.skip[k]) continue; out.push({k,n,date:(x.mv&&x.mv[k])||isoAddMonths(x.date,k),amount:+x.amount}); } return out; }
+  for(let k=0;k<n;k++){ if(x.skip&&x.skip[k]) continue; out.push({k,n,date:(x.mv&&x.mv[k])||isoAddMonths(x.date,k),amount:x.ak&&x.ak[k]!=null?+x.ak[k]:+x.amount}); } return out; }
+/* ---------- הוצאות והכנסות קבועות (מסך „תנועות קבועות”) ----------
+   כל רשומה: {id,sec:'in'|'out',name,amount,day,from:'YYYY-MM',to:'YYYY-MM'|'',grp,est}. est = סכום משוער: לא נבדק מול תנועה בודדת בבנק.
+   מהרשומה נוצר „פריט” חודשי לתחזית, עם מצב ההתאמה (got/mv/skip/ak/mt/rej) שנשמר על הרשומה עצמה. */
+const RC_GRP_OUT=[['exp1','הוצאות מהבנק'],['exp3','מיסים'],['exp4','תלושים'],['exp5','מנויים'],['exp6','פרילנס']];
+function recurItems(e){ const tm=thisYm(); return (e&&e.recur||[]).filter(r=>r&&r.name&&+r.amount>0).map(r=>{
+  const from=r.from||tm, end=r.to||ymAdd(tm,24), n=Math.min(60,ymDiff(from,end)+1); if(!(n>0)) return null;
+  const day=Math.min(31,Math.max(1,Math.round(+r.day||1))), date=isoAddMonths(from+'-'+String(day).padStart(2,'0'),0);
+  return {id:'rc-'+r.id,rid:r.id,recur:true,kind:r.sec==='in'?'cust':'bank',cust:r.name,amount:+r.amount,date,n,grp:r.grp||(r.sec==='in'?'inc3':'exp1'),est:!!r.est,got:r.got,mv:r.mv,skip:r.skip,ak:r.ak,mt:r.mt,rej:r.rej,method:r.sec==='in'?'הכנסה קבועה':'הוצאה קבועה'}; }).filter(Boolean); }
+// המקום שבו נשמר מצב ההתאמה של פריט: הכנסה צפויה רגילה או רשומה קבועה
+function edHolder(ed,id){ if(String(id).startsWith('rc-')) return (ed.recur||[]).find(r=>'rc-'+r.id===id)||null; return (ed.incItems||[]).find(x=>x.id===id)||null; }
+function edItem(ed,id){ if(String(id).startsWith('rc-')) return recurItems(ed).find(x=>x.id===id)||null; return (ed.incItems||[]).find(x=>x.id===id)||null; }
+// פעם אחת לכל לקוח: ההערכות הקיימות (מיסים, תלושים...) והתנועות הקבועות שנוספו בעבר הופכות לרשומות שאפשר לערוך
+function recurSeed(ed){ if(ed.recurInit) return false; ed.recur=ed.recur||[]; const tm=thisYm();
+  EXP_FIXED.forEach(([id,label,v])=>{ const ov=ed.overrides[id]||{}, val=ov[tm]!=null?+ov[tm]:v; if(!(val>0)) return;
+    ed.recur.push({id:uid(),sec:'out',name:label,amount:Math.round(val),day:1,from:tm,to:'',grp:id,est:true});
+    const vs=Object.values(ov); if(!vs.length||vs.every(x=>+x===val)) delete ed.overrides[id]; });
+  ed.incItems=(ed.incItems||[]).filter(x=>{ if(x.src!=='recur') return true; const m=String(x.date).slice(0,7);
+    ed.recur.push({id:uid(),sec:x.kind==='bank'?'out':'in',name:x.cust,amount:+x.amount,day:+String(x.date).slice(8,10)||1,from:m,to:ymAdd(m,(+x.n||12)-1),grp:x.kind==='bank'?'exp1':'inc3',est:false,got:x.got,mv:x.mv,skip:x.skip,rk:x.rk}); return false; });
+  ed.recurInit=1; return true; }
+function recurEnsure(){ if(VIEW||!hfDb) return; const k=hfKey(); if(!k||!HF[k]||!HFE[k]||HFE[k].recurInit) return; const ed=hfEdits(k); if(recurSeed(ed)) hfSave(k,ed); }
+// ממוצעים מ־6 החודשים המלאים האחרונים בדף הבנק
+const CC_IN_RE=/סליקה|ויזה|כא"ל|כאל|ישראכרט|מקס|לאומי קארד|קארדקום|cardcom|isracard|visa|שב"א|max/i;
+function lastFullMonths(c,n){ const tm=thisYm(), all=[...new Set((c.tx||[]).filter(t=>t.d).map(t=>t.d.slice(0,7)))].filter(m=>m<tm).sort(); return all.slice(-n); }
+function creditGenAuto(k,e,months){ const c=cur(); if(!c||c.ccKey!==k||!(c.tx||[]).length) return null; const M=lastFullMonths(c,6); if(!M.length) return null;
+  const per=M.map(m=>({m,v:Math.round((c.tx||[]).filter(t=>t.amt>0&&t.d&&t.d.startsWith(m)&&CC_IN_RE.test(t.desc||'')).reduce((a,t)=>a+t.amt,0))}));
+  const avg=sum(per.map(x=>x.v))/per.length; if(!(avg>0)) return null;
+  const ret=sum((c.retainers||[]).filter(r=>r.active!==false).map(r=>+r.amount||0));
+  let ccp=0; (e.incItems||[]).filter(x=>x.kind==='ccp').forEach(x=>itemEvents(x).forEach(ev=>{ if(months.includes(ev.date.slice(0,7))) ccp+=ev.amount; })); ccp/=Math.max(1,months.length);
+  const v=Math.max(0,Math.round(avg-ret-ccp));
+  return {v,note:`ממוצע תקבולי האשראי שנכנסו לבנק ב־${per.length} החודשים האחרונים: ${fmt(Math.round(avg))} ₪ (${per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')}). פחות הוראות הקבע (${fmt(Math.round(ret))} ₪ בחודש) ופחות עסקאות התשלומים (${fmt(Math.round(ccp))} ₪ בחודש), שמופיעות בשורות נפרדות. אפשר לשנות כל חודש ידנית`}; }
+function varExpAvg(k,e){ const c=cur(); if(!c||c.ccKey!==k||!(c.tx||[]).length) return null; const M=lastFullMonths(c,6); if(M.length<2) return null;
+  const EX=new Set(['tx_vat','tx_income','fx_bl','fx_salary','fx_loan']), R=(e.recur||[]).filter(r=>r.sec==='out'&&r.name);
+  const skip=t=>t.cat===IGNORE||EX.has(t.cat)||CC_BANK_RE.test(t.desc||'')||R.some(r=>bzNorm(t.desc)===bzNorm(r.name)||String((t.desc||'')+' '+(t.det||'')).includes(r.name)||(r.rk&&r.rk==='-'+bzNorm(t.desc)));
+  const inc=(c.tx||[]).filter(t=>t.amt<0&&t.d&&M.includes(t.d.slice(0,7))&&!skip(t));
+  const per=M.map(m=>({m,v:Math.round(inc.filter(t=>t.d.startsWith(m)).reduce((a,t)=>a-t.amt,0))}));
+  const avg=Math.round(sum(per.map(x=>x.v))/per.length); if(!(avg>0)) return null;
+  const big=inc.slice().sort((a,b)=>a.amt-b.amt).slice(0,8);
+  return {avg,note:`ממוצע ${per.length} החודשים האחרונים בדף הבנק (${per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')}): כל ההוצאות מהבנק, בלי מיסים, שכר, ביטוח לאומי, הלוואות, חיובי כרטיס אשראי והוצאות שמופיעות ב„תנועות קבועות”. אפשר לשנות כל חודש ידנית`,
+    details:[...per.map(x=>({label:ymLabel(x.m),amount:x.v})),...big.map(t=>({label:'מהגדולות: '+(t.desc||'')+(t.det?' · '+t.det:'')+' ('+fmtDate(t.d)+')',amount:Math.round(-t.amt)}))]}; }
 // ---- התאמה לבנק: כל תשלום צפוי מול תנועות הבנק (סכום ±1 ₪, תאריך מ־10 ימים לפני עד 45 אחרי) ----
 const dDays=(a,b)=>Math.round((Date.parse(b)-Date.parse(a))/864e5);
 const todayIsoF=()=>{ const t=new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); };
 let MATCH={}, HF_LATE=[], HF_BANKLAST=null, HF_TX=[], HF_USED=new Set();
-function hfMatch(k,e){ MATCH={}; HF_LATE=[]; HF_BANKLAST=null; HF_TX=[]; HF_USED=new Set(); const c=cur(); if(!c||c.ccKey!==k) return;
+let HF_DUE=[];
+function hfMatch(k,e){ MATCH={}; HF_LATE=[]; HF_BANKLAST=null; HF_TX=[]; HF_USED=new Set(); HF_DUE=[]; const c=cur(); if(!c||c.ccKey!==k) return;
   const tx=(c.tx||[]).filter(t=>t.d&&+t.amt), today=todayIsoF(); const last=tx.reduce((a,t)=>t.d>a?t.d:a,''); HF_BANKLAST=last||null;
-  const due=[]; (e.incItems||[]).forEach(x=>{ if((!x.cust&&!x.amount)||x.kind==='ccp') return; itemEvents(x).forEach(ev=>{ if(ev.date<=isoAddDays(today,7)) due.push({x,ev,sign:x.kind==='bank'?-1:1}); }); });
-  due.sort((a,b)=>a.ev.date<b.ev.date?-1:a.ev.date>b.ev.date?1:0); const used=new Set(); HF_TX=tx; HF_USED=used;
-  due.forEach(({x,ev,sign})=>{ const lo=isoAddDays(ev.date,-10), hi=isoAddDays(ev.date,45); let best=-1, bd=1e9;
-    tx.forEach((t,i)=>{ if(used.has(i)||Math.sign(t.amt)!==sign||Math.abs(Math.abs(t.amt)-ev.amount)>1||t.d<lo||t.d>hi) return; const dd=Math.abs(dDays(t.d,ev.date)); if(dd<bd){ bd=dd; best=i; } });
-    const key=x.id+'#'+ev.k;
-    if(x.got&&x.got[ev.k]){ MATCH[key]={st:'ok',d:x.got[ev.k],desc:'סומן ידנית כהתקבל'}; return; }
-    if(best>=0){ used.add(best); MATCH[key]={st:'ok',d:tx[best].d,desc:tx[best].desc||''}; }
+  const due=[]; [...(e.incItems||[]),...recurItems(e)].forEach(x=>{ if((!x.cust&&!x.amount)||x.kind==='ccp'||x.est) return; itemEvents(x).forEach(ev=>{ if(ev.date<=isoAddDays(today,7)) due.push({x,ev,sign:x.kind==='bank'?-1:1}); }); });
+  due.sort((a,b)=>a.ev.date<b.ev.date?-1:a.ev.date>b.ev.date?1:0); const used=new Set(); HF_TX=tx; HF_USED=used; HF_DUE=due;
+  const keyOf=t=>t.d+'|'+Math.round(t.amt*100)+'|'+String(t.desc||'').slice(0,30);
+  // שלב 1: מה שסומן ידנית
+  due.forEach(({x,ev})=>{ const key=x.id+'#'+ev.k;
+    if(x.got&&x.got[ev.k]){ MATCH[key]={st:'ok',d:x.got[ev.k],desc:'סומן ידנית כהתקבל',man:1}; return; }
+    const mk=x.mt&&x.mt[ev.k]; if(mk){ const i=tx.findIndex((t,i)=>!used.has(i)&&keyOf(t)===mk); if(i>=0){ used.add(i); MATCH[key]={st:'ok',d:tx[i].d,desc:tx[i].desc||'',man:1,ti:i}; } else MATCH[key]={st:'ok',d:String(mk).slice(0,10),desc:'הותאם ידנית',man:1}; } });
+  // שלב 2: התאמה אוטומטית לפי סכום (±1 ₪) ותאריך (מ־10 ימים לפני עד 45 אחרי)
+  due.forEach(({x,ev,sign})=>{ const key=x.id+'#'+ev.k; if(MATCH[key]) return; const lo=isoAddDays(ev.date,-10), hi=isoAddDays(ev.date,45), rej=(x.rej&&x.rej[ev.k])||[]; let best=-1, bd=1e9;
+    tx.forEach((t,i)=>{ if(used.has(i)||Math.sign(t.amt)!==sign||Math.abs(Math.abs(t.amt)-ev.amount)>1||t.d<lo||t.d>hi||rej.includes(keyOf(t))) return; const dd=Math.abs(dDays(t.d,ev.date)); if(dd<bd){ bd=dd; best=i; } });
+    if(best>=0){ used.add(best); MATCH[key]={st:'ok',d:tx[best].d,desc:tx[best].desc||'',ti:best}; }
     else if(ev.date<today){ const st=last&&last>=ev.date?'late':'nobank', days=dDays(ev.date,today); MATCH[key]={st,days};
       if(st==='late'&&x.kind!=='bank') HF_LATE.push({name:x.cust||'',amount:ev.amount,days}); } });
 }
@@ -2071,10 +2139,11 @@ function itemStatus(x){ const ev=itemEvents(x); if(!ev.length) return ''; if(x.k
 const ovIdx=(m,months)=>m<months[0]?(months[0]<=thisYm()?0:-1):months.indexOf(m);
 function cardLines(k,e,months){
   const n0=(e.cardRows&&e.cardRows[0]&&e.cardRows[0].src==='card'&&+e.cardRows[0].n)||3;
-  const a=null, v=0;  // הכנסות אשראי: מתחילות מאפס וממלאים ידנית (בלי ממוצע מקארדקום)
-  const out=[{id:'inc1',sec:'in',cardRow:0,cr:{src:'card',n:n0},label:'הכנסות אשראי',vals:months.map(()=>v),
+  const a=null, cg=creditGenAuto(k,e,months), v=cg?cg.v:0;  // הכנסות באשראי - כללי: ממוצע 6 חודשים מהבנק, בלי הוראות קבע ותשלומים
+  const out=[{id:'inc1',sec:'in',cardRow:0,cr:{src:'card',n:n0},label:'הכנסות באשראי - כללי',vals:months.map(()=>v),
     note:a?`הסכום ההתחלתי הוא ממוצע תקבולי האשראי בקארדקום ב־${a.per.length} החודשים האחרונים`+(a.per.length<a.asked?` (יש נתונים רק ל־${a.per.length})`:'')+': '+a.per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')+'. מה שנכתב בחודש הראשון מתמלא בכל החודשים, ואפשר לשנות כל חודש בנפרד':'אין עדיין נתוני אשראי מקארדקום. אפשר למלא ידנית',details:[]}];
-  [[1,"הכנסות - צ'קים"],[2,'הכנסות מהבנק'],[3,'הכנסות באשראי - תשלומים']].forEach(([i,label])=>{ const kind=INC_KIND[i], items=(e.incItems||[]).filter(x=>x.kind===kind), vals=months.map(()=>0);
+  if(cg) out[0].note=cg.note;
+  [[1,"הכנסות - צ'קים"],[2,'הכנסות מהבנק'],[3,'הכנסות באשראי - תשלומים']].forEach(([i,label])=>{ const kind=INC_KIND[i], items=(e.incItems||[]).filter(x=>x.kind===kind).concat(kind==='cust'?recurItems(e).filter(x=>x.sec!=='out'&&x.kind==='cust'):[]), vals=months.map(()=>0);
     items.forEach(x=>liveEvents(x).forEach(ev=>{ const m=ev.date.slice(0,7); const j=ovIdx(m,months); if(j>=0) vals[j]+=ev.amount; }));
     out.push({id:'inc'+(i+1),sec:'in',incKind:kind,label,vals,items,fixed:true,note:'',details:[]}); });
   const rr=retLine(k,months); if(rr) out.push(rr);
@@ -2114,19 +2183,25 @@ function ccStmtLine(k,months){ const c=cur(); if(!c||c.ccKey!==k||!c.ccStmt||!c.
 const EXP_CARD_RE=/ויזה|כא"ל|כאל|ישראכרט|מסטרקארד|מאסטרקארד|אמריקן|דיינרס|מקס|לאומי קארד|כרטיס אשראי/;
 const EXP_FIXED=[['exp3','מיסים',50000],['exp4','תלושים',25000],['exp5','מנויים',0],['exp6','פרילנס',0]];
 const PROP_ROWS=new Set(['inc1','exp2',...EXP_FIXED.map(x=>x[0])]);
-function cardOutAvg(){ const c=cur(); if(!c||!c.tx||!c.tx.length) return null; const tm=thisYm();
-  const have=[...new Set(c.tx.map(t=>t.d.slice(0,7)))].filter(m=>m<tm).sort().slice(-3); if(!have.length) return null;
+function cardOutAvg(n){ const c=cur(); if(!c||!c.tx||!c.tx.length) return null;
+  const have=lastFullMonths(c,n||6); if(!have.length) return null;
   const list=c.tx.filter(t=>t.amt<0&&EXP_CARD_RE.test(t.desc||'')&&have.includes(t.d.slice(0,7)));
   const per=have.map(m=>({m,v:Math.round(-sum(list.filter(t=>t.d.startsWith(m)).map(t=>t.amt)))}));
   return {avg:Math.round(sum(per.map(x=>x.v))/per.length),per}; }
 function expLines(k,e,months){
-  const items=(e.incItems||[]).filter(x=>x.kind==='bank'), vals=months.map(()=>0);
-  items.forEach(x=>liveEvents(x).forEach(ev=>{ const m=ev.date.slice(0,7); const j=ovIdx(m,months); if(j>=0) vals[j]+=ev.amount; }));
-  const out=[{id:'exp1',sec:'out',incKind:'bank',label:'הוצאות מהבנק',vals,items,fixed:true,note:'',details:[]}];
-  const cs=ccStmtLine(k,months); if(cs){ out.push(cs); EXP_FIXED.forEach(([id,label,v])=>out.push({id,sec:'out',label,plain:true,vals:months.map(()=>v),note:'',details:[]})); return out; }
-  const a=null;  // בלי פירוט אשראי: מתחיל מאפס וממלאים ידנית
-  out.push({id:'exp2',sec:'out',label:'אשראי - ממוצע 3 חודשים אחרונים',plain:true,vals:months.map(()=>a?a.avg:0),note:a?'חיובי כרטיסי אשראי בדף הבנק: '+a.per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', '):'',details:[]});
-  EXP_FIXED.forEach(([id,label,v])=>out.push({id,sec:'out',label,plain:true,vals:months.map(()=>v),note:'',details:[]}));
+  const rI=recurItems(e).filter(x=>x.kind==='bank');
+  const live=items=>{ const vals=months.map(()=>0); items.forEach(x=>liveEvents(x).forEach(ev=>{ const j=ovIdx(ev.date.slice(0,7),months); if(j>=0) vals[j]+=ev.amount; })); return vals; };
+  const items=(e.incItems||[]).filter(x=>x.kind==='bank').concat(rI.filter(x=>x.grp==='exp1'));
+  const out=[{id:'exp1',sec:'out',incKind:'bank',label:'הוצאות מהבנק',vals:live(items),items,fixed:true,note:'',details:[]}];
+  const cs=ccStmtLine(k,months);
+  if(cs) out.push(cs);
+  else { const c=cur(), a=c&&c.ccKey===k?cardOutAvg(6):null;
+    out.push({id:'exp2',sec:'out',label:'אשראי - ממוצע 6 חודשים אחרונים',plain:true,vals:months.map(()=>a?a.avg:0),note:a?'חיובי כרטיסי האשראי בדף הבנק: '+a.per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')+'. פירוט כרטיס שמועלה במסך „הוצאות אשראי” מחליף את הממוצע':'אין חיובי כרטיס אשראי בדף הבנק',details:[]}); }
+  EXP_FIXED.forEach(([id,label,v])=>{
+    if(e.recurInit){ const its=rI.filter(x=>x.grp===id);
+      out.push({id,sec:'out',label,fixed:true,items:its,vals:live(its),note:its.length?'לפי „תנועות קבועות”. משנים סכומים ומוסיפים הוצאות שם':'אין כאן הוצאות. מוסיפים במסך „תנועות קבועות” ובוחרים את השורה „'+label+'”',details:its.map(x=>({label:x.cust+(x.est?' (משוער)':'')+' · ב־'+(+x.date.slice(8,10))+' לחודש',amount:Math.round(x.amount),monthly:true}))}); }
+    else out.push({id,sec:'out',label,plain:true,vals:months.map(()=>v),note:'',details:[]}); });
+  const va=varExpAvg(k,e); if(va) out.push({id:'exp7',sec:'out',label:'הוצאות משתנות - ממוצע 6 חודשים',plain:true,vals:months.map(()=>va.avg),note:va.note,details:va.details});
   return out;
 }
 // רינדור מחדש בלי לאבד את השדה שהמשתמשת עומדת בו (למשל כשעוברים בטאב לשדה הבא)
@@ -3241,8 +3316,8 @@ on('#sh-base-save','click',async()=>{
 
 /* ================= עיצוב חדש: מעטפת ומסכים ================= */
 var BK_DIR='';
-const BZKEY='cashflow-bz', BZ_TITLES={overview:'סקירה כללית',half:'תחזית חודשית',daily:'תזרים יומי',recon:'התאמות בנקים',recur:'תנועות קבועות',payees:'מוטבים',bank:'בנק מזרחי',cardcom:'אשראי קארדקום',cheques:"צ'קים",ccexp:'הוצאות אשראי',debts:'חובות לקוחות',expov:'סקירת הוצאות',incov:'סקירת הכנסות',clients:'לקוחות וגיבוי'};
-const BZ_NEW=new Set(['overview','daily','recon','recur','payees','cheques','ccexp','debts','expov','incov']);
+const BZKEY='cashflow-bz', BZ_TITLES={overview:'סקירה כללית',half:'תחזית חודשית',daily:'תזרים יומי',recon:'התאמות בנקים',recur:'תנועות קבועות',payees:'מוטבים',bank:'בנק מזרחי',cardcom:'אשראי קארדקום',cheques:"צ'קים",ccexp:'הוצאות אשראי',debts:'חובות לקוחות',expov:'סקירת הוצאות',incov:'סקירת הכנסות',fcov:'סקירת תחזית',clients:'לקוחות וגיבוי'};
+const BZ_NEW=new Set(['overview','daily','recon','recur','payees','cheques','ccexp','debts','expov','incov','fcov']);
 let BZ=false, BZ_TAB='overview';
 BZ=true; // העיצוב החדש אושר והוא העיצוב הקבוע, גם בקישור ללקוח
 const bzM=n=>{ const v=Math.round((+n||0)*100)/100, a=Math.abs(v), i=Math.floor(a), d=Math.round((a-i)*100); return (v<0?'-':'')+i.toLocaleString('he-IL')+'<small>.'+String(d).padStart(2,'0')+'</small>'; };
@@ -3258,8 +3333,9 @@ function bzOnTab(t){ BZ_TAB=t; if(!BZ) return;
   document.body.classList.remove('bz-open');
   bzRender(t); }
 function bzRender(t){ if(!BZ) return; t=t||BZ_TAB;
-  try{ if(t==='overview') bzOverview(); else if(t==='daily') bzDaily(); else if(t==='recon') bzRecon(); else if(t==='recur') bzRecur(); else if(t==='payees') bzPayees(); else if(t==='cheques') bzCheques(); else if(t==='ccexp') bzCcExp(); else if(t==='debts') bzDebts(); else if(t==='expov') bzExpOv(); else if(t==='incov') bzIncOv(); }
+  try{ if(t==='overview') bzOverview(); else if(t==='daily') bzDaily(); else if(t==='recon') bzRecon(); else if(t==='recur') bzRecur(); else if(t==='payees') bzPayees(); else if(t==='cheques') bzCheques(); else if(t==='ccexp') bzCcExp(); else if(t==='debts') bzDebts(); else if(t==='expov') bzExpOv(); else if(t==='incov') bzIncOv(); else if(t==='fcov') bzFcOv(); }
   catch(err){ console.error(err); const el=$('#tab-'+t); if(el&&BZ_NEW.has(t)) el.firstElementChild.innerHTML='<div class="card"><b>משהו לא עבד בתצוגה הזו.</b><span class="hint">'+esc(err.message||'')+'</span></div>'; }
+  try{ recurEnsure(); fcSnapSoon(); }catch(e){}
   const c=cur(); if(c){ const sel=$('#bz-client'); sel.innerHTML=Object.keys(DB.clients).map(id=>`<option value="${esc(id)}"${id===DB.current?' selected':''}>${esc(DB.clients[id].name||'ללא שם')}</option>`).join(''); } }
 const bzNoData=msg=>`<div class="card"><b>${msg||'אין עדיין נתוני תחזית ללקוח הזה.'}</b><span class="hint">משייכים את הלקוח בלשונית „תחזית חודשית” ומעלים דף בנק בלשונית „תנועות בנק”.</span></div>`;
 
@@ -3421,7 +3497,7 @@ function bzOverview(){ const el=$('#bz-ov'), ctx=bzCtx(); if(!ctx){ el.innerHTML
   el.innerHTML=`
   <div class="bz-bars">
     <div class="bz-bar"><span class="ex ${neg?'':'ok'}" aria-hidden="true">${neg?'!':'✓'}</span><span><b>מצב התזרים לחודש הקרוב</b>&nbsp;&nbsp;${neg?`<span class="r">צפויה יתרה שלילית ב־${fmtDate(neg.d)} (${bzS(neg.bal)})</span>`:`<span class="g">תקין, היתרה נשארת חיובית</span>`}</span></div>
-    <div class="bz-bar pink"><span>קיימות <b>${late+unexp}</b> תנועות שטרם נפרעו / לא הותאמו${lateIn?` (<span class="g">${bzS(lateIn)}</span>)`:''}</span><button class="btn primary sm" type="button" data-bzgo="recon">להתאמה</button></div>
+    <div class="bz-bar pink"><span>קיימות <b>${late+unexp}</b> תנועות שטרם נפרעו / לא הותאמו${lateIn?` (<span class="g">${bzS(lateIn)}</span>)`:''}</span>${VIEW?'':'<button class="btn primary sm" type="button" data-ctl="1">לבקרת התחזית</button>'}</div>
   </div>
   <div class="bz-row">
     <div><div class="bz-sec"><h2>ריכוז יתרות</h2><span><button class="bz-link" data-bzgo="bank" type="button">למסך תנועות בנק</button> | <button class="bz-link" data-bzgo="daily" type="button">למסך תזרים יומי</button></span></div>
@@ -3469,7 +3545,7 @@ const bzOkSet=e=>new Set(e.reconOk||[]);
 function bzRecon(){ const el=$('#bz-recon'), ctx=bzCtx(); if(!ctx){ el.innerHTML=bzNoData(); return; }
   const {e}=ctx, t0=todayIsoF(), ok=bzOkSet(e);
   $('#bz-hx').innerHTML=`<div class="bz-seg" role="group" aria-label="תצוגה"><button type="button" data-bzrt="todo" aria-pressed="${BZ_RTAB==='todo'}">תנועות להתאמה</button><button type="button" data-bzrt="done" aria-pressed="${BZ_RTAB==='done'}">תנועות שהותאמו</button></div>`;
-  const items=(e.incItems||[]); const evs=[];
+  const items=[...(e.incItems||[]),...recurItems(e)]; const evs=[];
   items.forEach(x=>itemEvents(x).forEach(ev=>{ const m=MATCH[x.id+'#'+ev.k]; if(m) evs.push({x,ev,m}); }));
   if(BZ_RTAB==='done'){ const done=evs.filter(o=>o.m.st==='ok').sort((a,b)=>a.ev.date<b.ev.date?1:-1);
     el.innerHTML=`<div class="tscroll" style="border:1px solid var(--bz-line)"><table class="bz-tbl"><thead><tr><th>צפוי</th><th>תאריך צפוי</th><th>בבנק</th><th>תאריך בבנק</th><th class="n">סכום</th></tr></thead><tbody>${done.map(o=>`<tr><td>${esc(o.x.cust||'')}</td><td>${fmtDate(o.ev.date)}</td><td>${esc(o.m.desc||'')}</td><td>${o.m.d?fmtDate(o.m.d):''}</td><td class="n ${o.x.kind==='bank'?'out':'in'}">${bzM(o.ev.amount)}</td></tr>`).join('')||'<tr><td colspan="5" class="hint">עדיין אין תנועות שהותאמו</td></tr>'}</tbody></table></div>`; return; }
@@ -3483,20 +3559,149 @@ function bzRecon(){ const el=$('#bz-recon'), ctx=bzCtx(); if(!ctx){ el.innerHTML
     ${exp.length?exp.map(o=>`<div class="bz-mrow"><div><b>${esc(o.x.cust||'ללא שם')}${o.ev.n>1?` <span class="hint">(${o.ev.k+1}/${o.ev.n})</span>`:''}</b><div class="s">היה צפוי ב־${fmtDate(o.ev.date)} · ${o.m.st==='late'?`<span class="bz-neg">באיחור ${o.m.days} ימים</span>`:'דף הבנק עוד לא מעודכן לתאריך הזה'}</div></div><b class="${o.x.kind==='bank'?'bz-neg':'bz-pos'}">${bzM(o.x.kind==='bank'?-o.ev.amount:o.ev.amount)}</b>${VIEW?'':`<div class="acts"><button class="btn sm" type="button" data-bzm="got" data-id="${esc(o.x.id)}" data-k="${o.ev.k}">${o.x.kind==='bank'?'ירד':'התקבל'}</button><button class="btn sm" type="button" data-bzm="week" data-id="${esc(o.x.id)}" data-k="${o.ev.k}">דחייה בשבוע</button><button class="btn sm" type="button" data-bzm="month" data-id="${esc(o.x.id)}" data-k="${o.ev.k}">דחייה בחודש</button><button class="btn sm danger" type="button" data-bzm="skip" data-id="${esc(o.x.id)}" data-k="${o.ev.k}">ביטול</button></div>`}</div>`).join(''):'<div class="bz-empty">אין תנועות צפויות שמחכות</div>'}</div></div>`; }
 
 /* --- תנועות קבועות --- */
-function bzRecurList(c){ const tx=(c.tx||[]).filter(t=>t.d&&+t.amt), tm=thisYm(), M4=[1,2,3,4].map(i=>ymAdd(tm,-i)), G={};
-  tx.forEach(t=>{ const m=t.d.slice(0,7); if(!M4.includes(m)&&m!==tm) return; const k=(t.amt>0?'+':'-')+bzNorm(t.desc); const g=G[k]||(G[k]={name:bzNorm(t.desc),sign:t.amt>0?1:-1,m:{},days:[],last:'',amts:[]}); g.m[m]=(g.m[m]||0)+Math.abs(t.amt); g.days.push(+t.d.slice(8,10)); if(t.d>g.last) g.last=t.d; g.amts.push(Math.abs(t.amt)); });
+function bzRecurList(c){ const tx=(c.tx||[]).filter(t=>t.d&&+t.amt), tm=thisYm(), M6=[1,2,3,4,5,6].map(i=>ymAdd(tm,-i)), G={};
+  tx.forEach(t=>{ const m=t.d.slice(0,7); if(!M6.includes(m)) return; if(t.cat===IGNORE) return; const k=(t.amt>0?'+':'-')+bzNorm(t.desc); const g=G[k]||(G[k]={name:bzNorm(t.desc),sign:t.amt>0?1:-1,m:{},days:[],last:'',src:'בנק'}); g.m[m]=(g.m[m]||0)+Math.abs(t.amt); g.days.push(+t.d.slice(8,10)); if(t.d>g.last) g.last=t.d; });
+  // פירוט כרטיסי אשראי: בית עסק שחוזר בכמה חודשים
+  ccRowsAll(c).forEach(r=>{ if(!r.d||!(r.amt>0)||r.n>1) return; const m=r.d.slice(0,7); const k='-'+bzNorm(r.m)+' (אשראי)'; const g=G[k]||(G[k]={name:bzNorm(r.m)+' (אשראי)',sign:-1,m:{},days:[],last:'',src:'אשראי'}); g.m[m]=(g.m[m]||0)+r.amt; g.days.push(+r.d.slice(8,10)); if(r.d>g.last) g.last=r.d; });
   const med=a=>{ const b=a.slice().sort((x,y)=>x-y); return b.length?b[Math.floor(b.length/2)]:0; };
-  return Object.values(G).map(g=>{ const ms=M4.filter(m=>g.m[m]); if(ms.length<3) return null; const vals=ms.map(m=>g.m[m]); const mn=Math.min(...vals), mx=Math.max(...vals);
+  return Object.values(G).map(g=>{ const ms=Object.keys(g.m).sort(), need=g.src==='אשראי'?2:4; if(ms.length<need) return null; const vals=ms.map(m=>g.m[m]); const mn=Math.min(...vals), mx=Math.max(...vals);
     return {...g,count:ms.length,amount:Math.round(med(vals)),day:med(g.days),fixed:mx<=mn*1.15}; }).filter(Boolean).sort((a,b)=>b.amount-a.amount); }
 let BZ_RF='all';
-function bzRecur(){ const el=$('#bz-recur'), ctx=bzCtx(); const c=cur(); if(!c||!(c.tx||[]).length){ el.innerHTML=bzNoData('אין עדיין תנועות בנק ללקוח הזה.'); return; }
-  $('#bz-hx').innerHTML=`<div class="bz-seg" role="group" aria-label="סינון"><button type="button" data-bzrf="all" aria-pressed="${BZ_RF==='all'}">הכל</button><button type="button" data-bzrf="in" aria-pressed="${BZ_RF==='in'}">זכות</button><button type="button" data-bzrf="out" aria-pressed="${BZ_RF==='out'}">חובה</button></div>`;
-  const L=bzRecurList(c).filter(g=>BZ_RF==='all'||(BZ_RF==='in'?g.sign>0:g.sign<0));
-  const items=ctx?(ctx.e.incItems||[]):[], inF=g=>items.some(x=>x.src==='recur'&&x.rk===(g.sign>0?'+':'-')+g.name);
-  el.innerHTML=`<p class="hint" style="margin:0">תנועות שחוזרות בבנק לפחות 3 מתוך 4 החודשים האחרונים. אפשר להוסיף אותן לתחזית בלחיצה, כדי שלא יישכחו. שימו לב לא להוסיף תנועה שכבר מופיעה בתחזית בשורה אחרת (למשל מיסים או תלושים).</p>
-  <div class="tscroll" style="border:1px solid var(--bz-line)"><table class="bz-tbl"><thead><tr><th>תנועה</th><th>סוג</th><th class="n">סכום חודשי</th><th>יום בחודש</th><th>חודשים מתוך 4</th><th>אופי</th><th>אחרונה</th><th></th></tr></thead><tbody>
-  ${L.map(g=>`<tr><td>${esc(g.name)}</td><td>${esc(bzType(g.name))}</td><td class="n ${g.sign>0?'in':'out'}">${bzM(g.sign*g.amount)}</td><td>${g.day}</td><td>${g.count}</td><td>${g.fixed?'<span class="pill good">קבוע</span>':'<span class="pill warn">משתנה</span>'}</td><td>${fmtDate(g.last)}</td><td>${!ctx||VIEW?'':inF(g)?'<span class="pill good">✓ בתחזית</span>':`<button class="btn sm" type="button" data-bzrec="${esc((g.sign>0?'+':'-')+g.name)}">הוספה לתחזית</button>`}</td></tr>`).join('')||'<tr><td colspan="8" class="hint">לא נמצאו תנועות קבועות</td></tr>'}
+function rcStatus(it){ if(!it) return ''; const tm=thisYm(), evs=itemEvents(it).filter(ev=>ev.date.slice(0,7)===tm); if(!evs.length){ const nx=itemEvents(it).find(ev=>ev.date>=todayIsoF()); return nx?`<span class="hint">הבא: ${fmtDate(nx.date)}</span>`:'<span class="hint">הסתיים</span>'; }
+  const ev=evs[0]; if(it.est) return `<span class="hint">משוער · ${fmtDate(ev.date)}</span>`; const m=MATCH[it.id+'#'+ev.k];
+  if(m&&m.st==='ok') return `<span class="pill good">✓ ${it.kind==='bank'?'ירד':'התקבל'} ${m.d?fmtDate(m.d).slice(0,5):''}</span>`;
+  if(m&&m.st==='late') return `<span class="pill crit">באיחור ${m.days} ימים</span>`;
+  if(m&&m.st==='nobank') return '<span class="pill warn">טרם נבדק</span>';
+  return `<span class="hint">צפוי ${fmtDate(ev.date)}</span>`; }
+function bzRecur(){ const el=$('#bz-recur'), ctx=bzCtx(); const c=cur(); if(!c){ el.innerHTML=bzNoData(); return; }
+  $('#bz-hx').innerHTML=VIEW?'':`<button class="btn bz-btn-out" type="button" data-rcadd="out">+ הוצאה קבועה</button><button class="btn bz-btn-in" type="button" data-rcadd="in">+ הכנסה קבועה</button>`;
+  if(!ctx){ el.innerHTML=bzNoData(); return; }
+  const e=ctx.e, R=e.recur||[], its=recurItems(e), itOf=r=>its.find(x=>x.rid===r.id), tm=thisYm();
+  const monthAmt=r=>{ const it=itOf(r); return it?itemEvents(it).filter(ev=>ev.date.slice(0,7)===tm).reduce((a,ev)=>a+ev.amount,0):0; };
+  const tbl=sec=>{ const L=R.filter(r=>r.sec===sec), tot=L.reduce((a,r)=>a+monthAmt(r),0);
+    if(VIEW) return `<div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>${sec==='out'?'הוצאה':'הכנסה'}</th><th class="n">סכום חודשי</th><th>יום בחודש</th><th>עד</th><th>סטטוס החודש</th></tr></thead><tbody>${L.map(r=>`<tr><td>${esc(r.name)}${r.est?' <span class="hint">(משוער)</span>':''}</td><td class="n ${sec==='out'?'out':'in'}">${bzM(r.amount)}</td><td>${r.day||1}</td><td>${r.to?ymLabel(r.to):'ללא סוף'}</td><td>${rcStatus(itOf(r))}</td></tr>`).join('')||'<tr><td colspan="5" class="hint">אין</td></tr>'}</tbody></table></div>`;
+    return `<div class="tscroll bz-box"><table class="bz-tbl rc-tbl"><thead><tr><th>${sec==='out'?'שם ההוצאה':'שם ההכנסה'}</th><th>סכום חודשי (₪)</th><th>יום בחודש</th><th>מחודש</th><th>עד חודש</th>${sec==='out'?'<th>שורה בתחזית</th>':''}<th title="סכום משוער לא נבדק מול תנועה מסוימת בבנק">משוער</th><th>סטטוס החודש</th><th></th></tr></thead><tbody>
+    ${L.map(r=>`<tr data-rid="${esc(r.id)}"><td class="nm"><input data-rcf="name" value="${esc(r.name)}" maxlength="60" aria-label="שם"></td><td class="am"><input data-rcf="amount" inputmode="decimal" value="${+r.amount||''}" aria-label="סכום"></td><td class="dy"><input data-rcf="day" inputmode="numeric" value="${r.day||1}" aria-label="יום בחודש"></td>
+      <td class="mo"><input type="month" data-rcf="from" value="${esc(r.from||tm)}" aria-label="מחודש"></td><td class="mo"><input type="month" data-rcf="to" value="${esc(r.to||'')}" aria-label="עד חודש (ריק = ללא סוף)"></td>
+      ${sec==='out'?`<td class="gp"><select data-rcf="grp" aria-label="שורה בתחזית">${RC_GRP_OUT.map(([v,l])=>`<option value="${v}"${(r.grp||'exp1')===v?' selected':''}>${l}</option>`).join('')}</select></td>`:''}
+      <td style="text-align:center"><input type="checkbox" data-rcf="est"${r.est?' checked':''} aria-label="סכום משוער" style="width:18px;height:18px"></td><td>${rcStatus(itOf(r))}</td><td><button class="btn ghost xs danger" type="button" data-rcdel="${esc(r.id)}" aria-label="מחיקה">✕</button></td></tr>`).join('')||`<tr><td colspan="9" class="hint">עוד אין ${sec==='out'?'הוצאות':'הכנסות'} קבועות. מוסיפים בכפתור למעלה או מההצעות למטה.</td></tr>`}
+    </tbody><tfoot><tr><td>סה״כ ב${ymLabel(tm)}</td><td class="n ${sec==='out'?'out':'in'}">${bzM(tot)}</td><td colspan="7"></td></tr></tfoot></table></div>`; };
+  const sug=bzRecurList(c).filter(g=>BZ_RF==='all'||(BZ_RF==='in'?g.sign>0:g.sign<0)), inF=g=>R.some(r=>r.rk===(g.sign>0?'+':'-')+g.name||bzNorm(r.name)===g.name);
+  el.innerHTML=`<p class="hint" style="margin:0">מה שמופיע כאן נכנס לתחזית בכל חודש, ביום שנבחר. הוצאה בסכום מדויק נבדקת מול הבנק, ואם לא ירדה היא תופיע בבקרת התחזית. „משוער” = הערכה כללית (למשל מיסים), שלא נבדקת מול תנועה מסוימת.</p>
+  <div class="bz-sec"><h2 class="bz-neg">הוצאות קבועות</h2></div>${tbl('out')}
+  <div class="bz-sec" style="margin-top:18px"><h2 class="bz-pos">הכנסות קבועות</h2><span class="hint">הוראות הקבע באשראי מגיעות מהדוח של קארדקום, ואין צורך להוסיף אותן כאן</span></div>${tbl('in')}
+  <div class="bz-sec" style="margin-top:22px"><h2>הצעות מ־6 החודשים האחרונים</h2><span class="hint">תנועות שחזרו ב־4 חודשים לפחות בבנק, או ב־2 פירוטי אשראי</span>
+   <div class="bz-seg" role="group" aria-label="סינון"><button type="button" data-bzrf="all" aria-pressed="${BZ_RF==='all'}">הכל</button><button type="button" data-bzrf="in" aria-pressed="${BZ_RF==='in'}">זכות</button><button type="button" data-bzrf="out" aria-pressed="${BZ_RF==='out'}">חובה</button></div></div>
+  <div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תנועה</th><th>מקור</th><th class="n">סכום חודשי</th><th>יום בחודש</th><th>חודשים מתוך 6</th><th>אופי</th><th>אחרונה</th><th></th></tr></thead><tbody>
+  ${sug.map(g=>`<tr><td>${esc(g.name)}</td><td>${g.src}</td><td class="n ${g.sign>0?'in':'out'}">${bzM(g.sign*g.amount)}</td><td>${g.day}</td><td>${g.count}</td><td>${g.fixed?'<span class="pill good">קבוע</span>':'<span class="pill warn">משתנה</span>'}</td><td>${fmtDate(g.last)}</td><td>${VIEW?'':inF(g)?'<span class="pill good">✓ ברשימה</span>':`<button class="btn sm" type="button" data-bzrec="${esc((g.sign>0?'+':'-')+g.name)}">הוספה לקבועות</button>`}</td></tr>`).join('')||'<tr><td colspan="8" class="hint">לא נמצאו תנועות חוזרות</td></tr>'}
   </tbody></table></div>`; }
+function rcEdit(fn){ const k=hfKey(); if(!k) return; const ed=hfEdits(k); recurSeed(ed); fn(ed); hfSave(k,ed); setTimeout(()=>bzRender(),60); }
+document.addEventListener('change',e=>{ const t=e.target; if(!t.dataset||t.dataset.rcf==null) return; const tr=t.closest('[data-rid]'); if(!tr) return; const f=t.dataset.rcf;
+  rcEdit(ed=>{ const r=(ed.recur||[]).find(x=>x.id===tr.dataset.rid); if(!r) return;
+    if(f==='name') r.name=t.value.trim().slice(0,60)||r.name;
+    else if(f==='amount'){ const v=parseNum(t.value); if(v>0) r.amount=Math.round(v*100)/100; else toast('סכום לא תקין'); }
+    else if(f==='day'){ const v=Math.round(parseNum(t.value)); if(v>=1&&v<=31) r.day=v; else toast('יום בין 1 ל־31'); }
+    else if(f==='from'){ if(/^\d{4}-\d{2}$/.test(t.value)) r.from=t.value; }
+    else if(f==='to'){ r.to=/^\d{4}-\d{2}$/.test(t.value)?t.value:''; }
+    else if(f==='grp') r.grp=t.value;
+    else if(f==='est') r.est=t.checked; }); });
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('button'); if(!b) return;
+  if(b.dataset.rcadd){ const sec=b.dataset.rcadd; rcEdit(ed=>{ ed.recur.push({id:uid(),sec,name:sec==='out'?'הוצאה חדשה':'הכנסה חדשה',amount:0,day:10,from:thisYm(),to:'',grp:sec==='out'?'exp1':'inc3',est:false}); });
+    setTimeout(()=>{ const i=$$('#bz-recur [data-rcf="name"]').filter(x=>x.closest('tr').querySelector('[data-rcf="amount"]').value==='').pop(); if(i){ i.focus(); i.select(); } },200); }
+  else if(b.dataset.rcdel){ if(!armed(b,'למחוק? לחצו שוב')) return; rcEdit(ed=>{ ed.recur=(ed.recur||[]).filter(r=>r.id!==b.dataset.rcdel); }); toast('נמחק מהתנועות הקבועות'); } });
+
+/* --- סקירת תחזית --- */
+let BZ_FCP='90';
+function bzFcOv(){ const el=$('#bz-fcov'), ctx=bzCtx(); if(!ctx){ el.innerHTML=bzNoData(); return; }
+  const {R,D}=ctx, t0=todayIsoF(), CT=VIEW?null:ctlData();
+  const nPend=CT?CT.late.length+CT.cm.length:0;
+  $('#bz-hx').innerHTML=bzPerSel('bz-fcp',BZ_FCP,[['30','30 הימים הקרובים'],['eom','עד סוף החודש'],['90','3 החודשים הקרובים'],['180','6 החודשים הקרובים']])+(VIEW?'':`<button class="btn${nPend?' primary':''}" type="button" data-ctl="1">בקרת תחזית${nPend?` (${nPend})`:''}</button>`);
+  const nF=BZ_FCP==='eom'?dDays(t0,lastDayOf(thisYm()))+1:+BZ_FCP, fd=D.days.filter(x=>x.d>=t0).slice(0,nF);
+  const d1={},w1={},d2={},w2={}; let tin=0,tout=0;
+  fd.forEach(x=>x.ev.forEach(ev=>{ const a=Math.abs(ev.amt), inc=ev.amt>0; if(inc) tin+=a; else tout+=a;
+    const k1=ev.row||ev.name; (inc?d1:w1)[k1]=((inc?d1:w1)[k1]||0)+a;
+    const k2=ev.cust?custKey(ev.cust):('לא מפורט: '+(ev.row||ev.name)); (inc?d2:w2)[k2]=((inc?d2:w2)[k2]||0)+a; }));
+  const top=(o,n)=>{ const E=Object.entries(o).sort((a,b)=>b[1]-a[1]); if(E.length<=n) return o; const r={}; E.slice(0,n).forEach(([k,v])=>r[k]=v); r['שאר']=E.slice(n).reduce((a,x)=>a+x[1],0); return r; };
+  if(R.late&&R.late.length) d1['באיחור (טרם נגבה)']=(d1['באיחור (טרם נגבה)']||0)+R.late.reduce((a,l)=>a+l.amount,0);
+  bzDsSet('fcr',d1,w1,['הכנסות צפויות','הוצאות צפויות']); bzDsSet('fcn',top(d2,9),top(w2,9),['הכנסות צפויות','הוצאות צפויות']);
+  const lo=fd.reduce((a,x)=>x.bal<a.bal?x:a,fd[0]||{bal:0,d:t0}), endB=fd.length?fd[fd.length-1].bal:0, fEnd=fd.length?fd[fd.length-1].d:t0;
+  const sure=D.allIn?Math.round(D.certIn/D.allIn*100):0;
+  el.innerHTML=`${nPend?`<div class="bz-bar pink" style="margin-bottom:12px"><span><b>${CT.late.length}</b> תנועות מהתחזית לא נמצאו בבנק${CT.cm.length?` · <b>${CT.cm.length}</b> חודשי אשראי עם פער`:''}</span><button class="btn primary sm" type="button" data-ctl="1">לבדיקה</button></div>`:''}
+  <div class="bz-sum"><div><span>הכנסות צפויות</span><b class="bz-pos">${bzS(tin)}</b><span class="hint">${fmtDate(t0)} עד ${fmtDate(fEnd)}</span></div><div><span>הוצאות צפויות</span><b class="bz-neg">${bzS(-tout)}</b></div>
+   <div><span>יתרה צפויה בסוף התקופה</span><b class="${endB<0?'bz-neg':'bz-pos'}">${bzS(endB)}</b><span class="hint">הנקודה הנמוכה: ${bzS(lo.bal)} ב־${fmtDate(lo.d)}</span></div><div><span>מהימנות ההכנסות</span><b>${sure}%</b><span class="hint">מגובות בצ'קים ובהוראות קבע</span></div></div>
+  <div class="bz-sec" style="margin-top:6px"><h2>צפי הכנסות והוצאות לפי שורות התחזית</h2><span class="hint">${fmtDate(t0)} עד ${fmtDate(fEnd)}</span></div>
+  ${bzDsBox('fcr')}
+  <div class="bz-sec" style="margin-top:22px"><h2>צפי הכנסות והוצאות לפי לקוח / ספק</h2><span class="hint">הערכות כלליות מופיעות כ„לא מפורט”</span></div>
+  ${bzDsBox('fcn')}`; }
+document.addEventListener('change',e=>{ if(e.target.id==='bz-fcp'){ BZ_FCP=e.target.value; bzRender(); } });
+
+/* --- בקרת תחזית: מה קרה בפועל מול מה שנצפה --- */
+// צילום מצב חודשי של צפי האשראי, כדי לבדוק אחר כך מול מה שנכנס בפועל
+let fcSnapT=null; function fcSnapSoon(){ clearTimeout(fcSnapT); fcSnapT=setTimeout(fcSnap,1500); }
+function fcSnap(){ if(VIEW||!hfDb) return; const ctx=bzCtx(); if(!ctx) return; const {R,k}=ctx, tm=thisYm(), sn=JSON.parse(JSON.stringify((HFE[k]&&HFE[k].snap)||{})); let ch=false;
+  R.months.forEach((m,i)=>{ if(m<tm) return; const v=Math.round(['inc1','inc4','inc-ret'].reduce((a,id)=>{ const r=R.rows.find(r=>r.id===id); return a+(r?r.vals[i]:0); },0));
+    const o=sn[m]; if(m===tm&&o) return; if(!o||o.c!==v){ sn[m]={c:v,at:todayIsoF()}; ch=true; } });
+  if(!ch) return; const keep={}; Object.keys(sn).sort().slice(-18).forEach(m=>keep[m]=sn[m]); const ed=hfEdits(k); ed.snap=keep; hfSave(k,ed); }
+const ccActual=(c,m)=>(c.tx||[]).filter(t=>t.amt>0&&t.d&&t.d.startsWith(m)&&CC_IN_RE.test(t.desc||'')).reduce((a,t)=>a+t.amt,0);
+function ccExpEst(c,e,m){ let v=sum((c.retainers||[]).filter(r=>r.active!==false).map(r=>+r.amount||0));
+  (e.incItems||[]).filter(x=>x.kind==='ccp').forEach(x=>itemEvents(x).forEach(ev=>{ if(ev.date.startsWith(m)) v+=ev.amount; }));
+  const o=e.overrides&&e.overrides.inc1; if(o&&o[m]!=null) v+=+o[m]; else { const g=creditGenAuto(c.ccKey,e,[m]); if(g) v+=g.v; } return v; }
+function ctlData(){ const ctx=bzCtx(); if(!ctx) return null; const {e,c}=ctx, t0=todayIsoF(), all=[...(e.incItems||[]),...recurItems(e)], late=[], okRecent=[];
+  all.forEach(x=>itemEvents(x).forEach(ev=>{ const m=MATCH[x.id+'#'+ev.k]; if(!m) return;
+    if(m.st==='late'&&m.days>=2) late.push({x,ev,m}); else if(m.st==='ok'&&!m.man&&m.ti!=null&&dDays(m.d,t0)<=40) okRecent.push({x,ev,m}); }));
+  late.sort((a,b)=>(a.x.kind==='bank')-(b.x.kind==='bank')||b.ev.amount-a.ev.amount); okRecent.sort((a,b)=>a.m.d<b.m.d?1:-1);
+  const cm=[]; for(let i=1;i<=3;i++){ const m=ymAdd(thisYm(),-i); if(!HF_BANKLAST||HF_BANKLAST<lastDayOf(m)) continue; if(e.ccOk&&e.ccOk[m]) continue;
+    const sn=e.snap&&e.snap[m], exp=Math.round(sn?sn.c:ccExpEst(c,e,m)), act=Math.round(ccActual(c,m)); if(!exp&&!act) continue;
+    const gap=act-exp; if(Math.abs(gap)<=Math.max(500,exp*0.08)) continue; cm.push({m,exp,act,gap,snap:!!sn}); }
+  const okS=bzOkSet(e), unexp=(HF_TX||[]).filter((t,i)=>!HF_USED.has(i)&&t.amt>0&&dDays(t.d,t0)<=35&&!okS.has(bzTxKey(t))&&!CC_IN_RE.test(t.desc||'')).length;
+  return {ctx,late,okRecent,cm,unexp}; }
+let CTL_OP={};
+function ctlCands(o){ const sign=o.x.kind==='bank'?-1:1, t0=todayIsoF(), lo=isoAddDays(o.ev.date,-15), A=o.ev.amount, toks=custKey(o.x.cust).split(' ').filter(w=>w.length>=2);
+  const L=(HF_TX||[]).map((t,i)=>({t,i})).filter(({t,i})=>!HF_USED.has(i)&&Math.sign(t.amt)===sign&&t.d>=lo&&t.d<=t0).map(({t,i})=>{ const txt=(t.desc||'')+' '+(t.det||''), hit=toks.length&&toks.some(w=>txt.includes(w)), da=Math.abs(Math.abs(t.amt)-A)/Math.max(A,1);
+    return {t,i,hit,da,sc:da*100+Math.abs(dDays(t.d,o.ev.date))*0.4-(hit?45:0)}; }).filter(q=>q.da<=0.5||q.hit).sort((a,b)=>a.sc-b.sc).slice(0,6);
+  if(!L.length) return '<div class="ctl-c hint">לא נמצאו בבנק תנועות פתוחות בסכום דומה או עם שם דומה. אפשר לשנות סכום או למחוק.</div>';
+  const key=o.x.id+'#'+o.ev.k;
+  return `<div class="ctl-c">${L.map(q=>`<div class="inv-row${q.da<=0.01?' best':''}"><div><b>${esc(q.t.desc||'ללא תיאור')}</b><span class="hint">${fmtDate(q.t.d)}${q.t.det?' · '+esc(q.t.det):''}${q.hit?' · <b style="color:#1f7d5c">שם תואם</b>':''}${q.da>0.01?` · הפרש ${bzS(Math.abs(q.t.amt)-A)}`:''}</span></div><b class="${q.t.amt<0?'bz-neg':'bz-pos'}">${bzS(q.t.amt)}</b><button class="btn xs primary" type="button" data-ctl-pick="${esc(key)}" data-ti="${q.i}">זו התנועה</button></div>`).join('')}</div>`; }
+function ctlRender(){ const b=$('#ctl-body'), D=ctlData(); if(!D){ b.innerHTML=bzNoData(); return; }
+  $('#ctl-sub').textContent=HF_BANKLAST?'דף הבנק מעודכן עד '+fmtDate(HF_BANKLAST):'עוד לא הועלה דף בנק';
+  const {late,okRecent,cm,unexp}=D, kindL=x=>x.kind==='chq'?"צ'ק":x.recur?(x.kind==='bank'?'הוצאה קבועה':'הכנסה קבועה'):x.kind==='bank'?'הוצאה צפויה':'העברה מלקוח';
+  const row=o=>{ const key=o.x.id+'#'+o.ev.k, op=CTL_OP[key], out=o.x.kind==='bank';
+    return `<div class="ctl-it ${o.x.kind==='chq'?'chq':out?'out':'in'}"><div class="ctl-h"><div><b>${esc(o.x.cust||'ללא שם')}</b> <span class="pill ${o.x.kind==='chq'?'info':'warn'}">${kindL(o.x)}</span>${o.ev.n>1?` <span class="hint">(${o.ev.k+1}/${o.ev.n})</span>`:''}${o.x.chq&&o.x.chq.num?` <span class="hint">צ'ק ${esc(o.x.chq.num)}</span>`:''}<div class="hint">היה צפוי ב־${fmtDate(o.ev.date)} · ${o.m.days} ימים ללא תנועה מתאימה בבנק</div></div><b class="${out?'bz-neg':'bz-pos'}">${bzS(out?-o.ev.amount:o.ev.amount)}</b></div>
+    <div class="ctl-a"><button class="btn sm${op==='match'?' primary':''}" type="button" data-ctl-op="match" data-key="${esc(key)}">התאמה לתנועה מהבנק</button><button class="btn sm${op==='edit'?' primary':''}" type="button" data-ctl-op="edit" data-key="${esc(key)}">שינוי סכום / תאריך</button><button class="btn sm" type="button" data-ctl-do="got" data-key="${esc(key)}">${out?'שולם בדרך אחרת':'התקבל בדרך אחרת'}</button><button class="btn sm danger" type="button" data-ctl-do="skip" data-key="${esc(key)}">מחיקה מהתחזית</button></div>
+    ${op==='match'?ctlCands(o):op==='edit'?`<form class="ctl-ed" data-key="${esc(key)}"><label class="f">סכום צפוי (₪)<input name="amt" inputmode="decimal" value="${o.ev.amount}"></label><label class="f">תאריך צפוי חדש (DD/MM/YYYY)<input name="d" inputmode="numeric" value="${isoToDmy(isoAddDays(todayIsoF(),7))}"></label><button class="btn sm primary" type="submit">שמירה</button></form>`:''}</div>`; };
+  const inc=late.filter(o=>o.x.kind!=='bank'&&o.x.kind!=='chq'), chq=late.filter(o=>o.x.kind==='chq'), exp=late.filter(o=>o.x.kind==='bank');
+  const sec=(t,L,cls)=>L.length?`<h3><span class="${cls}">${t}</span> <span class="pill crit">${L.length}</span></h3>${L.map(row).join('')}`:'';
+  b.innerHTML=`${okRecent.length?`<details class="ctl-ok"><summary>✓ ${okRecent.length} תנועות מהתחזית נמצאו בבנק ואושרו אוטומטית (סכום זהה, תאריך קרוב)</summary>${okRecent.slice(0,60).map(o=>`<div class="r"><span><b>${esc(o.x.cust||'')}</b> · צפוי ${fmtDate(o.ev.date)} → בבנק ${fmtDate(o.m.d)} · ${esc(o.m.desc||'')}</span><span><b>${bzS(o.x.kind==='bank'?-o.ev.amount:o.ev.amount)}</b> <button class="btn ghost xs" type="button" data-ctl-rej="${esc(o.x.id+'#'+o.ev.k)}">לא נכון</button></span></div>`).join('')}</details>`:''}
+  ${sec('הכנסות שהיו צפויות ולא הגיעו',inc,'bz-pos')}${sec("צ'קים שלא נפרעו",chq,'bz-pos')}${sec('הוצאות שהיו צפויות ולא ירדו',exp,'bz-neg')}
+  ${cm.length?`<h3>הכנסות באשראי: צפי מול מה שנכנס לבנק</h3>${cm.map(x=>`<div class="ctl-it ${x.gap<0?'out':'in'}"><div class="ctl-h"><div><b>${ymLabel(x.m)}</b><div class="hint">צפי: ${bzS(x.exp)}${x.snap?' (לפי התחזית שנשמרה לפני החודש)':' (הערכה: הוראות קבע, תשלומים וממוצע 6 חודשים)'} · נכנס מחברות האשראי: ${bzS(x.act)}</div></div><b class="${x.gap<0?'bz-neg':'bz-pos'}">${x.gap>0?'+':''}${bzS(x.gap)}</b></div>
+    <div class="ctl-a"><button class="btn sm" type="button" data-ctl-cc="ok" data-m="${x.m}">${x.gap<0?'בסדר, ההפרש לא יגיע':'תקין'}</button>${x.gap<0?`<button class="btn sm primary" type="button" data-ctl-cc="move" data-m="${x.m}" data-v="${-x.gap}">ההפרש עוד יגיע: להוסיף לתחזית</button>`:''}</div></div>`).join('')}`:''}
+  ${!late.length&&!cm.length?`<div class="bz-box" style="padding:18px;text-align:center"><b style="color:#1f7d5c;font-size:18px">✓ הכל תואם לתחזית</b><div class="hint">כל מה שהיה צפוי עד ${HF_BANKLAST?fmtDate(HF_BANKLAST):'היום'} נמצא בבנק או טופל</div></div>`:''}
+  ${unexp?`<div class="bz-bar" style="margin-top:12px"><span>${unexp} הכנסות נכנסו לבנק ב־35 הימים האחרונים בלי שהיו בתחזית.</span><button class="btn sm" type="button" data-ctl-go="recon">לצפייה</button></div>`:''}`; }
+function ctlOpen(){ if(VIEW) return; ctlRender(); $('#ctl-ov').hidden=false; }
+function ctlAct(key,fn){ const k=hfKey(); if(!k) return; const [id,kk]=[key.slice(0,key.lastIndexOf('#')),+key.slice(key.lastIndexOf('#')+1)], ed=hfEdits(k), h=edHolder(ed,id); if(!h){ toast('הפריט לא נמצא'); return; }
+  fn(h,kk,edItem(ed,id)); delete CTL_OP[key]; hfSave(k,ed); setTimeout(()=>{ if(!$('#ctl-ov').hidden) ctlRender(); bzRender(); },80); }
+const txKeyI=t=>t.d+'|'+Math.round(t.amt*100)+'|'+String(t.desc||'').slice(0,30);
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('button'); if(!b) return;
+  if(b.dataset.ctl){ ctlOpen(); return; }
+  if(b.id==='ctl-x'){ $('#ctl-ov').hidden=true; return; }
+  if(b.dataset.ctlGo){ $('#ctl-ov').hidden=true; setTab(b.dataset.ctlGo); return; }
+  if(b.dataset.ctlOp){ const k=b.dataset.key; CTL_OP[k]=CTL_OP[k]===b.dataset.ctlOp?null:b.dataset.ctlOp; ctlRender(); return; }
+  if(b.dataset.ctlDo){ const d=b.dataset.ctlDo; ctlAct(b.dataset.key,(h,k)=>{ if(d==='got'){ h.got=h.got||{}; h.got[k]=todayIsoF(); toast('סומן כטופל'); } else { h.skip=h.skip||{}; h.skip[k]=1; toast('נמחק מהתחזית'); } }); return; }
+  if(b.dataset.ctlPick){ const t=HF_TX[+b.dataset.ti]; if(!t) return; ctlAct(b.dataset.ctlPick,(h,k,it)=>{ h.mt=h.mt||{}; h.mt[k]=txKeyI(t); const ev=it&&itemEvents(it).find(v=>v.k===k); if(ev&&Math.abs(Math.abs(t.amt)-ev.amount)>1){ h.ak=h.ak||{}; h.ak[k]=Math.round(Math.abs(t.amt)*100)/100; } toast('הותאם לתנועה מהבנק'); }); return; }
+  if(b.dataset.ctlRej){ const key=b.dataset.ctlRej, m=MATCH[key], t=m&&HF_TX[m.ti]; if(!t) return; ctlAct(key,(h,k)=>{ h.rej=h.rej||{}; h.rej[k]=(h.rej[k]||[]).concat([txKeyI(t)]).slice(-5); toast('ההתאמה בוטלה'); }); return; }
+  if(b.dataset.ctlCc){ const k=hfKey(); if(!k) return; const ed=hfEdits(k), m=b.dataset.m; ed.ccOk={...(ed.ccOk||{}),[m]:1};
+    if(b.dataset.ctlCc==='move'){ ed.incItems=ed.incItems||[]; ed.incItems.push({id:uid(),kind:'ccp',cust:'הפרש אשראי מ'+ymLabel(m),amount:+b.dataset.v,date:isoAddDays(todayIsoF(),7),n:1,cat:'',desc:'נוסף מבקרת התחזית',method:'כרטיס אשראי',saved:1}); toast('ההפרש נוסף לתחזית בעוד שבוע'); } else toast('סומן כנבדק');
+    hfSave(k,ed); setTimeout(()=>{ ctlRender(); bzRender(); },80); return; } });
+document.addEventListener('submit',e=>{ const f=e.target.closest('.ctl-ed'); if(!f) return; e.preventDefault(); const a=parseNum(f.amt.value), d=dmyToIso(f.d.value);
+  if(!(a>0)){ toast('סכום לא תקין'); return; } if(!d){ toast('תאריך בפורמט DD/MM/YYYY'); return; }
+  ctlAct(f.dataset.key,(h,k)=>{ h.ak=h.ak||{}; h.ak[k]=Math.round(a*100)/100; h.mv=h.mv||{}; h.mv[k]=d; toast('עודכן: '+fmt(a)+' ₪ ב־'+fmtDate(d)); }); });
+// פתיחה אוטומטית: אחרי העלאת דף בנק, ופעם ביום כשיש מה לבדוק
+let CTL_AFTER=false;
+function ctlMaybe(force){ if(VIEW) return; const D=ctlData(); if(!D) return; const n=D.late.length+D.cm.length;
+  if(force){ if(n||D.okRecent.length) ctlOpen(); return; }
+  if(!n) return; const tag=todayIsoF()+'|'+DB.current; let seen=''; try{ seen=localStorage.getItem('cashflow-ctl-day')||''; }catch(e){} if(seen===tag) return;
+  try{ localStorage.setItem('cashflow-ctl-day',tag); }catch(e){} ctlOpen(); }
+setTimeout(()=>{ try{ ctlMaybe(false); }catch(e){} },7000);
 
 /* --- מוטבים --- */
 let BZ_PF='all', BZ_PQ='';
@@ -3804,15 +4009,15 @@ document.addEventListener('click',ev=>{ const t=ev.target.closest('button'); if(
   if(t.dataset.bzpf){ BZ_PF=t.dataset.bzpf; bzRender(); return; }
   if(t.id==='bz-okall'){ const k=hfKey(); if(!k) return; const ed=hfEdits(k), t0=todayIsoF(), ok=new Set(ed.reconOk||[]); (HF_TX||[]).forEach((x,i)=>{ if(!HF_USED.has(i)&&dDays(x.d,t0)<=30) ok.add(bzTxKey(x)); }); ed.reconOk=[...ok].slice(-800); hfSave(k,ed); toast('כל התנועות סומנו כתקינות'); setTimeout(()=>bzRender(),60); return; }
   if(t.dataset.bzok){ const k=hfKey(); if(!k) return; const ed=hfEdits(k); ed.reconOk=(ed.reconOk||[]).concat([t.dataset.bzok]).slice(-500); hfSave(k,ed); toast('סומן כתקין'); setTimeout(()=>bzRender(),60); return; }
-  if(t.dataset.bzm){ const k=hfKey(); if(!k) return; const ed=hfEdits(k), x=(ed.incItems||[]).find(i=>i.id===t.dataset.id), kk=+t.dataset.k; if(!x) return;
-    const evd=(itemEvents(x).find(e=>e.k===kk)||{}).date||x.date;
+  if(t.dataset.bzm){ const k=hfKey(); if(!k) return; const ed=hfEdits(k), x=edHolder(ed,t.dataset.id), it=edItem(ed,t.dataset.id), kk=+t.dataset.k; if(!x||!it) return;
+    const evd=(itemEvents(it).find(e=>e.k===kk)||{}).date||it.date;
     if(t.dataset.bzm==='got'){ x.got=x.got||{}; x.got[kk]=todayIsoF(); toast(x.kind==='bank'?'סומן שירד':'סומן כהתקבל'); }
     else if(t.dataset.bzm==='week'||t.dataset.bzm==='month'){ x.mv=x.mv||{}; const base=evd<todayIsoF()?todayIsoF():evd; x.mv[kk]=t.dataset.bzm==='week'?isoAddDays(base,7):isoAddMonths(base,1); toast('נדחה ל־'+fmtDate(x.mv[kk])); }
     else { x.skip=x.skip||{}; x.skip[kk]=1; toast('התשלום הוסר מהתחזית'); }
     hfSave(k,ed); setTimeout(()=>bzRender(),60); return; }
   if(t.dataset.bzrec){ const k=hfKey(); if(!k) return; const g=bzRecurList(cur()).find(x=>(x.sign>0?'+':'-')+x.name===t.dataset.bzrec); if(!g) return;
     const tm=thisYm(); let d=tm+'-'+String(Math.min(28,g.day)).padStart(2,'0'); if(d<todayIsoF()) d=ymAdd(tm,1)+'-'+String(Math.min(28,g.day)).padStart(2,'0');
-    const ed=hfEdits(k); ed.incItems=ed.incItems||[]; ed.incItems.push({id:uid(),kind:g.sign>0?'cust':'bank',cust:g.name,amount:g.amount,date:d,n:12,cat:'',desc:'זוהה כתנועה קבועה בבנק',saved:1,src:'recur',rk:t.dataset.bzrec});
+    const ed=hfEdits(k); recurSeed(ed); ed.recur.push({id:uid(),sec:g.sign>0?'in':'out',name:g.name,amount:g.amount,day:Math.min(31,g.day||1),from:d.slice(0,7),to:'',grp:g.sign>0?'inc3':'exp1',est:!g.fixed,rk:t.dataset.bzrec});
     hfSave(k,ed); toast('נוסף לתחזית: '+g.name+', '+fmt(g.amount)+' ₪ בחודש'); setTimeout(()=>bzRender(),60); return; }
 });
 document.addEventListener('click',ev=>{ const dr=ev.target.closest('tr[data-bzday]'); if(dr&&!ev.target.closest('button')){ const d=dr.dataset.bzday; BZ_DOPEN.has(d)?BZ_DOPEN.delete(d):BZ_DOPEN.add(d); bzRender(); } });

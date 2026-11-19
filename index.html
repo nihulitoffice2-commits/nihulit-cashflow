@@ -356,6 +356,30 @@ body.bz .pill{border-radius:3px}
 .bz-ratio b{font-size:16px;color:#022258}
 .bz-ratio span{font-size:12.5px;color:#6d7d8b;text-align:center;line-height:1.3}
 .bz-donut tr.off td{opacity:.45}
+.bz-donuts.one{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:22px}
+.bz-donut th{font-size:13px;color:#6d7d8b;font-weight:600;text-align:right;padding:4px}
+.bz-donut th.n{text-align:left}
+.bz-dsel{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:right}
+.bz-dsel:hover,.bz-dsel[aria-pressed=true]{color:#16a4b5;text-decoration:underline}
+.bz-mb svg{width:100%;height:auto;display:block;overflow:visible}
+.bz-mb text{font:12px Assistant,Arial,sans-serif;fill:#6d7d8b}
+.bz-mb rect[data-tipx]{cursor:pointer}.bz-mb rect[data-tipx]:hover{opacity:.82}
+.bz-up{color:#c51d1d;font-weight:600}.bz-dn2{color:#1f7d5c;font-weight:600}
+.bz-tbl td.st .hint{display:block}
+.invacts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:3px}
+.invlink{font-size:13px;color:#16a4b5;font-weight:600;text-decoration:none}.invlink:hover{text-decoration:underline}
+#inv-ov .card{max-width:680px;width:100%;max-height:90vh;overflow:auto}
+#inv-ov h3{font-size:15px;margin:14px 0 6px;color:#022258}
+.inv-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bz-line)}
+.inv-row .hint{display:block}
+.inv-row.best{background:#eef8f3}
+.bz-map td select{max-width:220px}
+.bz-box>.tscroll{min-width:0;max-width:100%;overflow-x:auto}
+#bz-incov,#bz-expov{min-width:0}
+#bz-incov .pill,#bz-cheques .pill,#bz-expov .pill{white-space:normal;max-width:100%}
+#bz-incov>*,#bz-expov>*{min-width:0;max-width:100%}
+@media (max-width:700px){.bz-map th:nth-child(2),.bz-map td:nth-child(2){display:none}.bz-map td select{max-width:150px}}
+.chq-num{font-variant-numeric:tabular-nums;color:#4a5b6a}
 .bz-donut tr.on td{background:#f1f6f9}
 .bz-donut input[type=checkbox]{width:15px;height:15px;margin:0 0 0 6px;vertical-align:-2px;accent-color:#16a4b5}
 .bz-dtip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--bz-line);box-shadow:0 4px 14px rgba(2,34,88,.18);padding:8px 12px;font-size:14px;min-width:150px;z-index:5;border-radius:6px}
@@ -412,7 +436,8 @@ body.bz .pill{border-radius:3px}
   #bz-menu{display:inline-flex}
   #bz-side{transform:translateX(100%);transition:transform .2s;box-shadow:-8px 0 24px rgba(0,0,0,.2)}
   body.bz.bz-open #bz-side{transform:none}
-  .bz-fin,.bz-donuts,.bz-donuts.v2{grid-template-columns:1fr}
+  .bz-fin,.bz-donuts,.bz-donuts.v2,.bz-donuts.one{grid-template-columns:1fr}
+  .inv-row{grid-template-columns:1fr auto}
   .bz-ratio{padding-top:0}.bz-ratio .bars{height:70px}
   .bz-title h1{font-size:24px}
 }
@@ -462,11 +487,13 @@ body.bz .pill{border-radius:3px}
     <div class="bz-grp" data-grp="fin"><button class="bz-it" data-bzg="fin" type="button" aria-expanded="false"><span class="chev" aria-hidden="true">▾</span>ניהול פיננסי<svg width="24" height="24" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V11M9 20V7M14 20v-6M19 20V4"/><path d="M2 20h20"/></svg></button>
       <div class="bz-sub">
         <div class="bz-subh">הכנסות</div>
+        <button class="bz-it" data-bz="incov" type="button">סקירת הכנסות</button>
         <button class="bz-it" data-bz="bank" data-dir="in" type="button">בנק מזרחי</button>
         <button class="bz-it" data-bz="cardcom" type="button">אשראי קארדקום</button>
         <button class="bz-it" data-bz="cheques" type="button">צ'קים</button>
         <button class="bz-it" data-bz="payees" type="button">מוטבים</button>
         <div class="bz-subh">הוצאות</div>
+        <button class="bz-it" data-bz="expov" type="button">סקירת הוצאות</button>
         <button class="bz-it" data-bz="bank" data-dir="out" type="button">הוצאות בנק</button>
         <button class="bz-it" data-bz="ccexp" type="button">הוצאות אשראי</button>
       </div></div>
@@ -513,6 +540,8 @@ body.bz .pill{border-radius:3px}
   <section class="panel" id="tab-cheques" role="tabpanel" hidden><div id="bz-cheques"></div></section>
   <section class="panel" id="tab-ccexp" role="tabpanel" hidden><div id="bz-ccexp"></div></section>
   <section class="panel" id="tab-debts" role="tabpanel" hidden><div id="bz-debts"></div></section>
+  <section class="panel" id="tab-expov" role="tabpanel" hidden><div id="bz-expov"></div></section>
+  <section class="panel" id="tab-incov" role="tabpanel" hidden><div id="bz-incov"></div></section>
   <!-- ===== FORECAST ===== -->
   <section class="panel" id="tab-forecast" role="tabpanel">
     <div class="card">
@@ -822,6 +851,20 @@ body.bz .pill{border-radius:3px}
       <button class="btn primary" type="submit">המשך</button>
     </form>
     <div id="bz-pay-res"></div>
+  </div>
+</div>
+<div class="overlay bz-modal" id="inv-ov" hidden>
+  <div class="card" role="dialog" aria-modal="true" aria-labelledby="inv-h">
+    <div class="card-head"><h2 id="inv-h">קישור חשבונית מס קבלה</h2><button class="btn sm" id="inv-x" type="button">סגירה</button></div>
+    <div id="inv-what"></div>
+    <div id="inv-cur"></div>
+    <h3>הצעות מתיקיית הקבלות בדרייב</h3><div id="inv-sug"></div>
+    <h3>חיפוש בדרייב</h3>
+    <form id="inv-sf" style="display:flex;gap:8px;flex-wrap:wrap"><input id="inv-q" style="flex:1;min-width:200px" autocomplete="off" placeholder="שם ספק, מספר חשבונית או סכום" aria-label="חיפוש בדרייב"><button class="btn sm primary" type="submit">חיפוש</button></form>
+    <div id="inv-res"></div>
+    <h3>הדבקת קישור לקובץ</h3>
+    <form id="inv-pf" style="display:flex;gap:8px;flex-wrap:wrap"><input id="inv-url" style="flex:1;min-width:200px" dir="ltr" autocomplete="off" placeholder="https://drive.google.com/file/d/..." aria-label="קישור לקובץ"><button class="btn sm" type="submit">קישור</button></form>
+    <div class="status" id="inv-st"></div>
   </div>
 </div>
 <div class="overlay bz-modal" id="bz-add-ov" hidden>
@@ -1760,6 +1803,11 @@ const RC_ST={ok:['יש קבלה','good'],open:['חשבון פתוח, להפיק 
 const RC_IN=['ok','open','todo','none','card','credit','credit_todo','na'], RC_OUT=['gotx','wait','partial','nox','credit','credit_todo','na'];
 const EXP_NA=new Set(['fx_salary','fx_bl','tx_vat','tx_income','fx_loan']);
 const CARD_KW=['ישראכרט','isracard','כאל','cal ','מקס','max','לאומי קארד','שב"א','שבא','אמריקן','דיינרס','ויזה','visa','קארדקום','cardcom','סליקה','אשראי','ביט ','bit ','paybox','פייבוקס'];
+const CC_BANK_RE=/ויזה|כא"ל|כאל|ישראכרט|מקס|לאומי קארד|אמריקן|דיינרס|מסטרקארד/;
+function ccRowsAll(c){ const out=[]; (c&&c.ccStmt||[]).forEach(f=>(f.rows||[]).forEach(r=>{ if(!r.id) r.id=uid(); out.push(r); })); return out; }
+const driveUrl=fid=>'https://drive.google.com/file/d/'+encodeURIComponent(fid)+'/view';
+function invCell(s,key,ro){ if(!s) return ''; const [l,cls]=RC_ST[s.st]||['—',''];
+  return `<span class="pill ${cls}">${l}</span>${s.info?`<span class="hint">${esc(s.info)}</span>`:''}<span class="invacts">${s.fid?`<a class="invlink" href="${driveUrl(s.fid)}" target="_blank" rel="noopener">פתיחת החשבונית ↗</a>`:''}${!ro&&!VIEW&&s.st!=='na'?`<button class="btn ghost xs vh" type="button" data-invlink="${key}">${s.fid?'החלפת חשבונית':'קישור חשבונית'}</button>`:''}</span>`; }
 const dayDiff=(a,b)=>Math.round((Date.parse(a)-Date.parse(b))/864e5);
 function rcData(c){
   const k=c.ccKey, L=k&&CCL[k], f=k&&HF[k];
@@ -1793,20 +1841,33 @@ function rcMatch(c){
   });
   const SM=(c.ccKey&&SUMIT[c.ccKey]&&SUMIT[c.ccKey].inv)||[];
   const inv=(c.supInv||SM.length)?[...(c.supInv||[]),...SM.map(x=>({...x,sup:x.sup+' (סאמיט)'}))]:null, usedI=new Set();
+  const ccRows=ccRowsAll(c), manF=new Set([...c.tx,...ccRows].filter(t=>t.inv&&t.inv.fid).map(t=>t.inv.fid));
+  if(inv) inv.forEach((x,i)=>{ if(x.fid&&manF.has(x.fid)) usedI.add(i); });
+  const invInfo=x=>[String(x.sup||'').replace(/ \(סאמיט\)$/,''),x.num?('מס׳ '+x.num):'',x.d?fmtDate(x.d):''].filter(Boolean).join(' · ');
   c.tx.filter(t=>t.amt<0).sort((a,b)=>a.d<b.d?-1:1).forEach(t=>{
-    let st, info='', who='';
-    if(t.rcpt&&RC_ST[t.rcpt]){ st=t.rcpt; info=t.rcptInfo||'נקבע ידנית'; }
+    let st, info='', who='', fid='';
+    if(t.inv&&t.inv.fid){ st='gotx'; fid=t.inv.fid; info='קושר ידנית'+(invInfo(t.inv)?' · '+invInfo(t.inv):''); }
+    else if(t.rcpt&&RC_ST[t.rcpt]){ st=t.rcpt; info=t.rcptInfo||'נקבע ידנית'; }
+    else if(CC_BANK_RE.test(t.desc||'')){ st='na'; info='חיוב כרטיס אשראי. החשבוניות מקושרות לכל עסקה במסך „הוצאות אשראי”'; }
     else if(t.cat===IGNORE||EXP_NA.has(t.cat)||/עמלה|עמלת|דמי ניהול|ריבית|העברה בין|משכורת|ביטוח לאומי|מס הכנסה|מע"מ|מע״מ|הלוואה/.test(t.desc)) st='na';
     else if(!inv) st='unk';
     else {
       const a=-t.amt; let hit=-1, best=1e9;
       inv.forEach((x,i)=>{ if(usedI.has(i)||Math.abs(x.amt-a)>1) return; const dd=dayDiff(t.d,x.d); if(dd<-20||dd>75) return; if(Math.abs(dd)<best){ best=Math.abs(dd); hit=i; } });
-      if(hit>=0){ usedI.add(hit); const x=inv[hit]; st='gotx'; info=[x.sup,x.num?('מס׳ '+x.num):'',x.d?fmtDate(x.d):''].filter(Boolean).join(' · '); who=x.sup?'תשלום ל'+String(x.sup).replace(/ \(סאמיט\)$/,''):''; }
+      if(hit>=0){ usedI.add(hit); const x=inv[hit]; st='gotx'; fid=x.fid||''; info=invInfo(x); who=x.sup?'תשלום ל'+String(x.sup).replace(/ \(סאמיט\)$/,''):''; }
       else st='nox';
     }
-    res[t.id]={st,info,who};
+    res[t.id]={st,info,who,fid};
   });
-  return {res,hasRc:!!receipts,hasInv:!!inv,nDrive:(c.supInv||[]).length,nSumit:SM.length};
+  // עסקאות מפירוט האשראי: אותה התאמה, מול המסמכים שנשארו
+  const ccRes={};
+  ccRows.filter(r=>r.amt>0).sort((a,b)=>a.d<b.d?-1:1).forEach(r=>{ let st, info='', fid='';
+    if(r.inv&&r.inv.fid){ st='gotx'; fid=r.inv.fid; info='קושר ידנית'+(invInfo(r.inv)?' · '+invInfo(r.inv):''); }
+    else if(!inv) st='unk';
+    else { let hit=-1, best=1e9; inv.forEach((x,i)=>{ if(usedI.has(i)||Math.abs(x.amt-r.amt)>1) return; const dd=dayDiff(r.d,x.d); if(dd<-20||dd>75) return; if(Math.abs(dd)<best){ best=Math.abs(dd); hit=i; } });
+      if(hit>=0){ usedI.add(hit); const x=inv[hit]; st='gotx'; fid=x.fid||''; info=invInfo(x); } else st='nox'; }
+    ccRes[r.id]={st,info,fid}; });
+  return {res,ccRes,hasRc:!!receipts,hasInv:!!inv,nDrive:(c.supInv||[]).length,nSumit:SM.length};
 }
 function renderTxList(){
   const c=cur(), q=$('#tx-q').value.trim().toLowerCase(), fc=$('#tx-cat').value, fs=$('#tx-st').value;
@@ -1820,7 +1881,8 @@ function renderTxList(){
   let list=c.tx.slice().reverse().filter(t=>(!q||t.desc.toLowerCase().includes(q)||detOf(t).toLowerCase().includes(q)||String(t.ref||'').includes(q))&&(!fc||t.cat===fc)&&(!fs||(stOf(t)&&stOf(t).st===fs))&&(!BK_DIR||(BK_DIR==='in'?t.amt>0:t.amt<0)));
   const total=list.length; if(!showAllTx) list=list.slice(0,150);
   const stCell=t=>{ const s=stOf(t); if(!s) return '<td class="st"></td>'; const [l,cls]=RC_ST[s.st];
-    return `<td class="st"><span class="pill ${cls}">${l}</span>${s.info?`<span class="hint">${esc(s.info)}</span>`:''}<select class="vh" data-rcpt="${t.id}" aria-label="סטטוס ידני"><option value="">אוטומטי</option>${(t.amt>0?RC_IN:RC_OUT).map(x=>`<option value="${x}"${t.rcpt===x?' selected':''}>${RC_ST[x][0]}</option>`).join('')}</select></td>`; };
+    if(t.amt<0) return `<td class="st">${invCell(s,'tx:'+t.id)}<select class="vh" data-rcpt="${t.id}" aria-label="סטטוס ידני"><option value="">אוטומטי</option>${RC_OUT.map(x=>`<option value="${x}"${t.rcpt===x?' selected':''}>${RC_ST[x][0]}</option>`).join('')}</select></td>`;
+    return `<td class="st"><span class="pill ${cls}">${l}</span>${s.info?`<span class="hint">${esc(s.info)}</span>`:''}<select class="vh" data-rcpt="${t.id}" aria-label="סטטוס ידני"><option value="">אוטומטי</option>${RC_IN.map(x=>`<option value="${x}"${t.rcpt===x?' selected':''}>${RC_ST[x][0]}</option>`).join('')}</select></td>`; };
   $('#tx-table').innerHTML='<thead><tr><th class="lbl">תיאור</th><th class="det">פירוט התנועה</th><th>תאריך</th><th>אסמכתא</th><th>סכום</th><th>יתרה</th><th style="text-align:right">סטטוס קבלה</th><th style="text-align:right">קטגוריה בתזרים</th><th></th></tr></thead><tbody>'+
     list.map(t=>`<tr><td class="lbl desc" title="${esc(t.desc)}">${esc(t.desc)}</td><td class="det">${VIEW?esc(detOf(t)):`<input class="detin${t.det?'':' auto'}" data-det="${t.id}" value="${esc(t.det||'')}" placeholder="${esc(detOf(t)||'הוספת פירוט')}" maxlength="200" aria-label="פירוט התנועה" title="${t.det?'פירוט שנשמר. מוחקים כדי לחזור לפירוט האוטומטי':'פירוט אוטומטי. אפשר להקליד פירוט משלך'}">`}</td><td class="d">${fmtDate(t.d)}</td><td class="d">${esc(t.ref||'')}</td><td class="num ${t.amt>0?'pos':''}">${fmt2(t.amt)}</td><td class="num">${t.bal==null?'–':fmt2(t.bal)}</td>${stCell(t)}
       <td><select class="catsel" id="cat-${t.id}" data-tx="${t.id}" aria-label="קטגוריה">${catOptions(c,t.cat)}</select></td><td><button class="btn ghost xs danger" data-deltx="${t.id}" title="מחיקת התנועה" aria-label="מחיקת התנועה">✕</button></td></tr>`).join('')+'</tbody>';
@@ -2193,7 +2255,7 @@ function hfDaily(R,e){
       (r.items||[]).forEach(x=>liveEvents(x).forEach(ev=>{ const em=ev.date.slice(0,7); const j=ovIdx(em,R.months); if(j!==i) return;
         const d=ev.date<start?start:ev.date; dated+=ev.amount;
         const sure=r.sec==='in'&&(r.incKind==='chq'||r.incKind==='ccp'||CERT_RE.test(x.method||'')); if(r.sec==='in'){ allIn+=ev.amount; if(sure) certIn+=ev.amount; }
-        evs.push({d,amt:sign*ev.amount,row:r.label,name:(x.cust||r.label)+(ev.n>1?' ('+(ev.k+1)+'/'+ev.n+')':'')}); }));
+        evs.push({d,amt:sign*ev.amount,row:r.label,cust:x.cust||'',name:(x.cust||r.label)+(ev.n>1?' ('+(ev.k+1)+'/'+ev.n+')':'')}); }));
       const rest=(r.vals[i]||0)-dated; if(Math.abs(rest)<0.5) return;
       if(r.sec==='in') allIn+=rest;
       let d=r.sec==='in'?lastDayOf(m):m+'-01'; if(d<start) d=start;
@@ -3179,8 +3241,8 @@ on('#sh-base-save','click',async()=>{
 
 /* ================= עיצוב חדש: מעטפת ומסכים ================= */
 var BK_DIR='';
-const BZKEY='cashflow-bz', BZ_TITLES={overview:'סקירה כללית',half:'תחזית חודשית',daily:'תזרים יומי',recon:'התאמות בנקים',recur:'תנועות קבועות',payees:'מוטבים',bank:'בנק מזרחי',cardcom:'אשראי קארדקום',cheques:"צ'קים",ccexp:'הוצאות אשראי',debts:'חובות לקוחות',clients:'לקוחות וגיבוי'};
-const BZ_NEW=new Set(['overview','daily','recon','recur','payees','cheques','ccexp','debts']);
+const BZKEY='cashflow-bz', BZ_TITLES={overview:'סקירה כללית',half:'תחזית חודשית',daily:'תזרים יומי',recon:'התאמות בנקים',recur:'תנועות קבועות',payees:'מוטבים',bank:'בנק מזרחי',cardcom:'אשראי קארדקום',cheques:"צ'קים",ccexp:'הוצאות אשראי',debts:'חובות לקוחות',expov:'סקירת הוצאות',incov:'סקירת הכנסות',clients:'לקוחות וגיבוי'};
+const BZ_NEW=new Set(['overview','daily','recon','recur','payees','cheques','ccexp','debts','expov','incov']);
 let BZ=false, BZ_TAB='overview';
 BZ=true; // העיצוב החדש אושר והוא העיצוב הקבוע, גם בקישור ללקוח
 const bzM=n=>{ const v=Math.round((+n||0)*100)/100, a=Math.abs(v), i=Math.floor(a), d=Math.round((a-i)*100); return (v<0?'-':'')+i.toLocaleString('he-IL')+'<small>.'+String(d).padStart(2,'0')+'</small>'; };
@@ -3196,7 +3258,7 @@ function bzOnTab(t){ BZ_TAB=t; if(!BZ) return;
   document.body.classList.remove('bz-open');
   bzRender(t); }
 function bzRender(t){ if(!BZ) return; t=t||BZ_TAB;
-  try{ if(t==='overview') bzOverview(); else if(t==='daily') bzDaily(); else if(t==='recon') bzRecon(); else if(t==='recur') bzRecur(); else if(t==='payees') bzPayees(); else if(t==='cheques') bzCheques(); else if(t==='ccexp') bzCcExp(); else if(t==='debts') bzDebts(); }
+  try{ if(t==='overview') bzOverview(); else if(t==='daily') bzDaily(); else if(t==='recon') bzRecon(); else if(t==='recur') bzRecur(); else if(t==='payees') bzPayees(); else if(t==='cheques') bzCheques(); else if(t==='ccexp') bzCcExp(); else if(t==='debts') bzDebts(); else if(t==='expov') bzExpOv(); else if(t==='incov') bzIncOv(); }
   catch(err){ console.error(err); const el=$('#tab-'+t); if(el&&BZ_NEW.has(t)) el.firstElementChild.innerHTML='<div class="card"><b>משהו לא עבד בתצוגה הזו.</b><span class="hint">'+esc(err.message||'')+'</span></div>'; }
   const c=cur(); if(c){ const sel=$('#bz-client'); sel.innerHTML=Object.keys(DB.clients).map(id=>`<option value="${esc(id)}"${id===DB.current?' selected':''}>${esc(DB.clients[id].name||'ללא שם')}</option>`).join(''); } }
 const bzNoData=msg=>`<div class="card"><b>${msg||'אין עדיין נתוני תחזית ללקוח הזה.'}</b><span class="hint">משייכים את הלקוח בלשונית „תחזית חודשית” ומעלים דף בנק בלשונית „תנועות בנק”.</span></div>`;
@@ -3255,7 +3317,22 @@ const BZ_DGS=['#155f45','#1f7d5c','#2b9a72','#55b48f','#86ccb0','#b9e2d1','#dcf1
 const BZ_DS={}, BZ_DOFF={};
 function bzDsSet(id,dep,wd,lab){ const arr=o=>Object.entries(o).filter(([,v])=>v>0.5).map(([n,v])=>({n,v})).sort((a,b)=>b.v-a.v).map((x,i)=>({...x,i}));
   BZ_DS[id]={dep:arr(dep),wd:arr(wd),lab:lab||['הפקדות','משיכות']}; if(!BZ_DOFF[id]) BZ_DOFF[id]=new Set(); }
+function bzMBars(S,off){ const M=S.months||[]; if(!M.length) return '';
+  const names=S.dep.filter(x=>!off.has('d'+x.n)), sh=S.sh, W=520, H=250, pl=8, pr=58, pt=22, pb=30;
+  const tot=M.map(m=>names.reduce((a,x)=>a+((S.byM[m]||{})[x.n]||0),0)), mx=Math.max(1,...tot);
+  const bw=(W-pl-pr)/M.length, Y=v=>pt+(H-pt-pb)*(1-v/mx);
+  let g=''; [0,.5,1].forEach(f=>{ const y=Y(mx*f); g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#e3e9ee"/><text x="${W-pr+6}" y="${y+4}">${fmt(Math.round(mx*f))}</text>`; });
+  M.forEach((m,i)=>{ const x=pl+i*bw+bw*0.18, w=bw*0.64; let acc=0;   // הזמן משמאל לימין, כמו בתרשים היתרה
+    names.forEach(nm=>{ const v=(S.byM[m]||{})[nm.n]||0; if(v<=0) return; const y1=Y(acc+v), y0=Y(acc); acc+=v;
+      g+=`<rect x="${x.toFixed(1)}" y="${y1.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(0.5,y0-y1-1).toFixed(1)}" fill="${sh[nm.i%sh.length]}" data-tipx="${esc(`<div class="h">${ymLabel(m)}</div><div>${esc(nm.n)}</div><div class="${S.neg?'bz-neg':'bz-pos'}" style="font-weight:700;font-size:16px">₪${fmt(v)}</div><div class="hint">מתוך ₪${fmt(tot[i])} בחודש</div>`)}"/>`; });
+    if(tot[i]) g+=`<text x="${(x+w/2).toFixed(1)}" y="${(Y(tot[i])-6).toFixed(1)}" text-anchor="middle" style="font-weight:600;fill:#022258">${tot[i]>=10000?Math.round(tot[i]/1000)+'K':fmt(tot[i])}</text>`;
+    g+=`<text x="${(x+w/2).toFixed(1)}" y="${H-10}" text-anchor="middle">${m.slice(5,7)}/${m.slice(2,4)}</text>`; });
+  return `<div class="bz-sec" style="margin:0 0 4px"><h2 style="font-size:16px">לפי חודשים</h2></div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(S.lab[0])} לפי חודשים" style="direction:ltr">${g}</svg>`; }
 function bzDsHtml(id){ const S=BZ_DS[id], off=BZ_DOFF[id]; if(!S) return '';
+  if(S.one){ const A=S.dep, on=A.filter(x=>!off.has('d'+x.n)), T=on.reduce((a,x)=>a+x.v,0), sel=BZ_XSEL[id];
+    const tb=`<table><thead><tr><th>${esc(S.col||'סוג')}</th><th class="n">סכום</th><th class="n">לחודש</th><th class="n">%</th>${S.prev?'<th class="n" title="ממוצע חודשי בהשוואה לתקופה שלפני">שינוי</th>':''}</tr></thead>${A.map(x=>{ const o=off.has('d'+x.n), avg=x.v/(S.nm||1), pv=S.prev&&S.prev[x.n], ch=pv?Math.round((avg/pv-1)*100):null;
+      return `<tr class="${o?'off':''}" data-dk="${x.i}"><td><label style="display:inline"><input type="checkbox" data-doff="${esc('d'+x.n)}"${o?'':' checked'} aria-label="${esc(x.n)}"></label><i style="background:${S.sh[x.i%S.sh.length]}"></i><button class="bz-dsel" type="button" data-dsel="${esc(id)}" data-dn="${esc(x.n)}" aria-pressed="${sel===x.n}" title="הצגת הפירוט">${esc(x.n)}</button></td><td class="n">${fmt(x.v)}</td><td class="n" style="color:#4a5b6a">${fmt(avg)}</td><td class="n" style="color:#6d7d8b">${!o&&T?Math.round(x.v/T*100):0}%</td>${S.prev?`<td class="n">${ch==null?'<span class="hint">חדש</span>':Math.abs(ch)<10?'<span class="hint">≈</span>':`<span class="${(ch>0)===!!S.neg?'bz-up':'bz-dn2'}">${ch>0?'▲':'▼'}${Math.abs(ch)}%</span>`}</td>`:''}</tr>`; }).join('')||`<tr><td class="hint">${esc(S.empty||'אין נתונים בתקופה')}</td></tr>`}</table>`;
+    return `<div class="bz-donut bz-dn" data-side="d">${bzDonut(on,T,S.lab[0],S.sh)}${tb}</div><div class="bz-mb">${bzMBars(S,off)}</div><div class="bz-dtip" hidden></div>`; }
   const side=(A,sk,S2,lab)=>{ const on=A.filter(x=>!off.has(sk+x.n)), T=on.reduce((a,x)=>a+x.v,0);
     const tb=`<table>${A.map(x=>{ const o=off.has(sk+x.n); return `<tr class="${o?'off':''}" data-dk="${x.i}"><td><label><input type="checkbox" data-doff="${esc(sk+x.n)}"${o?'':' checked'} aria-label="${esc(x.n)}"><i style="background:${S2[x.i%S2.length]}"></i>${esc(x.n)}</label></td><td class="n">${fmt(x.v)}</td><td class="n" style="color:#6d7d8b">${!o&&T?Math.round(x.v/T*100):0}%</td></tr>`; }).join('')||'<tr><td class="hint">אין תנועות בתקופה</td></tr>'}</table>`;
     return {T,html:`<div class="bz-donut bz-dn" data-side="${sk}">${bzDonut(on,T,lab,S2)}${tb}</div>`}; };
@@ -3263,23 +3340,26 @@ function bzDsHtml(id){ const S=BZ_DS[id], off=BZ_DOFF[id]; if(!S) return '';
   const ratio=w.T?Math.round(d.T/w.T*100):null, diff=d.T-w.T;
   const tipT=`יחס הכנסות להוצאות: ${ratio==null?'—':ratio+'%'}. ${diff>=0?'עודף':'גירעון'} של ₪${fmt(Math.abs(diff))}`;
   return `${d.html}<div class="bz-ratio" title="${tipT}" aria-label="${tipT}"><b class="${diff<0?'bz-neg':'bz-pos'}">${ratio==null?'—':ratio+'%'}</b><div class="bars"><i style="height:${Math.round(d.T/mx*100)}%;background:#1f7d5c"></i><i style="height:${Math.round(w.T/mx*100)}%;background:#e23b3b"></i></div><span>יחס הכנסות<br>להוצאות</span><span class="${diff<0?'bz-neg':'bz-pos'}" style="font-weight:700">${diff>0?'+':''}${bzS(diff)}</span></div>${w.html}<div class="bz-dtip" hidden></div>`; }
-function bzDsBox(id){ return `<div class="bz-box bz-donuts v2" data-ds="${id}">${bzDsHtml(id)}</div>`; }
+function bzDsBox(id){ return `<div class="bz-box bz-donuts v2${BZ_DS[id]&&BZ_DS[id].one?' one':''}" data-ds="${id}">${bzDsHtml(id)}</div>`; }
+const BZ_XSEL={}, BZ_MSG={};
 function bzDsHover(box,side,k,ev){ const S=BZ_DS[box.dataset.ds]; if(!S) return; const tip=box.querySelector('.bz-dtip');
   box.querySelectorAll('.on').forEach(x=>x.classList.remove('on'));
   if(side==null){ tip.hidden=true; return; }
   const sideEl=box.querySelector(`.bz-dn[data-side="${side}"]`); sideEl.querySelectorAll(`[data-dk="${k}"]`).forEach(x=>x.classList.add('on'));
   const A=side==='d'?S.dep:S.wd, x=A.find(q=>q.i==k); if(!x) return; const off=BZ_DOFF[box.dataset.ds];
   const T=A.filter(q=>!off.has(side+q.n)).reduce((a,q)=>a+q.v,0);
-  tip.innerHTML=`<div class="h">${esc(x.n)}</div><div class="${side==='d'?'bz-pos':'bz-neg'}" style="font-weight:700;font-size:16px">₪${fmt(x.v)}</div><div class="hint">${side==='d'?S.lab[0]:S.lab[1]} · <bdi>${T&&!off.has(side+x.n)?Math.round(x.v/T*100):0}%</bdi> מהסך</div>`;
+  tip.innerHTML=`<div class="h">${esc(x.n)}</div><div class="${side==='d'&&!S.neg?'bz-pos':'bz-neg'}" style="font-weight:700;font-size:16px">₪${fmt(x.v)}</div><div class="hint">${side==='d'?S.lab[0]:S.lab[1]} · <bdi>${T&&!off.has(side+x.n)?Math.round(x.v/T*100):0}%</bdi> מהסך</div>`;
   tip.hidden=false; const br=box.getBoundingClientRect(); let L=ev.clientX-br.left+14, Tp=ev.clientY-br.top+14;
   if(L+tip.offsetWidth>box.clientWidth) L=ev.clientX-br.left-tip.offsetWidth-14; tip.style.left=Math.max(0,L)+'px'; tip.style.top=Tp+'px'; }
 document.addEventListener('pointermove',e=>{ const box=e.target.closest&&e.target.closest('.bz-donuts.v2'); if(!box) return;
+  const tx=e.target.closest('[data-tipx]'); if(tx){ const tip=box.querySelector('.bz-dtip'); box.querySelectorAll('.on').forEach(x=>x.classList.remove('on')); tip.innerHTML=tx.getAttribute('data-tipx'); tip.hidden=false; const br=box.getBoundingClientRect(); let L=e.clientX-br.left+14; if(L+tip.offsetWidth>box.clientWidth) L=e.clientX-br.left-tip.offsetWidth-14; tip.style.left=Math.max(0,L)+'px'; tip.style.top=(e.clientY-br.top+14)+'px'; return; }
   const seg=e.target.closest('path[data-dk],tr[data-dk]'); const side=seg&&seg.closest('.bz-dn')?seg.closest('.bz-dn').dataset.side:null;
   if(seg&&seg.tagName==='TR'&&seg.classList.contains('off')) return bzDsHover(box,null);
   bzDsHover(box,seg?side:null,seg?seg.dataset.dk:null,e); });
 document.addEventListener('pointerout',e=>{ const box=e.target.closest&&e.target.closest('.bz-donuts.v2'); if(box&&!box.contains(e.relatedTarget)) bzDsHover(box,null); });
 document.addEventListener('change',e=>{ const t=e.target; if(!t.dataset||t.dataset.doff==null) return; const box=t.closest('.bz-donuts.v2'), id=box.dataset.ds, o=BZ_DOFF[id];
   if(t.checked) o.delete(t.dataset.doff); else o.add(t.dataset.doff); box.innerHTML=bzDsHtml(id); });
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-dsel]'); if(!b) return; const id=b.dataset.dsel; BZ_XSEL[id]=BZ_XSEL[id]===b.dataset.dn?null:b.dataset.dn; bzRender(); setTimeout(()=>{ const d=$('#xdet-'+id); if(d&&BZ_XSEL[id]) d.scrollIntoView({behavior:'smooth',block:'nearest'}); },60); });
 
 /* תקופות */
 const BZ_PERS=[['day','היום האחרון'],['week','השבוע האחרון'],['month','מתחילת החודש'],['30','30 הימים האחרונים'],['90','3 החודשים האחרונים'],['180','6 החודשים האחרונים']];
@@ -3433,7 +3513,7 @@ function bzPayees(){ const el=$('#bz-payees'), c=cur(); if(!c||!(c.tx||[]).lengt
 
 /* --- צ'קים (הכנסות) --- */
 function bzCheques(){ const el=$('#bz-cheques'), ctx=bzCtx(), c=cur(), t0=todayIsoF();
-  $('#bz-hx').innerHTML=VIEW?'':`<button class="btn bz-btn-in" type="button" data-bzadd="chq">צ'ק חדש</button><label class="btn" for="chq-file">העלאת דוח צ'קים לגבייה</label>`;
+  $('#bz-hx').innerHTML=VIEW?'':`<label class="btn bz-btn-in" title="אפשר לבחור כמה צילומים יחד. כל צילום הופך לצ'ק חדש">📷 צ'קים מצילום<input type="file" accept="image/*" multiple data-chqimg="" hidden></label><button class="btn" type="button" data-bzadd="chq">צ'ק חדש</button><label class="btn" for="chq-file">העלאת דוח צ'קים לגבייה</label>`;
   const items=ctx?(ctx.e.incItems||[]).filter(x=>x.kind==='chq'):[];
   const fut=[]; items.forEach(x=>itemEvents(x).forEach(ev=>{ const m=MATCH[x.id+'#'+ev.k]; if(m&&m.st==='ok') return; fut.push({x,ev,m}); }));
   fut.sort((a,b)=>a.ev.date<b.ev.date?-1:1);
@@ -3442,9 +3522,9 @@ function bzCheques(){ const el=$('#bz-cheques'), ctx=bzCtx(), c=cur(), t0=todayI
   const tF=fut.reduce((a,o)=>a+o.ev.amount,0), late=fut.filter(o=>o.m&&o.m.st==='late');
   const st=o=>o.m&&o.m.st==='late'?`<span class="pill crit">באיחור ${o.m.days} ימים</span>`:o.m&&o.m.st==='nobank'?'<span class="pill warn">טרם נבדק</span>':'<span class="hint">צפוי</span>';
   el.innerHTML=`<div class="bz-sum"><div><span>צ'קים לפירעון</span><b class="bz-pos">${bzS(tF)}</b><span class="hint">${fut.length} צ'קים</span></div><div><span>באיחור</span><b class="${late.length?'bz-neg':''}">${late.length}</b></div><div><span>נפרעו ב־120 יום</span><b>${bzS(paid.reduce((a,t)=>a+t.amt,0))}</b><span class="hint">${paid.length} צ'קים</span></div><div><span>צ'קים שחזרו</span><b class="${ret.length?'bz-neg':''}">${ret.length}</b></div></div>
-  <div class="status" id="chq-status2"></div>
-  <div><div class="bz-sec"><h2>צ'קים לפירעון</h2></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>לקוח</th><th>תאריך פירעון</th><th class="n">סכום</th><th>מקור</th><th>סטטוס</th></tr></thead><tbody>
-   ${fut.map(o=>`<tr><td>${esc(o.x.cust||'')}${o.ev.n>1?` <span class="hint">(${o.ev.k+1}/${o.ev.n})</span>`:''}</td><td>${fmtDate(o.ev.date)}</td><td class="n in">${bzM(o.ev.amount)}</td><td>${o.x.src==='bankchq'?'דוח הבנק':'הוזן ידנית'}</td><td>${st(o)}</td></tr>`).join('')||'<tr><td colspan="5" class="hint">אין צ\'קים לפירעון. מוסיפים בכפתור „צ\'ק חדש” או מעלים דוח צ\'קים לגבייה מהבנק.</td></tr>'}
+  <div class="status" id="chq-status2">${BZ_MSG.chq||''}</div>
+  <div><div class="bz-sec"><h2>צ'קים לפירעון</h2></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>לקוח</th><th>מס׳ צ'ק</th><th>תאריך פירעון</th><th class="n">סכום</th><th>מקור</th><th>סטטוס</th>${VIEW?'':'<th>צילום</th>'}</tr></thead><tbody>
+   ${fut.map(o=>`<tr><td>${esc(o.x.cust||'')}${o.ev.n>1?` <span class="hint">(${o.ev.k+1}/${o.ev.n})</span>`:''}</td><td class="chq-num">${esc(o.x.chq&&o.x.chq.num||'')}</td><td>${fmtDate(o.ev.date)}</td><td class="n in">${bzM(o.ev.amount)}</td><td>${o.x.chq?'נקרא מצילום':o.x.src==='bankchq'?'דוח הבנק':'הוזן ידנית'}</td><td>${st(o)}</td>${VIEW?'':`<td>${o.ev.k?'':`<label class="btn ghost xs" title="Claude קורא את הצילום וממלא את הפרטים">📷 ${o.x.chq?'צילום חדש':'העלאת צילום'}<input type="file" accept="image/*" data-chqimg="${esc(o.x.id)}" hidden></label>`}</td>`}</tr>`).join('')||'<tr><td colspan="7" class="hint">אין צ\'קים לפירעון. מוסיפים בכפתור „צ\'ק חדש” או מעלים דוח צ\'קים לגבייה מהבנק.</td></tr>'}
   </tbody></table></div></div>
   ${ret.length?`<div><div class="bz-sec"><h2 class="bz-neg">צ'קים שחזרו</h2></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך</th><th>תיאור</th><th class="n">סכום</th></tr></thead><tbody>${ret.map(t=>`<tr><td>${fmtDate(t.d)}</td><td>${esc(t.desc||'')}</td><td class="n out">${bzM(t.amt)}</td></tr>`).join('')}</tbody></table></div></div>`:''}
   <div><div class="bz-sec"><h2>צ'קים שנפרעו בבנק (120 יום)</h2></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך</th><th>תיאור</th><th>פירוט</th><th class="n">סכום</th></tr></thead><tbody>
@@ -3454,7 +3534,7 @@ function bzCheques(){ const el=$('#bz-cheques'), ctx=bzCtx(), c=cur(), t0=todayI
 /* --- הוצאות אשראי --- */
 function bzCcExp(){ const el=$('#bz-ccexp'), c=cur(), t0=todayIsoF(); if(!c){ el.innerHTML=bzNoData(); return; }
   $('#bz-hx').innerHTML=VIEW?'':`<label class="btn primary" for="ccs-file">העלאת פירוט כרטיס אשראי</label>`;
-  const cs=c.ccStmt||[], rows=cs.flatMap(f=>(f.rows||[]).map(r=>({...r,file:f.file})));
+  const cs=c.ccStmt||[]; ccRowsAll(c); const rows=cs.flatMap(f=>(f.rows||[]).map(r=>({...r,file:f.file}))), CR=rcMatch(c).ccRes;
   const byD={}; rows.forEach(r=>{ const o=byD[r.d]||(byD[r.d]={d:r.d,n:0,sum:0}); o.n++; o.sum+=r.amt; });
   const future=Object.values(byD).filter(o=>o.d>=t0).sort((a,b)=>a.d<b.d?-1:1);
   const inst=rows.filter(r=>r.n>1&&r.k<r.n);
@@ -3465,12 +3545,199 @@ function bzCcExp(){ const el=$('#bz-ccexp'), c=cur(), t0=todayIsoF(); if(!c){ el
   const avg=M6.reduce((a,m)=>a+(bankCard[m]||0),0)/6;
   el.innerHTML=`<div class="bz-sum"><div><span>החיוב הבא</span><b class="bz-neg">${future[0]?bzS(-future[0].sum):'—'}</b><span class="hint">${future[0]?fmtDate(future[0].d):'אין פירוט עדכני'}</span></div><div><span>עסקאות בתשלומים פתוחות</span><b>${inst.length}</b><span class="hint">נותרו ${bzS(instLeft)}</span></div><div><span>ממוצע חיובי כרטיס בבנק (6 חודשים)</span><b>${bzS(-avg)}</b></div><div><span>פירוט אחרון הועלה</span><b style="font-size:17px">${cs.length?new Date(Math.max(...cs.map(x=>x.at))).toLocaleDateString('he-IL'):'עוד לא'}</b></div></div>
   <div class="status" id="ccs-status2"></div>
-  ${cs.length?`<div><div class="bz-sec"><h2>עסקאות בפירוט</h2><span class="hint">${esc(cs.map(x=>x.file).join(' · '))}</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך חיוב</th><th>בית עסק</th><th>תשלום</th><th class="n">סכום חיוב</th></tr></thead><tbody>
-   ${rows.slice().sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:b.amt-a.amt).map(r=>`<tr><td>${fmtDate(r.d)}</td><td>${esc(r.m||'')}</td><td>${r.n>1?`${r.k} מתוך ${r.n}`:'רגיל'}</td><td class="n out">${bzM(r.amt)}</td></tr>`).join('')}
+  ${cs.length?`<div><div class="bz-sec"><h2>עסקאות בפירוט</h2><span class="hint">${esc(cs.map(x=>x.file).join(' · '))}</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך חיוב</th><th>בית עסק</th><th>תשלום</th><th class="n">סכום חיוב</th><th>חשבונית מס קבלה</th></tr></thead><tbody>
+   ${rows.slice().sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:b.amt-a.amt).map(r=>`<tr><td>${fmtDate(r.d)}</td><td>${esc(r.m||'')}</td><td>${r.n>1?`${r.k} מתוך ${r.n}`:'רגיל'}</td><td class="n out">${bzM(r.amt)}</td><td class="st">${invCell(CR[r.id],'cc:'+r.id)}</td></tr>`).join('')}
   </tbody></table></div></div>`:`<div class="card"><b>עוד לא הועלה פירוט כרטיס אשראי.</b><span class="hint">מורידים מאתר כאל, מקס או ישראכרט את פירוט החיוב הבא, ומעלים בכפתור „העלאת פירוט כרטיס אשראי”. הפירוט ממלא את שורת „אשראי” בתחזית.</span></div>`}
   <div><div class="bz-sec"><h2>חיובי כרטיס אשראי בבנק</h2><span class="hint">6 החודשים האחרונים</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>חודש</th><th class="n">סה״כ חיובים</th></tr></thead><tbody>
    ${M6.map(m=>`<tr><td>${ymLabel(m)}</td><td class="n out">${bzM(bankCard[m]||0)}</td></tr>`).join('')}
   </tbody></table></div></div>`; }
+
+/* --- סקירת הוצאות / הכנסות --- */
+const BZ_XPERS=[['m0','החודש הנוכחי'],['m1','החודש הקודם'],['3','3 החודשים האחרונים'],['6','6 החודשים האחרונים'],['12','12 החודשים האחרונים']];
+let BZ_XP='6', BZ_IP='6', BZ_IFP='3';
+function bzXRange(per){ const tm=thisYm(); if(per==='m0') return [tm]; if(per==='m1') return [ymAdd(tm,-1)]; const n=+per, M=[]; for(let i=n-1;i>=0;i--) M.push(ymAdd(tm,-i)); return M; }
+function bzDsOne(id,recs,M,opts){ // recs: {m,type,amt}
+  const inM=new Set(M), by={}, byM={}; recs.forEach(r=>{ if(!inM.has(r.m)) return; by[r.type]=(by[r.type]||0)+r.amt; (byM[r.m]=byM[r.m]||{})[r.type]=((byM[r.m]||{})[r.type]||0)+r.amt; });
+  bzDsSet(id,by,{},[opts.lab,'']); const S=BZ_DS[id]; Object.assign(S,{one:true,sh:opts.sh,neg:!!opts.neg,months:opts.barM||M,nm:M.length,col:opts.col,empty:opts.empty});
+  // עמודות חודשיות: לפחות 6 חודשים לצורך השוואה
+  const bm={}; recs.forEach(r=>{ if(!(opts.barM||M).includes(r.m)) return; (bm[r.m]=bm[r.m]||{})[r.type]=((bm[r.m]||{})[r.type]||0)+r.amt; }); S.byM=bm;
+  if(opts.prevM&&opts.prevM.length){ const pv={}; recs.forEach(r=>{ if(opts.prevM.includes(r.m)) pv[r.type]=(pv[r.type]||0)+r.amt/opts.prevM.length; }); S.prev=pv; } else S.prev=null;
+  const D=BZ_DS[id]; if(D.dep.length>9){ const keep=D.dep.slice(0,8), rest=D.dep.slice(8), oth=rest.reduce((a,x)=>a+x.v,0), names=new Set(rest.map(x=>x.n));
+    D.dep=[...keep,{n:'שאר הסוגים',v:oth,i:8}]; Object.values(bm).forEach(o=>{ let s=0; names.forEach(n=>{ s+=o[n]||0; delete o[n]; }); if(s) o['שאר הסוגים']=s; });
+    if(S.prev){ let s=0; names.forEach(n=>{ s+=S.prev[n]||0; }); S.prev['שאר הסוגים']=s; } } }
+function bzBarMonths(M){ if(M.length>=6) return M; const out=[]; for(let i=5;i>=0;i--) out.push(ymAdd(M[M.length-1],-i)); return out; }
+function expRecords(c){ const cc=ccRowsAll(c), ccM=new Set(cc.map(r=>String(r.d||'').slice(0,7))), t0=todayIsoF(), out=[];
+  (c.tx||[]).forEach(t=>{ if(!(t.amt<0)||!t.d||t.cat===IGNORE) return; if(CC_BANK_RE.test(t.desc||'')&&ccM.has(t.d.slice(0,7))) return;
+    out.push({d:t.d,m:t.d.slice(0,7),amt:-t.amt,type:t.cat?catLabel(c,t.cat):'לא מסווג',desc:t.desc||'',det:t.det||'',src:CC_BANK_RE.test(t.desc||'')?'חיוב כרטיס (ללא פירוט)':'בנק',key:'tx:'+t.id}); });
+  cc.forEach(r=>{ if(!r.d||!(r.amt>0)||r.d>t0) return; const cat=classify(c,{desc:r.m||'',amt:-r.amt}); if(cat===IGNORE) return;
+    out.push({d:r.d,m:r.d.slice(0,7),amt:r.amt,type:catLabel(c,cat),desc:r.m||'',det:r.n>1?`תשלום ${r.k} מתוך ${r.n}`:'',src:'כרטיס אשראי',key:'cc:'+r.id}); });
+  return out; }
+function bzExpOv(){ const el=$('#bz-expov'), c=cur(); if(!c){ el.innerHTML=bzNoData(); return; }
+  $('#bz-hx').innerHTML=bzPerSel('bz-xp',BZ_XP,BZ_XPERS);
+  const M=bzXRange(BZ_XP), barM=bzBarMonths(M), prevM=M.map(m=>ymAdd(m,-M.length)), recs=expRecords(c), inM=new Set(M);
+  bzDsOne('exp',recs,M,{lab:'הוצאות',sh:BZ_DRS,neg:true,barM,prevM,col:'סוג ההוצאה',empty:'אין הוצאות בתקופה'});
+  const tot=recs.filter(r=>inM.has(r.m)).reduce((a,r)=>a+r.amt,0), pTot=recs.filter(r=>prevM.includes(r.m)).reduce((a,r)=>a+r.amt,0);
+  const RM=rcMatch(c), stOf=r=>r.key.startsWith('tx:')?RM.res[r.key.slice(3)]:RM.ccRes[r.key.slice(3)];
+  const inP=recs.filter(r=>inM.has(r.m)), noInv=inP.filter(r=>{ const s=stOf(r); return s&&s.st==='nox'; }), gotInv=inP.filter(r=>{ const s=stOf(r); return s&&s.st==='gotx'; });
+  const top=BZ_DS.exp.dep[0], sel=BZ_XSEL.exp, hasCc=ccRowsAll(c).length>0;
+  const det=sel?inP.filter(r=>r.type===sel||(sel==='שאר הסוגים'&&!BZ_DS.exp.dep.slice(0,8).some(x=>x.n===r.type))).sort((a,b)=>b.amt-a.amt):[];
+  el.innerHTML=`<div class="bz-sum"><div><span>סך ההוצאות בתקופה</span><b class="bz-neg">${bzS(-tot)}</b><span class="hint">${M.length>1?'ממוצע '+bzS(-tot/M.length)+' לחודש':ymLabel(M[0])}</span></div>
+   <div><span>לעומת התקופה הקודמת</span><b class="${tot>pTot?'bz-neg':'bz-pos'}">${pTot?(tot>=pTot?'▲':'▼')+Math.abs(Math.round((tot/pTot-1)*100))+'%':'—'}</b><span class="hint">${pTot?bzS(-pTot):'אין נתונים'}</span></div>
+   <div><span>ההוצאה הגדולה</span><b style="font-size:18px">${top?esc(top.n):'—'}</b><span class="hint">${top&&tot?Math.round(top.v/tot*100)+'% מההוצאות':''}</span></div>
+   <div><span>הוצאות בלי חשבונית</span><b class="${noInv.length?'bz-neg':''}">${noInv.length}</b><span class="hint">${gotInv.length} עם חשבונית מקושרת</span></div></div>
+  <div class="bz-sec"><h2>פילוח ההוצאות לפי סוג</h2><span class="hint">${hasCc?'בנק + פירוט כרטיסי אשראי (במקום החיוב המרוכז)':'מתנועות הבנק. העלאת פירוט אשראי תפרק גם את חיובי הכרטיס'} · לוחצים על סוג כדי לראות את התנועות</span></div>
+  ${bzDsBox('exp')}
+  ${sel?`<div id="xdet-exp"><div class="bz-sec" style="margin-top:18px"><h2>${esc(sel)}: ${det.length} תנועות</h2><button class="bz-link" type="button" data-dsel="exp" data-dn="${esc(sel)}">סגירה</button></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך</th><th>תיאור</th><th>מקור</th><th class="n">סכום</th><th>חשבונית מס קבלה</th></tr></thead><tbody>
+   ${det.map(r=>`<tr><td>${fmtDate(r.d)}</td><td>${esc(r.desc)}${r.det?`<span class="hint" style="display:block">${esc(r.det)}</span>`:''}</td><td>${esc(r.src)}</td><td class="n out">${bzM(-r.amt)}</td><td class="st">${invCell(stOf(r),r.key)}</td></tr>`).join('')}</tbody></table></div></div>`:''}
+  ${noInv.length&&!VIEW?`<div class="bz-sec" style="margin-top:18px"><h2>הוצאות בתקופה שלא נמצאה להן חשבונית</h2><span class="hint">${c.driveFolder?'נבדקו מול תיקיית הקבלות בדרייב':'עוד לא חוברה תיקיית קבלות בדרייב (במסך „הוצאות בנק”)'}</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך</th><th>תיאור</th><th>סוג</th><th class="n">סכום</th><th></th></tr></thead><tbody>
+   ${noInv.sort((a,b)=>b.amt-a.amt).slice(0,40).map(r=>`<tr><td>${fmtDate(r.d)}</td><td>${esc(r.desc)}</td><td>${esc(r.type)}</td><td class="n out">${bzM(-r.amt)}</td><td><button class="btn ghost xs" type="button" data-invlink="${r.key}">קישור חשבונית</button></td></tr>`).join('')}</tbody></table></div>`:''}`; }
+
+/* הכנסות לפי מוצר */
+const UNASG='לא משויך למוצר';
+const custKey=s=>String(s||'').replace(/\s*\(\d+\/\d+\)\s*$/,'').replace(/["'״׳.,\-–()]/g,' ').replace(/\s+/g,' ').trim();
+function prodAuto(c){ const by={}; (c.itemSales||[]).forEach(r=>{ const k=custKey(r[1]); if(!k) return; const o=by[k]||(by[k]={}); o[r[2]]=(o[r[2]]||0)+r[3]; });
+  const out={}; Object.entries(by).forEach(([k,o])=>{ out[k]=Object.entries(o).sort((a,b)=>b[1]-a[1])[0][0]; }); return out; }
+const prodOf=(c,cust,auto)=>{ const k=custKey(cust); return k&&((c.prodMap&&c.prodMap[k])||auto[k])||null; };
+const prodList=c=>[...new Set([...(c.products||[]),...(c.itemSales||[]).map(r=>r[2]),...Object.values(c.prodMap||{})])].filter(Boolean).sort((a,b)=>a.localeCompare(b,'he'));
+function incActual(c,auto){ const out=[], cov=new Set();
+  (c.itemSales||[]).forEach(r=>{ if(!r[0]) return; const m=r[0].slice(0,7); cov.add(m); out.push({m,d:r[0],amt:r[3],type:r[2]||UNASG,cust:r[1]}); });
+  const L=c.ccKey&&CCL[c.ccKey], rc=(L&&L.receipts)||[], rcM=new Set();
+  rc.forEach(r=>{ const m=String(r[0]||'').slice(0,7); if(!m||cov.has(m)) return; rcM.add(m); out.push({m,d:r[0],amt:+r[1]||0,type:prodOf(c,r[2],auto)||UNASG,cust:r[2]}); });
+  const keys=Object.keys({...auto,...(c.prodMap||{})}).filter(k=>k.length>=3);
+  (c.tx||[]).forEach(t=>{ if(!(t.amt>0)||!t.d||t.cat===IGNORE||t.cat==='in_loans') return; const m=t.d.slice(0,7); if(cov.has(m)||rcM.has(m)) return;
+    const txt=' '+custKey((t.desc||'')+' '+(t.det||''))+' ', k=keys.find(k=>txt.includes(' '+k+' '));
+    out.push({m,d:t.d,amt:t.amt,type:k?prodOf(c,k,auto):UNASG,cust:k||'',bank:1}); });
+  return {out,cov}; }
+function bzIncOv(){ const el=$('#bz-incov'), c=cur(), ctx=bzCtx(), t0=todayIsoF(); if(!c){ el.innerHTML=bzNoData(); return; }
+  $('#bz-hx').innerHTML=bzPerSel('bz-ip',BZ_IP,BZ_XPERS)+(VIEW?'':`<label class="btn primary" title="דוח מכירות לפי פריטים מקארדקום (אקסל, CSV או PDF)">העלאת דוח פריטים מקארדקום<input type="file" id="items-file" accept=".xlsx,.xls,.csv,.pdf" hidden></label>`);
+  const auto=prodAuto(c), M=bzXRange(BZ_IP), barM=bzBarMonths(M), prevM=M.map(m=>ymAdd(m,-M.length)), inM=new Set(M);
+  const {out,cov}=incActual(c,auto);
+  const prevOk=cov.size?prevM.filter(m=>cov.has(m)):prevM;   // השוואה רק לחודשים מאותו מקור נתונים
+  bzDsOne('inc',out,M,{lab:'הכנסות',sh:BZ_DGS,barM,prevM:prevOk,col:'מוצר',empty:'אין הכנסות בתקופה'});
+  const tot=out.filter(r=>inM.has(r.m)).reduce((a,r)=>a+r.amt,0), un=out.filter(r=>inM.has(r.m)&&r.type===UNASG).reduce((a,r)=>a+r.amt,0);
+  const covIn=M.filter(m=>cov.has(m)).length;
+  // צפי לפי מוצר: מאירועי התחזית (הוראות קבע, צ'קים, תשלומים שהוזנו)
+  const nF=+BZ_IFP, fEnd=isoAddMonths(t0,nF), fRecs=[], custs={};
+  if(ctx) ctx.D.days.filter(x=>x.d>=t0&&x.d<fEnd).forEach(x=>x.ev.forEach(e=>{ if(!(e.amt>0)) return; const cu=e.cust||'';
+    const p=cu?prodOf(c,cu,auto):null, type=p||(cu?UNASG:'הערכה כללית (ללא לקוח)'); fRecs.push({m:x.d.slice(0,7),amt:e.amt,type});
+    if(cu){ const k=custKey(cu), o=custs[k]||(custs[k]={k,name:custKey(cu),amt:0,n:0,amts:{},row:e.row}); o.amt+=e.amt; o.n++; o.amts[Math.round(e.amt)]=(o.amts[Math.round(e.amt)]||0)+1; } }));
+  const FM=[]; for(let i=0;i<nF;i++) FM.push(ymAdd(thisYm(),i));
+  bzDsOne('incf',fRecs,FM,{lab:'צפי',sh:BZ_DGS,barM:FM,col:'מוצר',empty:'אין הכנסות צפויות בתקופה'});
+  const fTot=fRecs.reduce((a,r)=>a+r.amt,0);
+  // הצעת מוצר לפי סכום: לקוחות משויכים עם אותו סכום
+  const amtProd={}; Object.values(custs).forEach(o=>{ const p=prodOf(c,o.k,auto); if(!p) return; Object.keys(o.amts).forEach(a=>{ const q=amtProd[a]||(amtProd[a]={}); q[p]=(q[p]||0)+1; }); });
+  const sugOf=o=>{ for(const a of Object.keys(o.amts).sort((x,y)=>o.amts[y]-o.amts[x])){ const q=amtProd[a]; if(q) return Object.entries(q).sort((x,y)=>y[1]-x[1])[0][0]; } return null; };
+  const CL=Object.values(custs).sort((a,b)=>(!!prodOf(c,a.k,auto))-(!!prodOf(c,b.k,auto))||b.amt-a.amt), unN=CL.filter(o=>!prodOf(c,o.k,auto)).length, PL=prodList(c);
+  const sel=BZ_XSEL.inc, det=sel?out.filter(r=>inM.has(r.m)&&r.type===sel).sort((a,b)=>b.amt-a.amt):[];
+  el.innerHTML=`<div class="bz-sum"><div><span>סך ההכנסות בתקופה</span><b class="bz-pos">${bzS(tot)}</b><span class="hint">${M.length>1?'ממוצע '+bzS(tot/M.length)+' לחודש':ymLabel(M[0])}</span></div>
+   <div><span>המוצר המוביל</span><b style="font-size:18px">${(BZ_DS.inc.dep.find(x=>x.n!==UNASG)||{}).n?esc(BZ_DS.inc.dep.find(x=>x.n!==UNASG).n):'—'}</b></div>
+   <div><span>לא משויך למוצר</span><b class="${un?'bz-neg':''}">${tot?Math.round(un/tot*100):0}%</b><span class="hint">${bzS(un)}</span></div>
+   <div><span>חודשים עם דוח פריטים</span><b>${covIn}/${M.length}</b><span class="hint">${(c.itemSales||[]).length?'עודכן '+new Date(c.itemSalesAt).toLocaleDateString('he-IL'):'עוד לא הועלה'}</span></div></div>
+  <div class="status" id="items-st">${BZ_MSG.items||''}</div>
+  <div class="bz-sec"><h2>הכנסות בפועל לפי מוצר</h2><span class="hint">${covIn===M.length?'לפי דוח הפריטים מקארדקום':covIn?'לפי דוח הפריטים, ובחודשים בלי דוח לפי שיוך הלקוחות':'לפי שיוך הלקוחות. דוח פריטים מקארדקום ייתן פילוח מדויק'}</span></div>
+  ${bzDsBox('inc')}
+  ${sel?`<div id="xdet-inc"><div class="bz-sec" style="margin-top:18px"><h2>${esc(sel)}: ${det.length} תשלומים</h2><button class="bz-link" type="button" data-dsel="inc" data-dn="${esc(sel)}">סגירה</button></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך</th><th>לקוח</th><th>מקור</th><th class="n">סכום</th></tr></thead><tbody>
+   ${det.slice(0,300).map(r=>`<tr><td>${fmtDate(r.d)}</td><td>${esc(r.cust||'')}</td><td>${r.bank?'בנק':cov.has(r.m)?'דוח פריטים':'קבלה בקארדקום'}</td><td class="n in">${bzM(r.amt)}</td></tr>`).join('')}</tbody></table></div></div>`:''}
+  <div class="bz-sec" style="margin-top:22px"><h2>צפי הכנסות לפי מוצר</h2><span class="hint">הוראות קבע, צ'קים ותשלומים צפויים · סה״כ ${bzS(fTot)}</span><select id="bz-ifp" class="bz-tool" aria-label="תקופה"><option value="1"${BZ_IFP==='1'?' selected':''}>החודש</option><option value="3"${BZ_IFP==='3'?' selected':''}>3 החודשים הקרובים</option><option value="6"${BZ_IFP==='6'?' selected':''}>6 החודשים הקרובים</option></select></div>
+  ${ctx?bzDsBox('incf'):bzNoData()}
+  ${VIEW?'':`<div class="bz-sec" style="margin-top:22px"><h2>שיוך לקוחות למוצרים</h2><span class="hint">${unN?unN+' לקוחות לא משויכים':'כל הלקוחות משויכים'}. לקוח שמופיע בדוח הפריטים משויך לבד.</span></div>
+  <div class="bz-box" style="padding:12px 14px"><form id="prod-add" class="actions"><input id="prod-name" maxlength="50" autocomplete="off" placeholder="שם מוצר חדש, למשל: תכנית ליווי" aria-label="שם מוצר חדש" style="flex:1;min-width:200px"><button class="btn sm primary" type="submit">הוספת מוצר</button></form>
+   <div class="hint" style="margin:6px 0">מוצרים: ${PL.length?PL.map(esc).join(' · '):'עוד אין. מוסיפים כאן או מעלים דוח פריטים'}</div>
+   <div class="tscroll"><table class="bz-tbl bz-map"><thead><tr><th>לקוח</th><th>שורה בתחזית</th><th class="n">צפוי בתקופה</th><th>מוצר</th><th></th></tr></thead><tbody>
+   ${CL.slice(0,200).map(o=>{ const man=c.prodMap&&c.prodMap[o.k], au=auto[o.k], p=man||au, sg=!p&&sugOf(o);
+     return `<tr><td>${esc(o.name)}</td><td class="hint">${esc(o.row||'')}</td><td class="n in">${bzM(o.amt)}</td><td><select data-pmap="${esc(o.k)}" aria-label="מוצר"><option value="">— לא משויך —</option>${PL.map(x=>`<option${x===p?' selected':''}>${esc(x)}</option>`).join('')}</select>${!man&&au?'<span class="hint" style="display:block">לפי דוח הפריטים</span>':''}</td><td>${sg?`<button class="btn ghost xs" type="button" data-pacc="${esc(o.k)}" data-pv="${esc(sg)}">הצעה: ${esc(sg)}</button>`:''}</td></tr>`; }).join('')||'<tr><td colspan="5" class="hint">אין לקוחות עם הכנסות צפויות בתקופה</td></tr>'}
+   </tbody></table></div></div>`}`; }
+function prodSet(k,v){ const c=cur(); c.prodMap=c.prodMap||{}; if(v) c.prodMap[k]=v; else delete c.prodMap[k]; if(v&&!(c.products||[]).includes(v)) c.products=[...(c.products||[]),v]; saveSoon(); bzRender(); }
+document.addEventListener('change',e=>{ const t=e.target;
+  if(t.id==='bz-xp'){ BZ_XP=t.value; bzRender(); } else if(t.id==='bz-ip'){ BZ_IP=t.value; bzRender(); } else if(t.id==='bz-ifp'){ BZ_IFP=t.value; bzRender(); }
+  else if(t.dataset&&t.dataset.pmap!=null) prodSet(t.dataset.pmap,t.value);
+  else if(t.id==='items-file'){ const f=t.files[0]; t.value=''; if(f) itemsUpload(f); }
+  else if(t.dataset&&t.dataset.chqimg!=null&&t.files&&t.files.length){ const fs=[...t.files], id=t.dataset.chqimg; t.value=''; chqPhoto(fs,id||null); } });
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('button'); if(!b) return;
+  if(b.dataset.pacc!=null) prodSet(b.dataset.pacc,b.dataset.pv);
+  else if(b.dataset.invlink) invOpen(b.dataset.invlink);
+  else if(b.id==='inv-x') $('#inv-ov').hidden=true;
+  else if(b.dataset.invpick!=null) invPick(INV_SUG[+b.dataset.invpick]);
+  else if(b.dataset.invres!=null) invPick(INV_RES[+b.dataset.invres]);
+  else if(b.id==='inv-un') invSet(null); });
+document.addEventListener('submit',e=>{ if(e.target.id==='prod-add'){ e.preventDefault(); const v=$('#prod-name').value.trim().slice(0,50); if(!v) return; const c=cur(); if(!(c.products||[]).includes(v)) c.products=[...(c.products||[]),v]; saveSoon(); toast('המוצר נוסף. עכשיו משייכים אליו לקוחות'); bzRender(); }
+  else if(e.target.id==='inv-sf'){ e.preventDefault(); invSearch(); }
+  else if(e.target.id==='inv-pf'){ e.preventDefault(); const v=$('#inv-url').value.trim(), m=v.match(/\/d\/([A-Za-z0-9_-]{10,})/)||v.match(/[?&]id=([A-Za-z0-9_-]{10,})/)||v.match(/^([A-Za-z0-9_-]{20,})$/);
+    if(!m){ $('#inv-st').innerHTML='<span class="pill crit">מדביקים קישור לקובץ בגוגל דרייב</span>'; return; } invPick({fid:m[1],sup:'',num:'',d:null,amt:null}); } });
+
+/* דוח פריטים מקארדקום */
+const ITEM_COLS={d:[/^תאריך(\s*(ה)?מסמך|\s*חשבונית|\s*עסקה)?$/,/תאריך/],num:[/מס.?\s*(ה)?(מסמך|חשבונית)/,/מספר\s*(ה)?(מסמך|חשבונית)/,/^מס.?\s*$/],cust:[/שם\s*(ה)?לקוח/,/^לקוח$/,/שם\s*(ה)?משלם/],item:[/שם\s*(ה)?(פריט|מוצר)/,/^(פריט|מוצר)$/,/תיאור\s*(ה)?(פריט|מוצר)/,/^תיאור$/],amt:[/סה.?כ\s*(כולל|לשורה|שורה)/,/סה.?כ/,/^סכום/,/מחיר\s*כולל/],qty:[/כמות/],price:[/מחיר\s*(ליחידה|יח)/,/^מחיר$/]};
+const ITEM_PROMPT='זה דוח מכירות לפי פריטים (מוצרים) מקארדקום. החזירי מערך JSON בלבד, איבר לכל שורת פריט במסמך (לא שורות סיכום): {"d":"תאריך המסמך YYYY-MM-DD","num":"מספר המסמך","cust":"שם הלקוח","item":"שם הפריט או המוצר","amt":הסכום הכולל של השורה כמספר (מחיר כפול כמות, כולל מע״מ אם מופיע), שלילי אם זה זיכוי}. שימי לב: עברית בטקסט שחולץ מ-PDF עלולה להופיע הפוכה.';
+async function itemsUpload(f){ const st=$('#items-st'); st.innerHTML='<span class="prog"><span>קוראת את הדוח…</span></span>';
+  try{ let out=[]; const name=f.name.toLowerCase();
+    if(name.endsWith('.pdf')){ const src=await pdfTextOrImages(f); out=await claudeList(ITEM_PROMPT,src,st,'דוח הפריטים'); }
+    else { const rows=(await fileRows(f)).map(r=>Array.isArray(r)?r:[]), H=headerBy(rows,ITEM_COLS,['item']);
+      if(H&&(H.m.amt!=null||H.m.price!=null)){ const m=H.m;
+        rows.slice(H.i+1).forEach(r=>{ const g=k=>m[k]==null?'':r[m[k]]; let a=parseNum(g('amt')); if(isNaN(a)&&m.price!=null){ a=parseNum(g('price'))*(m.qty!=null?(parseNum(g('qty'))||1):1); }
+          out.push({d:g('d') instanceof Date?retDate(g('d')):g('d'),num:g('num'),cust:g('cust'),item:g('item'),amt:a}); }); }
+      else out=await claudeList(ITEM_PROMPT,{text:rowsText(rows)},st,'דוח הפריטים'); }
+    // מילוי תאריך ולקוח לשורות המשך של אותו מסמך
+    let last={}; const norm=out.map(x=>{ const o={d:x.d?(parseDate(x.d)||retDate(x.d)):null,num:String(x.num||'').trim(),cust:String(x.cust||'').replace(/\s+/g,' ').trim().slice(0,60),item:String(x.item||'').replace(/\s+/g,' ').trim().slice(0,60),amt:Math.round((+x.amt||0)*100)/100};
+      if(o.num&&o.num===last.num){ o.d=o.d||last.d; o.cust=o.cust||last.cust; } last=o; return o; }).filter(o=>o.d&&o.item&&o.amt&&!/^סה.?כ|^total/i.test(o.item));
+    if(!norm.length) throw new Error('לא נמצאו שורות פריטים עם תאריך וסכום. מייצאים מקארדקום דוח שבו לכל שורה יש פריט, תאריך וסכום.');
+    const c=cur(), from=norm.reduce((a,o)=>o.d<a?o.d:a,'9999'), to=norm.reduce((a,o)=>o.d>a?o.d:a,'');
+    const keep=(c.itemSales||[]).filter(r=>r[0]<from||r[0]>to), lim=isoAddMonths(todayIsoF(),-25);
+    c.itemSales=[...keep,...norm.map(o=>[o.d,o.cust,o.item,o.amt,o.num])].filter(r=>r[0]>=lim).sort((a,b)=>a[0]<b[0]?-1:1); c.itemSalesAt=Date.now(); saveSoon();
+    const msg=`נקלטו ${norm.length} שורות פריטים (${fmtDate(from)} עד ${fmtDate(to)}), ${new Set(norm.map(o=>o.item)).size} מוצרים`; BZ_MSG.items='<span class="pill good">✓ '+esc(msg)+'</span>'; toast(msg); bzRender();
+  }catch(err){ st.innerHTML='<span class="pill crit">לא הצלחתי לקרוא את הדוח</span> '+esc(err&&err.message||''); } }
+
+/* קישור חשבונית ידני */
+let INV_T=null, INV_SUG=[], INV_RES=[];
+function invTarget(key){ const c=cur(), i=key.indexOf(':'), ty=key.slice(0,i), id=key.slice(i+1);
+  if(ty==='tx'){ const t=c.tx.find(x=>x.id===id); return t?{key,obj:t,d:t.d,amt:-t.amt,desc:t.desc}:null; }
+  const r=ccRowsAll(c).find(x=>x.id===id); return r?{key,obj:r,d:r.d,amt:r.amt,desc:r.m||''}:null; }
+function invRowHtml(x,attr,i,best){ return `<div class="inv-row${best?' best':''}"><div><b>${esc(x.sup||x.title||'מסמך')}</b><span class="hint">${[x.num?'מס׳ '+esc(x.num):'',x.d?fmtDate(x.d):'',x.amt!=null?'₪'+fmt(x.amt):''].filter(Boolean).join(' · ')}${best?' · <b style="color:#1f7d5c">סכום זהה</b>':''}</span></div>${x.fid?`<a class="invlink" href="${driveUrl(x.fid)}" target="_blank" rel="noopener">פתיחה ↗</a>`:'<span></span>'}<button class="btn xs primary" type="button" ${attr}="${i}">קישור</button></div>`; }
+function invOpen(key){ const T=invTarget(key); if(!T){ toast('התנועה לא נמצאה'); return; } INV_T=T; const c=cur();
+  $('#inv-what').innerHTML=`<div class="bz-box" style="padding:10px 12px"><b>${esc(T.desc)}</b><span class="hint" style="display:block">${fmtDate(T.d)} · ₪${fmt(T.amt)}</span></div>`;
+  $('#inv-cur').innerHTML=T.obj.inv&&T.obj.inv.fid?`<div class="actions" style="margin-top:8px"><span>מקושרת עכשיו: <a class="invlink" href="${driveUrl(T.obj.inv.fid)}" target="_blank" rel="noopener">${esc(T.obj.inv.sup||'החשבונית')} ↗</a></span><button class="btn xs danger" type="button" id="inv-un">ביטול הקישור</button></div>`:'';
+  const used=new Set([...c.tx,...ccRowsAll(c)].filter(t=>t.inv&&t.inv.fid&&t!==T.obj).map(t=>t.inv.fid));
+  INV_SUG=(c.supInv||[]).filter(x=>x.fid&&!used.has(x.fid)).map(x=>({...x,sc:Math.abs((x.amt||0)-T.amt)/Math.max(T.amt,1)*100+Math.abs(dayDiff(T.d,x.d||T.d))/30})).sort((a,b)=>a.sc-b.sc).slice(0,8);
+  $('#inv-sug').innerHTML=INV_SUG.length?INV_SUG.map((x,i)=>invRowHtml(x,'data-invpick',i,Math.abs((x.amt||0)-T.amt)<=1)).join(''):`<div class="hint">${c.driveFolder?'אין מסמכים בתיקייה. אפשר לחפש בכל הדרייב למטה.':'עוד לא חוברה תיקיית קבלות. מחברים במסך „הוצאות בנק”, או מחפשים בדרייב למטה.'}</div>`;
+  $('#inv-res').innerHTML=''; $('#inv-st').textContent=''; $('#inv-q').value=T.obj.det&&!/העברה|באינטרנט|זיכוי/.test(T.obj.det)?String(T.obj.det).replace(/[^א-תA-Za-z0-9 ]/g,' ').replace(/\s+/g,' ').trim().split(' ').slice(0,3).join(' '):(/העברה|באינטרנט|הו"ק|הוראת קבע|שיק|צ'ק/.test(T.desc||'')?'':String(T.desc||'').replace(/[^א-תA-Za-z ]/g,' ').replace(/\s+/g,' ').trim().split(' ').slice(0,2).join(' '));
+  $('#inv-url').value=''; $('#inv-ov').hidden=false; }
+async function invSearch(){ const q=$('#inv-q').value.trim().replace(/'/g,"\\'"); if(!q) return; const c=cur(), st=$('#inv-st');
+  let mcp=null; try{ mcp=window.claude&&await window.claude.use('mcp'); }catch(e){}
+  if(!mcp){ st.textContent='החיפוש בדרייב זמין רק כשהדף פתוח מתוך claude.ai. אפשר להדביק קישור לקובץ.'; return; }
+  st.textContent='מחפשת בדרייב…';
+  try{ const query=(c.driveFolder?`'${c.driveFolder}' in ancestors and `:'')+`fullText contains '${q}' and mimeType != '${FOLDER_MT}' and trashed = false`;
+    const r=await mcp.callTool(DRIVE,'search_files',{query,pageSize:15,snippetVerbosity:'BRIEF'}); let p=r.payload; if(typeof p==='string'){ try{ p=JSON.parse(p); }catch(e){ p={}; } }
+    INV_RES=((p&&p.files)||[]).map(f=>({...invFromDrive(f),title:f.title}));
+    $('#inv-res').innerHTML=INV_RES.length?INV_RES.map((x,i)=>invRowHtml({...x,sup:x.title||x.sup},'data-invres',i,INV_T&&x.amt!=null&&Math.abs(x.amt-INV_T.amt)<=1)).join(''):'<div class="hint">לא נמצאו קבצים. נסו מילה אחרת, מספר החשבונית או הסכום.</div>'; st.textContent='';
+  }catch(e){ st.textContent=e&&(e.code==='not_granted'||e.code==='cancelled')?'לא אושרה גישה לגוגל דרייב בדף הזה':'החיפוש נכשל: '+((e&&(e.message||e.code))||''); } }
+function invPick(x){ if(!x||!INV_T) return; invSet({fid:x.fid,sup:String(x.sup||x.title||'').slice(0,60),num:String(x.num||'').slice(0,20),d:x.d||null,amt:x.amt==null?null:x.amt,at:Date.now()}); }
+function invSet(inv){ const T=INV_T; if(!T) return; if(inv) T.obj.inv=inv; else delete T.obj.inv; saveSoon(); $('#inv-ov').hidden=true; toast(inv?'החשבונית קושרה להוצאה':'הקישור בוטל'); try{ renderTxList(); }catch(e){} bzRender(); }
+
+/* צילום צ'ק: Claude קורא את הפרטים */
+const CHQIMG_PROMPT='זו תמונה של צ\'ק ישראלי (לפעמים בכתב יד). קראי את הפרטים והחזירי אובייקט JSON בלבד: {"cust":"שם בעל החשבון (המושך), כפי שמודפס בראש הצ\'ק","payee":"שם המוטב (לפקודת)","amount":סכום הצ\'ק כמספר, לפי הספרות ובבדיקה מול הסכום במילים,"date":"תאריך הפירעון שכתוב על הצ\'ק YYYY-MM-DD","num":"מספר הצ\'ק","bank":"מספר הבנק","branch":"מספר הסניף","account":"מספר החשבון"}. שדה שאי אפשר לקרוא: null. אם התמונה אינה צ\'ק: {"error":"not_cheque"}.';
+async function imgBlob(f){ const url=URL.createObjectURL(f);
+  try{ const im=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error('הדפדפן לא הצליח לפתוח את התמונה. שומרים אותה כ־JPG או PNG ומנסים שוב')); i.src=url; });
+    const s=Math.min(1,1600/Math.max(im.naturalWidth,im.naturalHeight)), cv=document.createElement('canvas'); cv.width=Math.round(im.naturalWidth*s); cv.height=Math.round(im.naturalHeight*s);
+    cv.getContext('2d').drawImage(im,0,0,cv.width,cv.height); return await new Promise(r=>cv.toBlob(r,'image/jpeg',0.86)); } finally{ URL.revokeObjectURL(url); } }
+async function chqRead(f){ const sample=window.claude&&await window.claude.use('sample');
+  if(!sample) throw new Error('קריאת צילום זמינה רק כשהדף פתוח מתוך claude.ai');
+  let j=await sample.json(CHQIMG_PROMPT,{images:[await imgBlob(f)]}); if(Array.isArray(j)) j=j[0];
+  if(!j||j.error) throw new Error('לא זיהיתי צ\'ק בתמונה');
+  const s=v=>v==null?'':String(v).trim().slice(0,40), a=Math.abs(parseNum(j.amount));
+  return {cust:s(j.cust).slice(0,60),payee:s(j.payee),amount:isNaN(a)?0:Math.round(a*100)/100,date:j.date?parseDate(j.date):null,num:s(j.num).replace(/\D/g,'').slice(0,12),bank:s(j.bank),branch:s(j.branch),account:s(j.account)}; }
+async function chqPhoto(files,id){ const k=hfKey(), st=$('#chq-status2')||$('#chq-status'); if(!k){ toast('אין תחזית משויכת ללקוח הזה'); return; }
+  const PR=progress(st,files.length>1?`Claude קורא ${files.length} צילומי צ'קים…`:"Claude קורא את הצ'ק…",10*files.length); const done=[], errs=[];
+  const ed=hfEdits(k); ed.incItems=ed.incItems||[];
+  try{ for(const f of files){ try{ const r=await chqRead(f);
+        let x=id&&ed.incItems.find(q=>q.id===id); if(!x){ x={id:uid(),kind:'chq',cust:'',amount:0,date:todayIsoF(),n:1,cat:'',desc:'',method:"צ'ק",saved:1}; ed.incItems.push(x); }
+        if(r.cust) x.cust=r.cust; if(r.amount>0) x.amount=r.amount; if(r.date) x.date=r.date; x.n=x.n||1;
+        x.chq={num:r.num,bank:r.bank,branch:r.branch,account:r.account,payee:r.payee,file:f.name.slice(0,60),at:Date.now()}; if(r.num) x.desc="צ'ק מס' "+r.num;
+        const miss=[!r.cust&&'שם',!(r.amount>0)&&'סכום',!r.date&&'תאריך'].filter(Boolean);
+        done.push(`${r.cust||'ללא שם'} · ₪${fmt(r.amount||0)} · ${r.date?fmtDate(r.date):'ללא תאריך'}${r.num?' · צ\'ק '+r.num:''}${miss.length?' (חסר: '+miss.join(', ')+', השלימו ידנית)':''}`);
+      }catch(e){ errs.push(f.name+': '+(e&&e.message||'')); } } }
+  finally{ PR.end(); }
+  BZ_MSG.chq=(done.length?`<span class="pill good">✓ נקראו ${done.length} צ'קים</span> <span class="hint">${done.map(esc).join(' | ')}</span>`:'')+(errs.length?` <span class="pill crit">לא נקרא</span> <span class="hint">${errs.map(esc).join(' | ')}</span>`:'');
+  if(done.length) hfSave(k,ed); st.innerHTML=BZ_MSG.chq;
+  if(done.length) toast(done.length>1?`נקראו ${done.length} צ'קים ונוספו לתחזית`:"פרטי הצ'ק נקראו ונשמרו"); setTimeout(()=>bzRender(),80); }
 
 /* --- חובות לקוחות --- */
 let BZ_DQ='';

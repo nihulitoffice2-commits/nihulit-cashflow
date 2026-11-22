@@ -366,6 +366,21 @@ body.bz .pill{border-radius:3px}
 .bz-mb rect[data-tipx]{cursor:pointer}.bz-mb rect[data-tipx]:hover{opacity:.82}
 .bz-up{color:#c51d1d;font-weight:600}.bz-dn2{color:#1f7d5c;font-weight:600}
 .bz-tbl td.st .hint{display:block}
+.bk-sum{display:flex;flex-wrap:wrap;align-items:stretch;background:var(--bz-panel);border:1px solid var(--bz-line)}
+.bk-sum>div{padding:12px 20px;display:grid;gap:2px;align-content:center}
+.bk-sum .op{font-size:24px;color:var(--bz-muted);padding:0 4px;display:grid;place-items:center}
+.bk-sum span{color:var(--bz-navy);font-size:15px}.bk-sum b{font-size:22px;font-weight:700}
+.bk-sum input{width:120px;font-size:18px;font-weight:700;border:0;border-bottom:1px solid #9fb0bf;border-radius:0;background:transparent;padding:2px 0;direction:ltr;text-align:right}
+.bk-alert{display:flex;align-items:center;gap:10px;padding:10px 16px;font-weight:700}
+.bk-alert.crit{background:var(--bz-pink);color:var(--bz-red)}.bk-alert.warn{background:#fdf1d6;color:#8a5a00}
+.bk-day tr.d{cursor:pointer}.bk-day tr.d:hover td{background:#f4f8fb}
+.bk-day tr.d td:first-child::before{content:"▸";display:inline-block;width:14px;color:var(--bz-muted);font-size:12px}
+.bk-day tr.d.open td:first-child::before{content:"▾"}
+.bk-day tr.over td{background:var(--bz-pink)}
+.bk-day tr.nod td{color:#9aa7b2}
+.bk-day tr.sub td{background:#fafcfd;font-size:14px;color:var(--bz-text);padding-block:6px}
+.bk-day .neg{color:var(--bz-red);font-weight:700}
+@media (max-width:700px){.bk-day td:first-child .hint,.bk-day .yr{display:none}.bz-tbl.bk-day td,.bz-tbl.bk-day th{padding:8px 6px}.bz-tbl.bk-day{font-size:13.5px}.bz-tbl.bk-day tr.sub td{white-space:normal}.bk-day small{display:none}}
 #ctl-ov .card{max-width:820px;width:100%;max-height:92vh;overflow:auto}
 #ctl-ov h3{font-size:16px;margin:16px 0 8px;color:#022258;display:flex;gap:8px;align-items:center}
 .ctl-it{border:1px solid var(--bz-line);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:#fff}
@@ -493,9 +508,9 @@ body.bz .pill{border-radius:3px}
 .chartnote{color:var(--ink-2);font-size:13px;margin:6px 0 0}
 </style>
 
-
 </head>
 <body>
+
 <div class="view-msg" id="view-msg" dir="rtl" hidden><strong id="view-msg-t">טוענת את הנתונים…</strong><span id="view-msg-s"></span></div>
 <aside id="bz-side" aria-label="תפריט ראשי">
   <div class="bz-logo"><div class="mk" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M3 17l5-6 4 3 7-9"/><path d="M15 5h4v4"/></svg></div><div><b>ניהולית</b><small>תזרים לעסקים</small></div></div>
@@ -687,7 +702,9 @@ body.bz .pill{border-radius:3px}
 
   <!-- ===== BANK ===== -->
   <section class="panel" id="tab-bank" role="tabpanel" hidden>
-    <div class="card">
+    <div id="bk-top" class="bz-only"></div>
+    <div class="card" id="bk-daycard" hidden></div>
+    <div class="card" id="bk-upcard">
       <div class="card-head"><h2>העלאת דף בנק</h2><span class="hint">התנועות נשמרות ללקוח הנבחר בלבד</span></div>
       <div class="cols3">
         <div class="drop" id="drop">
@@ -1617,7 +1634,12 @@ function guessMap(h,data){
 function balCheck(list){ const w=list.filter(t=>t.bal!=null); if(w.length<4) return null; let ok=0,inv=0,n=0;
   for(const dir of [1,-1]){ const L=dir===1?w:w.slice().reverse(); for(let i=1;i<L.length;i++){ const d=L[i].bal-L[i-1].bal; if(Math.abs(d)<0.005) continue; n++; if(Math.abs(d-L[i].amt)<0.02) ok++; else if(Math.abs(d+L[i].amt)<0.02) inv++; } }
   return {ok,inv,n}; }
-function startMapping(rows,src,opt){
+// מסגרת האשראי בבנק: אם מופיעה בקובץ שהועלה, נשמרת לבד
+function bkLimitScan(text){ try{ const t=String(text||'').replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g,'');
+  const m=t.match(/מסגרת(?:\s*(?:ה?אשראי|חח"?ד|עו"?ש|בחשבון|מאושרת))*[^\d\n]{0,25}?(\d{1,3}(?:,\d{3})+|\d{4,})(?:\.\d{1,2})?/)||t.match(/(\d{1,3}(?:,\d{3})+|\d{4,})(?:\.\d{1,2})?[^\d\n]{0,25}?(?:יארשא\s*)?תרגסמ/);
+  if(!m) return; const v=Math.round(+m[1].replace(/,/g,'')); if(!(v>=1000)) return; const c=cur(); if(!c||+c.bankLimit===v) return;
+  c.bankLimit=v; saveSoon(); toast('מסגרת האשראי בבנק זוהתה בקובץ: '+fmt(v)+' ₪'); try{ bkTop(); }catch(e){} }catch(e){} }
+function startMapping(rows,src,opt){ try{ bkLimitScan((rows||[]).slice(0,60).map(r=>Array.isArray(r)?r.join(','):String(r)).join('\n')); }catch(e){}
   rows=(rows||[]).map(r=>Array.isArray(r)?r:[]).filter(r=>r.some(c=>String(c==null?'':c).trim()!==''));
   if(!rows.length){ toast('לא נמצאו נתונים בקובץ או בטקסט'); return; }
   const hi=detectHeader(rows); let width=0; rows.forEach(r=>{ if(r.length>width) width=r.length; });
@@ -1893,7 +1915,7 @@ function rcMatch(c){
     ccRes[r.id]={st,info,fid}; });
   return {res,ccRes,hasRc:!!receipts,hasInv:!!inv,nDrive:(c.supInv||[]).length,nSumit:SM.length};
 }
-function renderTxList(){
+function renderTxList(){ try{ if(BZ&&BZ_TAB==='bank') setTimeout(bkTop,0); }catch(e){}
   const c=cur(), q=$('#tx-q').value.trim().toLowerCase(), fc=$('#tx-cat').value, fs=$('#tx-st').value;
   const RM=rcMatch(c), stOf=t=>RM.res[t.id]||null;
   const tot={}; c.tx.forEach(t=>{ const s=stOf(t); if(!s) return; const o=tot[s.st]||(tot[s.st]={n:0,a:0}); o.n++; o.a+=t.amt; });
@@ -2583,6 +2605,7 @@ async function bkFromPdf0(file,stEl,PR){
   if(!window.pdfjsLib){ await loadScript(PDFJS+'pdf.min.js'); window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+'pdf.worker.min.js'; }
   const pdf=await window.pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
   const pages=Math.min(pdf.numPages,60), idx=[...Array(pages)].map((_,i)=>i+1);
+  try{ const pg=await pdf.getPage(1), tc=await pg.getTextContent(); bkLimitScan(tc.items.map(x=>x.str).join(' ')); }catch(e){}
   const texts=await Promise.all(idx.map(async q=>{ const pg=await pdf.getPage(q), tc=await pg.getTextContent(); return tc.items.map(i=>i.str).join(' '); }));
   const hasText=texts.filter(t=>t.replace(/\s/g,'').length>150).length>=Math.ceil(pages*0.6);
   if(hasText){ PR.set(0.3,'קוראת את התנועות…'); try{ const loc=await bkLocalPdf(pdf,pages); if(loc&&loc.length) return loc.map(t=>({d:parseDate(t.d),desc:String(t.desc).slice(0,120),det:'',ref:String(t.ref||'').slice(0,30),amt:Math.round(t.amt*100)/100,bal:t.bal,cat:bkCat(t.desc,t.amt)})); }catch(e){} }
@@ -3333,7 +3356,7 @@ function bzOnTab(t){ BZ_TAB=t; if(!BZ) return;
   document.body.classList.remove('bz-open');
   bzRender(t); }
 function bzRender(t){ if(!BZ) return; t=t||BZ_TAB;
-  try{ if(t==='overview') bzOverview(); else if(t==='daily') bzDaily(); else if(t==='recon') bzRecon(); else if(t==='recur') bzRecur(); else if(t==='payees') bzPayees(); else if(t==='cheques') bzCheques(); else if(t==='ccexp') bzCcExp(); else if(t==='debts') bzDebts(); else if(t==='expov') bzExpOv(); else if(t==='incov') bzIncOv(); else if(t==='fcov') bzFcOv(); }
+  try{ if(t==='overview') bzOverview(); else if(t==='daily') bzDaily(); else if(t==='recon') bzRecon(); else if(t==='recur') bzRecur(); else if(t==='payees') bzPayees(); else if(t==='cheques') bzCheques(); else if(t==='ccexp') bzCcExp(); else if(t==='debts') bzDebts(); else if(t==='expov') bzExpOv(); else if(t==='incov') bzIncOv(); else if(t==='fcov') bzFcOv(); else if(t==='bank') bkTop(); }
   catch(err){ console.error(err); const el=$('#tab-'+t); if(el&&BZ_NEW.has(t)) el.firstElementChild.innerHTML='<div class="card"><b>משהו לא עבד בתצוגה הזו.</b><span class="hint">'+esc(err.message||'')+'</span></div>'; }
   try{ recurEnsure(); fcSnapSoon(); }catch(e){}
   const c=cur(); if(c){ const sel=$('#bz-client'); sel.innerHTML=Object.keys(DB.clients).map(id=>`<option value="${esc(id)}"${id===DB.current?' selected':''}>${esc(DB.clients[id].name||'ללא שם')}</option>`).join(''); } }
@@ -3756,6 +3779,46 @@ function bzCcExp(){ const el=$('#bz-ccexp'), c=cur(), t0=todayIsoF(); if(!c){ el
   <div><div class="bz-sec"><h2>חיובי כרטיס אשראי בבנק</h2><span class="hint">6 החודשים האחרונים</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>חודש</th><th class="n">סה״כ חיובים</th></tr></thead><tbody>
    ${M6.map(m=>`<tr><td>${ymLabel(m)}</td><td class="n out">${bzM(bankCard[m]||0)}</td></tr>`).join('')}
   </tbody></table></div></div>`; }
+
+/* --- חשבונות בנק: יתרה + מסגרת = יתרה זמינה, מרוכז (לפי יום) / מפורט (תנועות) --- */
+let BK_MODE='sum', BK_DAYS=30, BK_UP=false; const BK_OPEN=new Set();
+function bkData(c){ const tx=(c.tx||[]).filter(t=>t.d&&+t.amt); if(!tx.length) return null;
+  const last=tx.reduce((a,t)=>t.d>a?t.d:a,''), eb=c.bankEnd, has=eb!==''&&eb!=null&&!isNaN(+eb), byD={};
+  tx.forEach(t=>{ const o=byD[t.d]||(byD[t.d]={in:0,out:0,tx:[]}); if(t.amt>0) o.in+=+t.amt; else o.out-=+t.amt; o.tx.push(t); });
+  return {last,byD,bal:has?+eb:null}; }
+function bkTop(){ const c=cur(), top=$('#bk-top'), dc=$('#bk-daycard'), up=$('#bk-upcard'), txc=$('#tx-card'); if(!top||!c) return;
+  const D=bkData(c), lim=Math.max(0,+c.bankLimit||0);
+  // סרגל כלים
+  $('#bz-hx').innerHTML=D?`<div class="bz-seg" role="group" aria-label="תצוגה"><button type="button" data-bkm="sum" aria-pressed="${BK_MODE==='sum'}">מרוכז</button><button type="button" data-bkm="det" aria-pressed="${BK_MODE==='det'}">מפורט</button></div>
+    ${BK_MODE==='sum'?`<select id="bk-days" aria-label="תקופה">${[[7,'7 ימים אחרונים'],[30,'30 ימים אחרונים'],[90,'90 ימים אחרונים'],[180,'6 חודשים אחרונים']].map(([v,l])=>`<option value="${v}"${BK_DAYS===v?' selected':''}>${l}</option>`).join('')}</select>`:''}
+    ${VIEW?'':`<button class="btn${BK_UP?' primary':''}" type="button" id="bk-upbtn" aria-expanded="${BK_UP}">העלאת דף בנק</button>`}`:'';
+  if(up) up.hidden=!!D&&!BK_UP; if(txc) txc.hidden=!!D&&BK_MODE==='sum'; dc.hidden=!D||BK_MODE!=='sum';
+  if(!D){ top.innerHTML=''; return; }
+  const bal=D.bal, avail=bal==null?null:bal+lim, over=bal!=null&&bal<-lim, neg=bal!=null&&bal<0;
+  top.innerHTML=`<div class="bz-box" style="overflow:hidden">${over?`<div class="bk-alert crit">⚠ החשבון בחריגה: היתרה ${bzS(bal)} עוברת את המסגרת (${bzS(-lim)})</div>`:neg?`<div class="bk-alert warn">החשבון ביתרת חובה, בתוך המסגרת</div>`:''}
+   <div class="bk-sum"><div><span>יתרה בבנק · ${fmtDate(D.last)}</span><b class="${neg?'bz-neg':'bz-pos'}">${bal==null?'—':bzS(bal)}</b>${bal==null?'<span class="hint">לא זוהתה יתרה בדף הבנק</span>':''}</div>
+    <div class="op" aria-hidden="true">+</div>
+    <div><span>מסגרת אשראי בבנק</span>${VIEW?`<b>${bzS(lim)}</b>`:`<label style="display:flex;align-items:center;gap:4px"><input id="bk-lim" inputmode="decimal" value="${lim||''}" placeholder="0" aria-label="מסגרת אשראי בבנק"><span>₪</span></label>`}</div>
+    <div class="op" aria-hidden="true">=</div>
+    <div><span>יתרה זמינה</span><b class="${avail!=null&&avail<0?'bz-neg':''}" style="color:${avail!=null&&avail<0?'':'var(--bz-navy)'}">${avail==null?'—':bzS(avail)}</b></div>
+    <div style="margin-inline-start:auto"><span class="hint">דף הבנק מעודכן עד ${fmtDate(D.last)}</span></div></div></div>`;
+  if(BK_MODE!=='sum') return;
+  // טבלה לפי יום: יתרה בסוף כל יום, מהיום האחרון בדף אחורה
+  const rows=[]; let b=bal; for(let i=0;i<BK_DAYS;i++){ const d=isoAddDays(D.last,-i), o=D.byD[d]; rows.push({d,o,b}); if(o&&b!=null) b=b-o.in+o.out; }
+  const catL=t=>t.cat?catLabel(c,t.cat):'';
+  dc.innerHTML=`<div class="tscroll"><table class="bz-tbl bk-day"><thead><tr><th>תאריך</th><th class="n">זכות</th><th class="n">חובה</th><th class="n">יתרה<span class="yr"> בסוף היום</span></th></tr></thead><tbody>
+   ${rows.map((r,i)=>{ const isO=BK_OPEN.has(r.d), ov=r.b!=null&&r.b<-lim, nm=r.o?r.o.tx.length:0;
+     const fd=fmtDate(r.d), sd=`${fd.slice(0,5)}<span class="yr">${fd.slice(5)}</span>`, lbl=i===0?`${sd} <span class="hint">(אחרון בדף)</span>`:sd;
+     return `<tr class="${r.o?'d':'nod'}${isO?' open':''}${ov?' over':''}" ${r.o?`data-bkd="${r.d}" tabindex="0" aria-expanded="${isO}"`:''}><td>${lbl}${nm?` <span class="hint">· ${nm===1?'תנועה אחת':nm+' תנועות'}</span>`:''}</td><td class="n in">${r.o&&r.o.in?bzM(r.o.in):'0.00'}</td><td class="n out">${r.o&&r.o.out?bzM(-r.o.out):'0.00'}</td><td class="n ${r.b!=null&&r.b<0?'neg':''}">${r.b==null?'—':bzM(r.b)}</td></tr>`
+       +(isO&&r.o?r.o.tx.map(t=>`<tr class="sub"><td>${esc(t.desc||'')}${t.det?` <span class="hint">· ${esc(t.det)}</span>`:''}</td><td class="n in">${t.amt>0?bzM(t.amt):''}</td><td class="n out">${t.amt<0?bzM(t.amt):''}</td><td class="hint">${esc(catL(t))}</td></tr>`).join(''):''); }).join('')}
+   </tbody></table></div><p class="hint" style="margin:8px 4px 0">לחיצה על יום מציגה את התנועות שלו. ${lim?'שורה ורודה = חריגה מהמסגרת.':''}</p>`; }
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-bkm],#bk-upbtn,[data-bkd]'); if(!b) return;
+  if(b.dataset.bkm){ BK_MODE=b.dataset.bkm; bkTop(); if(BK_MODE==='det') renderTxList(); }
+  else if(b.id==='bk-upbtn'){ BK_UP=!BK_UP; bkTop(); if(BK_UP) $('#bk-upcard').scrollIntoView({behavior:'smooth',block:'start'}); }
+  else if(b.dataset.bkd){ const d=b.dataset.bkd; if(BK_OPEN.has(d)) BK_OPEN.delete(d); else BK_OPEN.add(d); bkTop(); } });
+document.addEventListener('keydown',e=>{ const r=e.target.closest&&e.target.closest('[data-bkd]'); if(r&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); r.click(); } });
+document.addEventListener('change',e=>{ const t=e.target; if(t.id==='bk-days'){ BK_DAYS=+t.value; bkTop(); }
+  else if(t.id==='bk-lim'){ const v=parseNum(t.value); const c=cur(); c.bankLimit=isNaN(v)?0:Math.max(0,Math.round(Math.abs(v))); saveSoon(); bkTop(); toast('המסגרת נשמרה'); } });
 
 /* --- סקירת הוצאות / הכנסות --- */
 const BZ_XPERS=[['m0','החודש הנוכחי'],['m1','החודש הקודם'],['3','3 החודשים האחרונים'],['6','6 החודשים האחרונים'],['12','12 החודשים האחרונים']];

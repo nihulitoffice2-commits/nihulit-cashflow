@@ -2111,6 +2111,10 @@ function recurSeed(ed){ if(ed.recurInit) return false; ed.recur=ed.recur||[]; co
 function recurEnsure(){ if(VIEW||!hfDb) return; const k=hfKey(); if(!k||!HF[k]||!HFE[k]||HFE[k].recurInit) return; const ed=hfEdits(k); if(recurSeed(ed)) hfSave(k,ed); }
 // ממוצעים מ־6 החודשים המלאים האחרונים בדף הבנק
 const CC_IN_RE=/סליקה|ויזה|כא"ל|כאל|ישראכרט|מקס|לאומי קארד|קארדקום|cardcom|isracard|visa|שב"א|max/i;
+// כמה כבר נכנס/ירד החודש בבנק (לפי סינון), כדי שהחודש הנוכחי לא ייספר פעמיים
+const tmSum=(c,fn)=>{ const tm=thisYm(); return Math.round((c&&c.tx||[]).filter(t=>t.d&&t.d.startsWith(tm)&&fn(t)).reduce((a,t)=>a+Math.abs(+t.amt||0),0)); };
+const GRP_CATS={exp3:['tx_vat','tx_income','fx_bl'],exp4:['fx_salary'],exp5:['fx_tel'],exp6:[]};
+const monthLeftFrac=()=>{ const t=new Date(), dim=new Date(t.getFullYear(),t.getMonth()+1,0).getDate(); return Math.max(0,(dim-t.getDate()+1)/dim); };
 function lastFullMonths(c,n){ const tm=thisYm(), all=[...new Set((c.tx||[]).filter(t=>t.d).map(t=>t.d.slice(0,7)))].filter(m=>m<tm).sort(); return all.slice(-n); }
 function creditGenAuto(k,e,months){ const c=cur(); if(!c||c.ccKey!==k||!(c.tx||[]).length) return null; const M=lastFullMonths(c,6); if(!M.length) return null;
   const per=M.map(m=>({m,v:Math.round((c.tx||[]).filter(t=>t.amt>0&&t.d&&t.d.startsWith(m)&&CC_IN_RE.test(t.desc||'')).reduce((a,t)=>a+t.amt,0))}));
@@ -2125,9 +2129,16 @@ function varExpAvg(k,e){ const c=cur(); if(!c||c.ccKey!==k||!(c.tx||[]).length) 
   const inc=(c.tx||[]).filter(t=>t.amt<0&&t.d&&M.includes(t.d.slice(0,7))&&!skip(t));
   const per=M.map(m=>({m,v:Math.round(inc.filter(t=>t.d.startsWith(m)).reduce((a,t)=>a-t.amt,0))}));
   const avg=Math.round(sum(per.map(x=>x.v))/per.length); if(!(avg>0)) return null;
-  const big=inc.slice().sort((a,b)=>a.amt-b.amt).slice(0,8);
-  return {avg,note:`ממוצע ${per.length} החודשים האחרונים בדף הבנק (${per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')}): כל ההוצאות מהבנק, בלי מיסים, שכר, ביטוח לאומי, הלוואות, חיובי כרטיס אשראי והוצאות שמופיעות ב„תנועות קבועות”. אפשר לשנות כל חודש ידנית`,
+  const big=inc.slice().sort((a,b)=>a.amt-b.amt).slice(0,8), cur0=tmSum(c,t=>t.amt<0&&!skip(t));
+  return {avg,cur:cur0,note:`ממוצע ${per.length} החודשים האחרונים בדף הבנק (${per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')}): כל ההוצאות מהבנק, בלי מיסים, שכר, ביטוח לאומי, הלוואות, חיובי כרטיס אשראי והוצאות שמופיעות ב„תנועות קבועות”. אפשר לשנות כל חודש ידנית`,
     details:[...per.map(x=>({label:ymLabel(x.m),amount:x.v})),...big.map(t=>({label:'מהגדולות: '+(t.desc||'')+(t.det?' · '+t.det:'')+' ('+fmtDate(t.d)+')',amount:Math.round(-t.amt)}))]}; }
+function bankInAvg(k,e){ const c=cur(); if(!c||c.ccKey!==k||!(c.tx||[]).length) return null; const M=lastFullMonths(c,6); if(M.length<2) return null;
+  const R=(e.recur||[]).filter(r=>r.sec==='in'&&r.name);
+  const skip=t=>t.cat===IGNORE||t.cat==='in_loans'||CC_IN_RE.test(t.desc||'')||R.some(r=>bzNorm(t.desc)===bzNorm(r.name)||String((t.desc||'')+' '+(t.det||'')).includes(r.name));
+  const inc=(c.tx||[]).filter(t=>t.amt>0&&t.d&&M.includes(t.d.slice(0,7))&&!skip(t));
+  const per=M.map(m=>({m,v:Math.round(inc.filter(t=>t.d.startsWith(m)).reduce((a,t)=>a+t.amt,0))}));
+  const avg=Math.round(sum(per.map(x=>x.v))/per.length); if(!(avg>0)) return null;
+  return {avg,cur:tmSum(c,t=>t.amt>0&&!skip(t)),per}; }
 // ---- התאמה לבנק: כל תשלום צפוי מול תנועות הבנק (סכום ±1 ₪, תאריך מ־10 ימים לפני עד 45 אחרי) ----
 const dDays=(a,b)=>Math.round((Date.parse(b)-Date.parse(a))/864e5);
 const todayIsoF=()=>{ const t=new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0'); };
@@ -2164,15 +2175,22 @@ const ovIdx=(m,months)=>m<months[0]?(months[0]<=thisYm()?0:-1):months.indexOf(m)
 function cardLines(k,e,months){
   const n0=(e.cardRows&&e.cardRows[0]&&e.cardRows[0].src==='card'&&+e.cardRows[0].n)||3;
   const a=null, cg=creditGenAuto(k,e,months), v=cg?cg.v:0;  // הכנסות באשראי - כללי: ממוצע 6 חודשים מהבנק, בלי הוראות קבע ותשלומים
-  const out=[{id:'inc1',sec:'in',cardRow:0,cr:{src:'card',n:n0},label:'הכנסות באשראי - כללי',vals:months.map(()=>v),
+  const out=[{id:'inc1',sec:'in',spread:true,cardRow:0,cr:{src:'card',n:n0},label:'הכנסות באשראי - כללי',vals:months.map(()=>v),
     note:a?`הסכום ההתחלתי הוא ממוצע תקבולי האשראי בקארדקום ב־${a.per.length} החודשים האחרונים`+(a.per.length<a.asked?` (יש נתונים רק ל־${a.per.length})`:'')+': '+a.per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')+'. מה שנכתב בחודש הראשון מתמלא בכל החודשים, ואפשר לשנות כל חודש בנפרד':'אין עדיין נתוני אשראי מקארדקום. אפשר למלא ידנית',details:[]}];
   if(cg) out[0].note=cg.note;
   [[1,"הכנסות - צ'קים"],[2,'הכנסות מהבנק'],[3,'הכנסות באשראי - תשלומים']].forEach(([i,label])=>{ const kind=INC_KIND[i], items=(e.incItems||[]).filter(x=>x.kind===kind).concat(kind==='cust'?recurItems(e).filter(x=>x.sec!=='out'&&x.kind==='cust'):[]), vals=months.map(()=>0);
     items.forEach(x=>liveEvents(x).forEach(ev=>{ const m=ev.date.slice(0,7); const j=ovIdx(m,months); if(j>=0) vals[j]+=ev.amount; }));
     out.push({id:'inc'+(i+1),sec:'in',incKind:kind,label,vals,items,fixed:true,note:'',details:[]}); });
   const rr=retLine(k,months); if(rr) out.push(rr);
-  // סדר השורות: מהבנק, אשראי - הוראות קבע, אשראי - תשלומים, אשראי - כללי, צ'קים
-  const ORD=['inc3','inc-ret','inc4','inc1','inc2']; out.sort((a,b)=>ORD.indexOf(a.id)-ORD.indexOf(b.id));
+  // החודש הנוכחי: אשראי כללי לפי הימים שנשארו בחודש
+  const j0=months.indexOf(thisYm()), fr=monthLeftFrac();
+  if(cg&&j0>=0){ out[0].vals[j0]=Math.round(v*fr); out[0].note+=`. ב${ymLabel(months[j0])} נספר רק החלק של הימים שנשארו בחודש (${Math.round(fr*100)}%)`; }
+  // הכנסות מהבנק (העברות, צ'קים וכו') לפי ממוצע 6 חודשים, פחות מה שכבר צפוי בשורה „הכנסות מהבנק” ומה שכבר נכנס החודש
+  const ba=bankInAvg(k,e);
+  if(ba){ const i3=out.find(r=>r.id==='inc3'), vals=months.map((m,i)=>{ let x=ba.avg-(i3?i3.vals[i]:0); if(i===j0) x-=ba.cur; return Math.max(0,Math.round(x)); });
+    out.push({id:'inc5',sec:'in',label:'הכנסות מהבנק - ממוצע 6 חודשים',plain:true,spread:true,vals,note:`ממוצע ההכנסות בדף הבנק ב־${ba.per.length} החודשים האחרונים, בלי זיכויי אשראי (הם בשורות האשראי), הלוואות והעברות בין חשבונות: ${fmt(ba.avg)} ₪ בחודש (${ba.per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')}). מורידים ממנו את ההכנסות שכבר רשומות בשורה „הכנסות מהבנק”${j0>=0?`, ובחודש הנוכחי גם את מה שכבר נכנס (${fmt(ba.cur)} ₪)`:''}. אפשר לשנות כל חודש ידנית`,details:ba.per.map(x=>({label:ymLabel(x.m),amount:x.v}))}); }
+  // סדר השורות: מהבנק, ממוצע מהבנק, אשראי - הוראות קבע, אשראי - תשלומים, אשראי - כללי, צ'קים
+  const ORD=['inc3','inc5','inc-ret','inc4','inc1','inc2']; out.sort((a,b)=>ORD.indexOf(a.id)-ORD.indexOf(b.id));
   return out;
 }
 // הוראות קבע: מתוך „דוח רישום הוראות לחיוב” שהועלה. כל לקוח רק בחודשים שנותרו לו
@@ -2213,19 +2231,22 @@ function cardOutAvg(n){ const c=cur(); if(!c||!c.tx||!c.tx.length) return null;
   const per=have.map(m=>({m,v:Math.round(-sum(list.filter(t=>t.d.startsWith(m)).map(t=>t.amt)))}));
   return {avg:Math.round(sum(per.map(x=>x.v))/per.length),per}; }
 function expLines(k,e,months){
-  const rI=recurItems(e).filter(x=>x.kind==='bank');
+  const rI=recurItems(e).filter(x=>x.kind==='bank'), c0=cur(), mine=c0&&c0.ccKey===k, tm=thisYm(), j0=months.indexOf(tm);
   const live=items=>{ const vals=months.map(()=>0); items.forEach(x=>liveEvents(x).forEach(ev=>{ const j=ovIdx(ev.date.slice(0,7),months); if(j>=0) vals[j]+=ev.amount; })); return vals; };
   const items=(e.incItems||[]).filter(x=>x.kind==='bank').concat(rI.filter(x=>x.grp==='exp1'));
   const out=[{id:'exp1',sec:'out',incKind:'bank',label:'הוצאות מהבנק',vals:live(items),items,fixed:true,note:'',details:[]}];
   const cs=ccStmtLine(k,months);
   if(cs) out.push(cs);
   else { const c=cur(), a=c&&c.ccKey===k?cardOutAvg(6):null;
-    out.push({id:'exp2',sec:'out',label:'אשראי - ממוצע 6 חודשים אחרונים',plain:true,vals:months.map(()=>a?a.avg:0),note:a?'חיובי כרטיסי האשראי בדף הבנק: '+a.per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')+'. פירוט כרטיס שמועלה במסך „הוצאות אשראי” מחליף את הממוצע':'אין חיובי כרטיס אשראי בדף הבנק',details:[]}); }
+    const cc0=a&&j0>=0?tmSum(c,t=>t.amt<0&&EXP_CARD_RE.test(t.desc||'')):0;
+    out.push({id:'exp2',sec:'out',label:'אשראי - ממוצע 6 חודשים אחרונים',plain:true,spread:true,vals:months.map((m,i)=>a?(i===j0?Math.max(0,a.avg-cc0):a.avg):0),note:a?'חיובי כרטיסי האשראי בדף הבנק: '+a.per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')+'. פירוט כרטיס שמועלה במסך „הוצאות אשראי” מחליף את הממוצע':'אין חיובי כרטיס אשראי בדף הבנק',details:[]}); }
   EXP_FIXED.forEach(([id,label,v])=>{
-    if(e.recurInit){ const its=rI.filter(x=>x.grp===id);
-      out.push({id,sec:'out',label,fixed:true,items:its,vals:live(its),note:its.length?'לפי „תנועות קבועות”. משנים סכומים ומוסיפים הוצאות שם':'אין כאן הוצאות. מוסיפים במסך „תנועות קבועות” ובוחרים את השורה „'+label+'”',details:its.map(x=>({label:x.cust+(x.est?' (משוער)':'')+' · ב־'+(+x.date.slice(8,10))+' לחודש',amount:Math.round(x.amount),monthly:true}))}); }
+    if(e.recurInit){ let its=rI.filter(x=>x.grp===id), paid0=0;
+      if(mine&&j0>=0&&(GRP_CATS[id]||[]).length){ let paid=paid0=tmSum(c0,t=>t.amt<0&&GRP_CATS[id].includes(t.cat));
+        if(paid>0) its=its.map(x=>{ if(!x.est) return x; const ev=itemEvents(x).find(q=>q.date.slice(0,7)===tm); if(!ev) return x; const red=Math.min(paid,ev.amount); paid-=red; return {...x,ak:{...(x.ak||{}),[ev.k]:Math.round(ev.amount-red)}}; }); }
+      out.push({id,sec:'out',label,fixed:true,items:its,vals:live(its),note:its.length?'לפי „תנועות קבועות”. משנים סכומים ומוסיפים הוצאות שם'+(paid0?`. ב${ymLabel(tm)} כבר ירדו מהבנק ${fmt(paid0)} ₪ בשורה הזו, ולכן נשאר רק ההפרש`:''):'אין כאן הוצאות. מוסיפים במסך „תנועות קבועות” ובוחרים את השורה „'+label+'”',details:its.map(x=>({label:x.cust+(x.est?' (משוער)':'')+' · ב־'+(+x.date.slice(8,10))+' לחודש',amount:Math.round(x.amount),monthly:true}))}); }
     else out.push({id,sec:'out',label,plain:true,vals:months.map(()=>v),note:'',details:[]}); });
-  const va=varExpAvg(k,e); if(va) out.push({id:'exp7',sec:'out',label:'הוצאות משתנות - ממוצע 6 חודשים',plain:true,vals:months.map(()=>va.avg),note:va.note,details:va.details});
+  const va=varExpAvg(k,e); if(va) out.push({id:'exp7',sec:'out',label:'הוצאות משתנות - ממוצע 6 חודשים',plain:true,spread:true,vals:months.map((m,i)=>i===j0?Math.max(0,va.avg-va.cur):va.avg),note:va.note+(j0>=0?`. ב${ymLabel(tm)} כבר ירדו ${fmt(va.cur)} ₪ מההוצאות האלה, ולכן נשאר ${fmt(Math.max(0,va.avg-va.cur))} ₪`:''),details:va.details});
   return out;
 }
 // רינדור מחדש בלי לאבד את השדה שהמשתמשת עומדת בו (למשל כשעוברים בטאב לשדה הבא)
@@ -2357,6 +2378,11 @@ function hfDaily(R,e){
         evs.push({d,amt:sign*ev.amount,row:r.label,cust:x.cust||'',name:(x.cust||r.label)+(ev.n>1?' ('+(ev.k+1)+'/'+ev.n+')':'')}); }));
       const rest=(r.vals[i]||0)-dated; if(Math.abs(rest)<0.5) return;
       if(r.sec==='in') allIn+=rest;
+      if(r.spread){ // ממוצעים: מתפזרים על פני החודש, פעם בשבוע, לפי מספר הימים
+        let a=m+'-01'<start?start:m+'-01'; const z=lastDayOf(m); if(a>z) return; const tot=dDays(a,z)+1; let left=rest;
+        while(a<=z){ const b2=isoAddDays(a,6)>z?z:isoAddDays(a,6), part=b2===z?left:Math.round(rest*(dDays(a,b2)+1)/tot*100)/100; left-=part;
+          evs.push({d:a,amt:sign*part,row:r.label,name:r.label}); a=isoAddDays(b2,1); }
+        return; }
       let d=r.sec==='in'?lastDayOf(m):m+'-01'; if(d<start) d=start;
       evs.push({d,amt:sign*rest,row:r.label,name:r.label}); }); });
   evs.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);

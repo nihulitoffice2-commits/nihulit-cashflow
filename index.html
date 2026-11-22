@@ -1268,8 +1268,15 @@ function importTx(c,list){
     t.id=uid(); if(!t.det) delete t.det; t.cat=classify(c,t); c.tx.push(t); ids.push(t.id); added++; });
   sortTx(c);
   const eb=deriveEnd(c.tx); if(eb!=null) c.bankEnd=eb;
-  return {added,dup,filled,ids};
+  const ds=list.map(t=>t.d).filter(Boolean).sort();
+  return (LAST_IMP={added,dup,filled,ids,total:list.length,from:ds[0]||null,to:ds[ds.length-1]||null});
 }
+let LAST_IMP=null;
+// הודעה ברורה אחרי קליטה: כמה חדשות, כמה כבר היו, ואיזה טווח תאריכים יש בקובץ
+function impMsg(r){ if(!r||!r.total) return 'לא נמצאו תנועות בקובץ';
+  const rng=r.from?` (${fmtDate(r.from)}–${fmtDate(r.to)})`:'';
+  if(!r.added) return `הקובץ נקלט: ${r.total} תנועות בקובץ${rng}. כולן כבר קיימות במערכת, אין תנועות חדשות`;
+  return `הקובץ נקלט: ${r.added} תנועות חדשות נוספו${r.dup?`, ${r.dup} כבר היו במערכת`:''}${rng}`; }
 
 /* ---------- history & forecast math ---------- */
 function history(c){
@@ -1674,10 +1681,10 @@ function autoImport(){
   const nm=k=>P.map[k]>=0?esc(P.headers[P.map[k]]):null;
   const parts=[['תאריך',nm('date')],['תיאור',nm('desc')],['פירוט',nm('det')],['אסמכתא',nm('ref')],P.map.amount>=0?['סכום',nm('amount')]:null,P.map.credit>=0?['זכות',nm('credit')]:null,P.map.debit>=0?['חובה',nm('debit')]:null,['יתרה',nm('bal')]].filter(x=>x&&x[1]);
   const box=$('#auto-note'); box.hidden=false; box.style.borderColor='var(--in)'; box.style.background='var(--in-weak)';
-  box.innerHTML=`<div><span class="pill good">✓ העמודות הותאמו אוטומטית</span> <b>${esc(P.src)}</b>: נוספו ${r.added} תנועות חדשות${r.dup?`, ${r.dup} כבר היו קיימות`:''}${skipped?`, ${skipped} שורות דולגו (סיכומים או שורות ריקות)`:''}${P.map.neg?'. כיוון הסכומים תוקן לפי עמודת היתרה':''}.</div>
+  box.innerHTML=`<div><span class="pill good">✓ העמודות הותאמו אוטומטית</span> <b>${esc(P.src)}</b>: ${esc(impMsg(r).replace(/^הקובץ נקלט: /,''))}${skipped?`, ${skipped} שורות דולגו (סיכומים או שורות ריקות)`:''}${P.map.neg?'. כיוון הסכומים תוקן לפי עמודת היתרה':''}.</div>
     <div class="hint" style="margin-top:4px">${P.ai?'הקובץ נקרא בעזרת Claude, והשדות (תאריך, תיאור, פירוט, אסמכתא, סכום ויתרה) זוהו אוטומטית':parts.map(([a,b])=>`${a}: „${b}”`).join(' · ')}</div>
     <div class="actions" style="margin-top:8px"><button class="btn sm" id="auto-fix" type="button">משהו לא נכון? ביטול ובחירת עמודות ידנית</button><button class="btn ghost sm" id="auto-ok" type="button">סגירה</button></div>`;
-  toast('נקלטו '+r.added+' תנועות. העמודות הותאמו אוטומטית');
+  toast(impMsg(r));
 }
 on('#auto-note','click',e=>{
   if(e.target.closest('#auto-ok')){ $('#auto-note').hidden=true; return; }
@@ -1723,7 +1730,7 @@ on('#btn-map-cancel','click',()=>{ pending=null; renderMapping(); });
 on('#btn-import','click',()=>{
   const c=cur(), {out}=parsePending(), r=importTx(c,out); if(r.added) setTimeout(()=>{ try{ ctlMaybe(true); }catch(e){} },900);
   pending=null; renderMapping(); c.example=false; saveSoon(); renderHeader(); renderBank(); updateCalc();
-  toast('נוספו '+r.added+' תנועות חדשות'+(r.dup?' · '+r.dup+' כבר היו קיימות'+(r.filled?`, ול־${r.filled} מהן נוספו פירוט או אסמכתא`:''):''));
+  toast(impMsg(r)+(r.filled?`. ל־${r.filled} תנועות קיימות נוספו פירוט או אסמכתא`:''));
   $('#hist-card').scrollIntoView({behavior:'smooth',block:'start'});
 });
 // יש קבצים (למשל מקארדקום) שבהם סימון גודל הטבלה שגוי ומכסה רק שורה אחת. מחשבים אותו מחדש לפי התאים בפועל
@@ -3847,13 +3854,16 @@ document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closes
 async function bkReadMany(files){ const st=$('#bk-upst'), done=[], left=files.slice();
   // אקסל ו־CSV קודם (מהירים), PDF אחריהם
   left.sort((a,b)=>(/\.pdf$/i.test(a.name))-(/\.pdf$/i.test(b.name)));
-  while(left.length){ const f=left.shift(), n0=(cur().tx||[]).length;
+  while(left.length){ const f=left.shift(), n0=(cur().tx||[]).length; LAST_IMP=null;
     st.innerHTML=files.length>1?`<b>קובץ ${done.length+1} מתוך ${files.length}:</b> ${esc(f.name)}`:'';
     const sub=document.createElement('div'); st.appendChild(sub);
     await readFile(f,sub);
     const mc=$('#mapcard'); if(mc&&!mc.hidden){ BK_UP=true; bkTop(); st.innerHTML=`<span class="pill warn">צריך לאשר את התאמת העמודות בקובץ ${esc(f.name)}</span>${left.length?` <span class="hint">אחר כך מעלים שוב את ${left.length} הקבצים שנשארו</span>`:''}`; mc.scrollIntoView({behavior:'smooth',block:'start'}); return; }
-    done.push({name:f.name,added:(cur().tx||[]).length-n0}); }
+    done.push({name:f.name,added:(cur().tx||[]).length-n0,r:LAST_IMP}); }
   const tot=done.reduce((a,x)=>a+Math.max(0,x.added),0);
+  if(done.length===1){ const x=done[0]; st.innerHTML=`<span class="pill ${x.added>0?'good':'mute'}">✓ ${esc(impMsg(x.r))}</span>`; setTimeout(()=>{ if(st.textContent.startsWith('✓')) st.innerHTML=''; },20000); return; }
+  st.innerHTML=`<span class="pill good">✓ נקלטו ${done.length} קבצים: ${tot?tot+' תנועות חדשות':'אין תנועות חדשות, הכול כבר היה במערכת'}</span><div class="hint">${done.map(x=>'<b>'+esc(x.name)+'</b>: '+esc(impMsg(x.r).replace(/^הקובץ נקלט: /,''))).join('<br>')}</div>`;
+  setTimeout(()=>{ if(st.textContent.startsWith('✓')) st.innerHTML=''; },20000); return;
   st.innerHTML=`<span class="pill good">✓ ${done.length>1?`נקלטו ${done.length} קבצים`:'הקובץ נקלט'}, ${tot} תנועות חדשות</span>${done.length>1?' <span class="hint">'+done.map(x=>esc(x.name)+': '+Math.max(0,x.added)).join(' · ')+'</span>':''}`;
   setTimeout(()=>{ if(st.textContent.startsWith('✓')) st.innerHTML=''; },15000); }
 document.addEventListener('change',e=>{ if(e.target.id==='bk-files'){ const fs=[...e.target.files]; e.target.value=''; if(fs.length) bkReadMany(fs); } });

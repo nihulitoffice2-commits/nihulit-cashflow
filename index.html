@@ -380,6 +380,7 @@ body.bz .pill{border-radius:3px}
 .bk-day tr.nod td{color:#9aa7b2}
 .bk-day tr.sub td{background:#fafcfd;font-size:14px;color:var(--bz-text);padding-block:6px}
 .bk-day .neg{color:var(--bz-red);font-weight:700}
+#bk-upst:empty{display:none}#bk-upst{display:grid;gap:4px;padding:10px 14px;background:var(--bz-panel);border:1px solid var(--bz-line);margin-bottom:12px}
 @media (max-width:700px){.bk-day td:first-child .hint,.bk-day .yr{display:none}.bz-tbl.bk-day td,.bz-tbl.bk-day th{padding:8px 6px}.bz-tbl.bk-day{font-size:13.5px}.bz-tbl.bk-day tr.sub td{white-space:normal}.bk-day small{display:none}}
 #ctl-ov .card{max-width:820px;width:100%;max-height:92vh;overflow:auto}
 #ctl-ov h3{font-size:16px;margin:16px 0 8px;color:#022258;display:flex;gap:8px;align-items:center}
@@ -702,6 +703,7 @@ body.bz .pill{border-radius:3px}
 
   <!-- ===== BANK ===== -->
   <section class="panel" id="tab-bank" role="tabpanel" hidden>
+    <div class="bz-only" id="bk-upwrap"><input type="file" id="bk-files" multiple accept=".pdf,.xlsx,.xls,.csv,.txt,.htm,.html,.docx" hidden><div class="status" id="bk-upst" aria-live="polite"></div></div>
     <div id="bk-top" class="bz-only"></div>
     <div class="card" id="bk-daycard" hidden></div>
     <div class="card" id="bk-upcard">
@@ -711,7 +713,7 @@ body.bz .pill{border-radius:3px}
           <strong>העלאת קובץ מהבנק</strong>
           <span class="hint">אקסל, PDF, וורד (docx) או CSV, כפי שיוצא מאתר הבנק. אפשר גם לגרור לכאן. קריאת PDF ווורד בלי טבלה נעשית על ידי Claude.</span>
           <label class="btn primary" for="file-in">בחירת קובץ</label>
-          <input type="file" id="file-in" accept=".xlsx,.xls,.csv,.txt,.htm,.html,.pdf,.docx,.doc" hidden>
+          <input type="file" id="file-in" multiple accept=".xlsx,.xls,.csv,.txt,.htm,.html,.pdf,.docx,.doc" hidden>
           <span class="status" id="file-status"></span>
         </div>
         <div class="f" style="gap:8px">
@@ -1774,8 +1776,8 @@ async function bkFromText(text,status){
   return (Array.isArray(j)?j:[]).map(t=>({d:parseDate(t.d),desc:String(t.desc||'ללא תיאור').slice(0,120),det:String(t.det||'').replace(/\s+/g,' ').trim().slice(0,200),ref:String(t.ref||'').slice(0,30),amt:Math.round((+t.amt||0)*100)/100,bal:t.bal==null||isNaN(+t.bal)?null:+t.bal})).filter(t=>t.d&&t.amt);
 }
 const txRows=tx=>[['תאריך','תיאור','פירוט','אסמכתא','סכום','יתרה'],...tx.map(t=>[t.d,t.desc,t.det||'',t.ref||'',t.amt,t.bal==null?'':t.bal])];
-async function readFile(f){
-  const st=$('#file-status');
+async function readFile(f,stEl){
+  const st=stEl||$('#file-status');
   try{
     const buf=await f.arrayBuffer(), name=f.name.toLowerCase();
     if(name.endsWith('.pdf')){
@@ -1804,7 +1806,7 @@ async function readFile(f){
     }
   }catch(e){ st.textContent=''; toast(e&&e.code?bkErr(e):(e&&e.message)||'לא הצלחנו לקרוא את הקובץ. נסו לשמור אותו כ־CSV או להדביק את הטבלה'); }
 }
-on('#file-in','change',e=>{ const f=e.target.files[0]; if(f) readFile(f); e.target.value=''; });
+on('#file-in','change',e=>{ const fs=[...e.target.files]; e.target.value=''; if(!fs.length) return; if(BZ) bkReadMany(fs); else readFile(fs[0]); });
 const drop=$('#drop');
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.remove('over'); }));
@@ -3791,7 +3793,7 @@ function bkTop(){ const c=cur(), top=$('#bk-top'), dc=$('#bk-daycard'), up=$('#b
   // סרגל כלים
   $('#bz-hx').innerHTML=D?`<div class="bz-seg" role="group" aria-label="תצוגה"><button type="button" data-bkm="sum" aria-pressed="${BK_MODE==='sum'}">מרוכז</button><button type="button" data-bkm="det" aria-pressed="${BK_MODE==='det'}">מפורט</button></div>
     ${BK_MODE==='sum'?`<select id="bk-days" aria-label="תקופה">${[[7,'7 ימים אחרונים'],[30,'30 ימים אחרונים'],[90,'90 ימים אחרונים'],[180,'6 חודשים אחרונים']].map(([v,l])=>`<option value="${v}"${BK_DAYS===v?' selected':''}>${l}</option>`).join('')}</select>`:''}
-    ${VIEW?'':`<button class="btn${BK_UP?' primary':''}" type="button" id="bk-upbtn" aria-expanded="${BK_UP}">העלאת דף בנק</button>`}`:'';
+    ${VIEW?'':`<label class="btn primary" for="bk-files" title="אפשר לבחור כמה קבצים יחד: PDF, אקסל או CSV">העלאת דף בנק</label><button class="btn ghost${BK_UP?' primary':''}" type="button" id="bk-upbtn" aria-expanded="${BK_UP}">הדבקה / הוספה ידנית</button>`}`:(VIEW?'':`<label class="btn primary" for="bk-files">העלאת דף בנק</label>`);
   if(up) up.hidden=!!D&&!BK_UP; if(txc) txc.hidden=!!D&&BK_MODE==='sum'; dc.hidden=!D||BK_MODE!=='sum';
   if(!D){ top.innerHTML=''; return; }
   const bal=D.bal, avail=bal==null?null:bal+lim, over=bal!=null&&bal<-lim, neg=bal!=null&&bal<0;
@@ -3816,6 +3818,19 @@ document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closes
   if(b.dataset.bkm){ BK_MODE=b.dataset.bkm; bkTop(); if(BK_MODE==='det') renderTxList(); }
   else if(b.id==='bk-upbtn'){ BK_UP=!BK_UP; bkTop(); if(BK_UP) $('#bk-upcard').scrollIntoView({behavior:'smooth',block:'start'}); }
   else if(b.dataset.bkd){ const d=b.dataset.bkd; if(BK_OPEN.has(d)) BK_OPEN.delete(d); else BK_OPEN.add(d); bkTop(); } });
+async function bkReadMany(files){ const st=$('#bk-upst'), done=[], left=files.slice();
+  // אקסל ו־CSV קודם (מהירים), PDF אחריהם
+  left.sort((a,b)=>(/\.pdf$/i.test(a.name))-(/\.pdf$/i.test(b.name)));
+  while(left.length){ const f=left.shift(), n0=(cur().tx||[]).length;
+    st.innerHTML=files.length>1?`<b>קובץ ${done.length+1} מתוך ${files.length}:</b> ${esc(f.name)}`:'';
+    const sub=document.createElement('div'); st.appendChild(sub);
+    await readFile(f,sub);
+    const mc=$('#mapcard'); if(mc&&!mc.hidden){ BK_UP=true; bkTop(); st.innerHTML=`<span class="pill warn">צריך לאשר את התאמת העמודות בקובץ ${esc(f.name)}</span>${left.length?` <span class="hint">אחר כך מעלים שוב את ${left.length} הקבצים שנשארו</span>`:''}`; mc.scrollIntoView({behavior:'smooth',block:'start'}); return; }
+    done.push({name:f.name,added:(cur().tx||[]).length-n0}); }
+  const tot=done.reduce((a,x)=>a+Math.max(0,x.added),0);
+  st.innerHTML=`<span class="pill good">✓ ${done.length>1?`נקלטו ${done.length} קבצים`:'הקובץ נקלט'}, ${tot} תנועות חדשות</span>${done.length>1?' <span class="hint">'+done.map(x=>esc(x.name)+': '+Math.max(0,x.added)).join(' · ')+'</span>':''}`;
+  setTimeout(()=>{ if(st.textContent.startsWith('✓')) st.innerHTML=''; },15000); }
+document.addEventListener('change',e=>{ if(e.target.id==='bk-files'){ const fs=[...e.target.files]; e.target.value=''; if(fs.length) bkReadMany(fs); } });
 document.addEventListener('keydown',e=>{ const r=e.target.closest&&e.target.closest('[data-bkd]'); if(r&&(e.key==='Enter'||e.key===' ')){ e.preventDefault(); r.click(); } });
 document.addEventListener('change',e=>{ const t=e.target; if(t.id==='bk-days'){ BK_DAYS=+t.value; bkTop(); }
   else if(t.id==='bk-lim'){ const v=parseNum(t.value); const c=cur(); c.bankLimit=isNaN(v)?0:Math.max(0,Math.round(Math.abs(v))); saveSoon(); bkTop(); toast('המסגרת נשמרה'); } });

@@ -4094,15 +4094,19 @@ document.addEventListener('change',e=>{ if(e.target.id==='cc-h'){ CC_H=+e.target
 let ccQT=null; document.addEventListener('input',e=>{ if(e.target.id==='cc-q'){ CC_Q=e.target.value; clearTimeout(ccQT); ccQT=setTimeout(()=>{ const pos=e.target.selectionStart; ccOrders(); const i=$('#cc-q'); if(i){ i.focus(); try{ i.setSelectionRange(pos,pos); }catch(x){} } },250); } });
 
 /* --- סקירת הוצאות / הכנסות --- */
-const BZ_XPERS=[['m0','החודש הנוכחי'],['m1','החודש הקודם'],['3','3 החודשים האחרונים'],['6','6 החודשים האחרונים'],['12','12 החודשים האחרונים']];
+const BZ_XPERS=[['day','היום האחרון'],['week','השבוע האחרון'],['m0','החודש הנוכחי'],['m1','החודש הקודם'],['3','3 החודשים האחרונים'],['6','6 החודשים האחרונים'],['12','12 החודשים האחרונים']];
 let BZ_XP='6', BZ_IP='6', BZ_IFP='3';
-function bzXRange(per){ const tm=thisYm(); if(per==='m0') return [tm]; if(per==='m1') return [ymAdd(tm,-1)]; const n=+per, M=[]; for(let i=n-1;i>=0;i--) M.push(ymAdd(tm,-i)); return M; }
+// יום/שבוע אחרון: לפי התאריך האחרון שיש עליו נתונים מהבנק, וההשוואה ליום/לשבוע שלפניו
+function bzDW(per,c){ if(per!=='day'&&per!=='week') return null; const to=bzPerFrom('day',c,todayIsoF()), n=per==='day'?1:7, from=isoAddDays(to,-(n-1));
+  return {from,to,pf:isoAddDays(from,-n),pt:isoAddDays(from,-1),lab:per==='day'?fmtDate(to):fmtDate(from)+' עד '+fmtDate(to)}; }
+function bzXRange(per){ if(per==='day'||per==='week') return [thisYm()]; const tm=thisYm(); if(per==='m0') return [tm]; if(per==='m1') return [ymAdd(tm,-1)]; const n=+per, M=[]; for(let i=n-1;i>=0;i--) M.push(ymAdd(tm,-i)); return M; }
 function bzDsOne(id,recs,M,opts){ // recs: {m,type,amt}
-  const inM=new Set(M), by={}, byM={}; recs.forEach(r=>{ if(!inM.has(r.m)) return; by[r.type]=(by[r.type]||0)+r.amt; (byM[r.m]=byM[r.m]||{})[r.type]=((byM[r.m]||{})[r.type]||0)+r.amt; });
+  const inM=new Set(M), by={}, byM={}, inP=opts.inP||(r=>inM.has(r.m)); recs.forEach(r=>{ if(!inP(r)) return; by[r.type]=(by[r.type]||0)+r.amt; (byM[r.m]=byM[r.m]||{})[r.type]=((byM[r.m]||{})[r.type]||0)+r.amt; });
   bzDsSet(id,by,{},[opts.lab,'']); const S=BZ_DS[id]; Object.assign(S,{one:true,sh:opts.sh,neg:!!opts.neg,months:opts.barM||M,nm:M.length,col:opts.col,empty:opts.empty});
   // עמודות חודשיות: לפחות 6 חודשים לצורך השוואה
   const bm={}; recs.forEach(r=>{ if(!(opts.barM||M).includes(r.m)) return; (bm[r.m]=bm[r.m]||{})[r.type]=((bm[r.m]||{})[r.type]||0)+r.amt; }); S.byM=bm;
-  if(opts.prevM&&opts.prevM.length){ const pv={}; recs.forEach(r=>{ if(opts.prevM.includes(r.m)) pv[r.type]=(pv[r.type]||0)+r.amt/opts.prevM.length; }); S.prev=pv; } else S.prev=null;
+  if(opts.inPrev){ const pv={}; recs.forEach(r=>{ if(opts.inPrev(r)) pv[r.type]=(pv[r.type]||0)+r.amt; }); S.prev=pv; }
+  else if(opts.prevM&&opts.prevM.length){ const pv={}; recs.forEach(r=>{ if(opts.prevM.includes(r.m)) pv[r.type]=(pv[r.type]||0)+r.amt/opts.prevM.length; }); S.prev=pv; } else S.prev=null;
   const D=BZ_DS[id]; if(D.dep.length>9){ const keep=D.dep.slice(0,8), rest=D.dep.slice(8), oth=rest.reduce((a,x)=>a+x.v,0), names=new Set(rest.map(x=>x.n));
     D.dep=[...keep,{n:'שאר הסוגים',v:oth,i:8}]; Object.values(bm).forEach(o=>{ let s=0; names.forEach(n=>{ s+=o[n]||0; delete o[n]; }); if(s) o['שאר הסוגים']=s; });
     if(S.prev){ let s=0; names.forEach(n=>{ s+=S.prev[n]||0; }); S.prev['שאר הסוגים']=s; } } }
@@ -4115,15 +4119,16 @@ function expRecords(c){ const cc=ccRowsAll(c), ccM=new Set(cc.map(r=>String(r.d|
   return out; }
 function bzExpOv(){ const el=$('#bz-expov'), c=cur(); if(!c){ el.innerHTML=bzNoData(); return; }
   $('#bz-hx').innerHTML=bzPerSel('bz-xp',BZ_XP,BZ_XPERS);
-  const M=bzXRange(BZ_XP), barM=bzBarMonths(M), prevM=M.map(m=>ymAdd(m,-M.length)), recs=expRecords(c), inM=new Set(M);
-  bzDsOne('exp',recs,M,{lab:'הוצאות',sh:BZ_DRS,neg:true,barM,prevM,col:'סוג ההוצאה',empty:'אין הוצאות בתקופה'});
-  const tot=recs.filter(r=>inM.has(r.m)).reduce((a,r)=>a+r.amt,0), pTot=recs.filter(r=>prevM.includes(r.m)).reduce((a,r)=>a+r.amt,0);
+  const DW=bzDW(BZ_XP,c), M=bzXRange(BZ_XP), barM=bzBarMonths(M), prevM=M.map(m=>ymAdd(m,-M.length)), recs=expRecords(c), inM=new Set(M);
+  const fP=DW?(r=>r.d>=DW.from&&r.d<=DW.to):(r=>inM.has(r.m)), fPrev=DW?(r=>r.d>=DW.pf&&r.d<=DW.pt):(r=>prevM.includes(r.m));
+  bzDsOne('exp',recs,M,{lab:'הוצאות',sh:BZ_DRS,neg:true,barM,prevM,col:'סוג ההוצאה',empty:'אין הוצאות בתקופה',...(DW?{inP:fP,inPrev:fPrev}:{})});
+  const tot=recs.filter(fP).reduce((a,r)=>a+r.amt,0), pTot=recs.filter(fPrev).reduce((a,r)=>a+r.amt,0);
   const RM=rcMatch(c), stOf=r=>r.key.startsWith('tx:')?RM.res[r.key.slice(3)]:RM.ccRes[r.key.slice(3)];
-  const inP=recs.filter(r=>inM.has(r.m)), noInv=inP.filter(r=>{ const s=stOf(r); return s&&s.st==='nox'; }), gotInv=inP.filter(r=>{ const s=stOf(r); return s&&s.st==='gotx'; });
+  const inP=recs.filter(fP), noInv=inP.filter(r=>{ const s=stOf(r); return s&&s.st==='nox'; }), gotInv=inP.filter(r=>{ const s=stOf(r); return s&&s.st==='gotx'; });
   const top=BZ_DS.exp.dep[0], sel=BZ_XSEL.exp, hasCc=ccRowsAll(c).length>0;
   const det=sel?inP.filter(r=>r.type===sel||(sel==='שאר הסוגים'&&!BZ_DS.exp.dep.slice(0,8).some(x=>x.n===r.type))).sort((a,b)=>b.amt-a.amt):[];
-  el.innerHTML=`<div class="bz-sum"><div><span>סך ההוצאות בתקופה</span><b class="bz-neg">${bzS(-tot)}</b><span class="hint">${M.length>1?'ממוצע '+bzS(-tot/M.length)+' לחודש':ymLabel(M[0])}</span></div>
-   <div><span>לעומת התקופה הקודמת</span><b class="${tot>pTot?'bz-neg':'bz-pos'}">${pTot?(tot>=pTot?'▲':'▼')+Math.abs(Math.round((tot/pTot-1)*100))+'%':'—'}</b><span class="hint">${pTot?bzS(-pTot):'אין נתונים'}</span></div>
+  el.innerHTML=`<div class="bz-sum"><div><span>סך ההוצאות בתקופה</span><b class="bz-neg">${bzS(-tot)}</b><span class="hint">${DW?DW.lab:M.length>1?'ממוצע '+bzS(-tot/M.length)+' לחודש':ymLabel(M[0])}</span></div>
+   <div><span>${DW?(BZ_XP==='day'?'לעומת היום הקודם':'לעומת השבוע הקודם'):'לעומת התקופה הקודמת'}</span><b class="${tot>pTot?'bz-neg':'bz-pos'}">${pTot?(tot>=pTot?'▲':'▼')+Math.abs(Math.round((tot/pTot-1)*100))+'%':'—'}</b><span class="hint">${pTot?bzS(-pTot):'אין נתונים'}</span></div>
    <div><span>ההוצאה הגדולה</span><b style="font-size:18px">${top?esc(top.n):'—'}</b><span class="hint">${top&&tot?Math.round(top.v/tot*100)+'% מההוצאות':''}</span></div>
    <div><span>הוצאות בלי חשבונית</span><b class="${noInv.length?'bz-neg':''}">${noInv.length}</b><span class="hint">${gotInv.length} עם חשבונית מקושרת</span></div></div>
   <div class="bz-sec"><h2>פילוח ההוצאות לפי סוג</h2><span class="hint">${hasCc?'בנק + פירוט כרטיסי אשראי (במקום החיוב המרוכז)':'מתנועות הבנק. העלאת פירוט אשראי תפרק גם את חיובי הכרטיס'} · לוחצים על סוג כדי לראות את התנועות</span></div>
@@ -4151,12 +4156,17 @@ function incActual(c,auto){ const out=[], cov=new Set();
     out.push({m,d:t.d,amt:t.amt,type:k?prodOf(c,k,auto):UNASG,cust:k||'',bank:1}); });
   return {out,cov}; }
 function bzIncOv(){ const el=$('#bz-incov'), c=cur(), ctx=bzCtx(), t0=todayIsoF(); if(!c){ el.innerHTML=bzNoData(); return; }
-  $('#bz-hx').innerHTML=bzPerSel('bz-ip',BZ_IP,BZ_XPERS)+(VIEW?'':`<label class="btn primary" title="דוח מכירות לפי פריטים מקארדקום (אקסל, CSV או PDF)">העלאת דוח פריטים מקארדקום<input type="file" id="items-file" accept=".xlsx,.xls,.csv,.pdf" hidden></label>`);
-  const auto=prodAuto(c), M=bzXRange(BZ_IP), barM=bzBarMonths(M), prevM=M.map(m=>ymAdd(m,-M.length)), inM=new Set(M);
+  $('#bz-hx').innerHTML=bzPerSel('bz-ip',BZ_IP,BZ_XPERS);
+  const DW=bzDW(BZ_IP,c), auto=prodAuto(c), M=bzXRange(BZ_IP), barM=bzBarMonths(M), prevM=M.map(m=>ymAdd(m,-M.length)), inM=new Set(M);
+  const fP=DW?(r=>r.d>=DW.from&&r.d<=DW.to):(r=>inM.has(r.m)), fPrev=DW?(r=>r.d>=DW.pf&&r.d<=DW.pt):(r=>prevM.includes(r.m));
   const {out,cov}=incActual(c,auto);
   const prevOk=cov.size?prevM.filter(m=>cov.has(m)):prevM;   // השוואה רק לחודשים מאותו מקור נתונים
-  bzDsOne('inc',out,M,{lab:'הכנסות',sh:BZ_DGS,barM,prevM:prevOk,col:'מוצר',empty:'אין הכנסות בתקופה'});
-  const tot=out.filter(r=>inM.has(r.m)).reduce((a,r)=>a+r.amt,0), un=out.filter(r=>inM.has(r.m)&&r.type===UNASG).reduce((a,r)=>a+r.amt,0);
+  // הכנסות בפועל לפי מקור: כל מה שנכנס לבנק (סליקה מקארדקום, צ'קים שהופקדו, העברות), בלי הלוואות, הזרמות בעלים ותנועות שסומנו להתעלם
+  const SRC={'סליקה':'סליקה (כרטיסי אשראי)',"צ'ק":"צ'קים",'העברה בנקאית':'העברות בנקאיות','הוראת קבע':'הוראות קבע'};
+  const srcR=(c.tx||[]).filter(t=>t.amt>0&&t.d&&t.cat!==IGNORE&&t.cat!=='in_loans').map(t=>({d:t.d,m:t.d.slice(0,7),amt:t.amt,type:SRC[bzType((t.desc||'')+' '+(t.det||''))]||(/מזומן/.test(t.desc||'')?'מזומן':'אחר')}));
+  bzDsOne('incs',srcR,M,{lab:'הכנסות',sh:BZ_DGS,barM,prevM,col:'מקור',empty:'אין הכנסות בתקופה',...(DW?{inP:fP,inPrev:fPrev}:{})});
+  bzDsOne('inc',out,M,{lab:'הכנסות',sh:BZ_DGS,barM,prevM:prevOk,col:'מוצר',empty:'אין הכנסות בתקופה',...(DW?{inP:fP,inPrev:fPrev}:{})});
+  const tot=srcR.filter(fP).reduce((a,r)=>a+r.amt,0), pTot=srcR.filter(fPrev).reduce((a,r)=>a+r.amt,0), pTot2=out.filter(fP).reduce((a,r)=>a+r.amt,0), un=out.filter(r=>fP(r)&&r.type===UNASG).reduce((a,r)=>a+r.amt,0);
   const covIn=M.filter(m=>cov.has(m)).length;
   // צפי לפי מוצר: מאירועי התחזית (הוראות קבע, צ'קים, תשלומים שהוזנו)
   const nF=+BZ_IFP, fEnd=isoAddMonths(t0,nF), fRecs=[], custs={};
@@ -4170,13 +4180,14 @@ function bzIncOv(){ const el=$('#bz-incov'), c=cur(), ctx=bzCtx(), t0=todayIsoF(
   const amtProd={}; Object.values(custs).forEach(o=>{ const p=prodOf(c,o.k,auto); if(!p) return; Object.keys(o.amts).forEach(a=>{ const q=amtProd[a]||(amtProd[a]={}); q[p]=(q[p]||0)+1; }); });
   const sugOf=o=>{ for(const a of Object.keys(o.amts).sort((x,y)=>o.amts[y]-o.amts[x])){ const q=amtProd[a]; if(q) return Object.entries(q).sort((x,y)=>y[1]-x[1])[0][0]; } return null; };
   const CL=Object.values(custs).sort((a,b)=>(!!prodOf(c,a.k,auto))-(!!prodOf(c,b.k,auto))||b.amt-a.amt), unN=CL.filter(o=>!prodOf(c,o.k,auto)).length, PL=prodList(c);
-  const sel=BZ_XSEL.inc, det=sel?out.filter(r=>inM.has(r.m)&&r.type===sel).sort((a,b)=>b.amt-a.amt):[];
-  el.innerHTML=`<div class="bz-sum"><div><span>סך ההכנסות בתקופה</span><b class="bz-pos">${bzS(tot)}</b><span class="hint">${M.length>1?'ממוצע '+bzS(tot/M.length)+' לחודש':ymLabel(M[0])}</span></div>
+  const sel=BZ_XSEL.inc, det=sel?out.filter(r=>fP(r)&&r.type===sel).sort((a,b)=>b.amt-a.amt):[];
+  el.innerHTML=`<div class="bz-sum"><div><span>סך ההכנסות בתקופה</span><b class="bz-pos">${bzS(tot)}</b><span class="hint">${DW?DW.lab:M.length>1?'ממוצע '+bzS(tot/M.length)+' לחודש':ymLabel(M[0])}</span></div>
+   <div><span>${DW?(BZ_IP==='day'?'לעומת היום הקודם':'לעומת השבוע הקודם'):'לעומת התקופה הקודמת'}</span><b class="${tot>=pTot?'bz-pos':'bz-neg'}">${pTot?(tot>=pTot?'▲':'▼')+Math.abs(Math.round((tot/pTot-1)*100))+'%':'—'}</b><span class="hint">${pTot?bzS(pTot):'אין נתונים'}</span></div>
    <div><span>המוצר המוביל</span><b style="font-size:18px">${(BZ_DS.inc.dep.find(x=>x.n!==UNASG)||{}).n?esc(BZ_DS.inc.dep.find(x=>x.n!==UNASG).n):'—'}</b></div>
-   <div><span>לא משויך למוצר</span><b class="${un?'bz-neg':''}">${tot?Math.round(un/tot*100):0}%</b><span class="hint">${bzS(un)}</span></div>
-   <div><span>חודשים עם דוח פריטים</span><b>${covIn}/${M.length}</b><span class="hint">${(c.itemSales||[]).length?'עודכן '+new Date(c.itemSalesAt).toLocaleDateString('he-IL'):'עוד לא הועלה'}</span></div></div>
-  <div class="status" id="items-st">${BZ_MSG.items||''}</div>
-  <div class="bz-sec"><h2>הכנסות בפועל לפי מוצר</h2><span class="hint">${covIn===M.length?'לפי דוח הפריטים מקארדקום':covIn?'לפי דוח הפריטים, ובחודשים בלי דוח לפי שיוך הלקוחות':'לפי שיוך הלקוחות. דוח פריטים מקארדקום ייתן פילוח מדויק'}</span></div>
+   <div><span>לא משויך למוצר</span><b class="${un?'bz-neg':''}">${tot?Math.round(un/tot*100):0}%</b><span class="hint">${bzS(un)} מתוך ${bzS(pTot2)}</span></div></div>
+  <div class="bz-sec"><h2>הכנסות בפועל לפי מקור</h2><span class="hint">כל מה שנכנס לבנק בתקופה: סליקה מקארדקום, צ'קים שהופקדו, העברות. בלי הלוואות והזרמות של הבעלים</span></div>
+  ${bzDsBox('incs')}
+  <div class="bz-sec" style="margin-top:22px"><h2>הכנסות בפועל לפי מוצר</h2><span class="hint">${covIn?'לפי דוח הפריטים, ובחודשים בלי דוח לפי שיוך הלקוחות':'לפי שיוך הלקוחות למוצרים (מהקבצים של קארדקום, או ידנית למטה)'}</span></div>
   ${bzDsBox('inc')}
   ${sel?`<div id="xdet-inc"><div class="bz-sec" style="margin-top:18px"><h2>${esc(sel)}: ${det.length} תשלומים</h2><button class="bz-link" type="button" data-dsel="inc" data-dn="${esc(sel)}">סגירה</button></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך</th><th>לקוח</th><th>מקור</th><th class="n">סכום</th></tr></thead><tbody>
    ${det.slice(0,300).map(r=>`<tr><td>${fmtDate(r.d)}</td><td>${esc(r.cust||'')}</td><td>${r.bank?'בנק':cov.has(r.m)?'דוח פריטים':'קבלה בקארדקום'}</td><td class="n in">${bzM(r.amt)}</td></tr>`).join('')}</tbody></table></div></div>`:''}

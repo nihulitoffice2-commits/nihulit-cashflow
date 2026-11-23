@@ -435,6 +435,11 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
 #bz-incov,#bz-expov{min-width:0}
 #bz-incov .pill,#bz-cheques .pill,#bz-expov .pill{white-space:normal;max-width:100%}
 #bz-incov>*,#bz-expov>*{min-width:0;max-width:100%}
+.filegrid.four{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.arc-list{display:flex;flex-direction:column;gap:4px;margin:8px 0;max-height:220px;overflow-y:auto}
+.arc-list .arc{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:13px;border-bottom:1px solid var(--line,#dde);padding:4px 0}
+.arc-list .arc .nm{flex:1 1 100%;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}.arc-list .arc .dt{flex:1}.arc-list .arc .dt{color:var(--muted,#778);font-size:12px;white-space:nowrap}
+.arc-list .arc button{padding:2px 7px;font-size:12px}
 .rc-tbl2 tr.rc-grp td{background:var(--surface-2,#eef2f5);cursor:pointer;font-size:14px}
 .rc-tbl2 tr.clk{cursor:pointer}.rc-tbl2 tr.clk:hover td{background:rgba(45,160,150,.07)}
 .rc-tbl2 td.rc-fq .hint,.rc-tbl2 td.rc-last{font-size:12.5px}.rc-tbl2 td.rc-fq .hint{display:block}
@@ -687,14 +692,20 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
         <div class="scroll"><table class="grid" id="hf-table"></table></div>
       </div>
       <div class="card vh" id="hf-files">
-        <div class="card-head"><h2>קבצים שמעדכנים את התחזית</h2><span class="hint">מעלים כמו שהקובץ יוצא מהאתר. קובץ חדש מחליף את הקודם מאותו סוג</span></div>
-        <div class="filegrid">
-          <div class="fbox"><b>פירוט כרטיס אשראי</b><span class="hint">מאתר מקס, כאל או ישראכרט: פירוט החיוב הבא (אקסל עדיף). ממלא את שורת „אשראי” בהוצאות, כולל עסקאות בתשלומים</span><span class="hint" id="ccs-info"></span>
-            <div class="actions"><label class="btn sm" for="ccs-file">העלאת פירוט אשראי</label><input type="file" id="ccs-file" accept=".xlsx,.xls,.csv,.txt,.pdf" hidden><button class="btn ghost sm danger" id="ccs-clear" type="button" hidden>מחיקה</button></div><div class="status" id="ccs-status"></div></div>
-          <div class="fbox"><b>צ'קים לגבייה (מהבנק)</b><span class="hint">מאתר הבנק: דוח צ'קים דחויים שהופקדו לגבייה. מוסיף לשורת „הכנסות - צ'קים” בלי כפילויות</span><span class="hint" id="chq-info"></span>
-            <div class="actions"><label class="btn sm" for="chq-file">העלאת דוח צ'קים</label><input type="file" id="chq-file" accept=".xlsx,.xls,.csv,.txt,.pdf" hidden><button class="btn ghost sm danger" id="chq-clear" type="button" hidden>הסרת הצ'קים מהדוח</button></div><div class="status" id="chq-status"></div></div>
-          <div class="fbox"><b>הוראות קבע (מקארדקום)</b><span class="hint">„דוח רישום הוראות לחיוב”. ממלא את שורת „הכנסות באשראי - הוראות קבע”, רק בחודשים שנותרו לכל לקוח</span><span class="hint" id="ret-info2"></span>
-            <div class="actions"><label class="btn sm" for="ret-file2">העלאת דוח הוראות קבע</label><input type="file" id="ret-file2" accept=".xlsx,.xls,.csv,.txt,.htm,.html,.docx,.pdf" hidden></div><div class="status" id="ret-status2"></div></div>
+        <div class="card-head"><h2>קבצים שמעדכנים את התחזית</h2><span class="hint">כל קובץ שמעלים בלשוניות של „ניהול פיננסי” נשמר כאן אוטומטית לחצי שנה. אפשר להוריד או למחוק. קובץ שעבר חצי שנה נמחק כשעולה קובץ חדש</span></div>
+        <div class="filegrid four">
+          <div class="fbox"><b>חשבונות בנק</b><span class="hint">דפי בנק (PDF, אקסל או CSV), מהלשונית „חשבונות בנק”</span>
+            <div class="arc-list" data-arc="bank"></div>
+            <div class="actions"><label class="btn sm" for="bk-files">העלאת דף בנק</label></div></div>
+          <div class="fbox"><b>כרטיסי אשראי</b><span class="hint">פירוט החיוב מכאל, מקס או ישראכרט, מהלשונית „כרטיסי אשראי”</span><span class="hint" id="ccs-info"></span>
+            <div class="status" id="ccs-status"></div><div class="arc-list" data-arc="cc"></div>
+            <div class="actions"><label class="btn sm" for="ccs-file">העלאת פירוט אשראי</label><input type="file" id="ccs-file" accept=".xlsx,.xls,.csv,.txt,.pdf" hidden><button class="btn ghost sm danger" id="ccs-clear" type="button" hidden>מחיקה</button></div></div>
+          <div class="fbox"><b>צ'קים</b><span class="hint">דוח צ'קים מהבנק וצילומי צ'קים, מהלשונית „צ'קים”</span><span class="hint" id="chq-info"></span>
+            <div class="status" id="chq-status"></div><div class="arc-list" data-arc="chq"></div>
+            <div class="actions"><label class="btn sm" for="chq-file">העלאת דוח צ'קים</label><input type="file" id="chq-file" accept=".xlsx,.xls,.csv,.txt,.pdf" hidden><button class="btn ghost sm danger" id="chq-clear" type="button" hidden>הסרת הצ'קים מהדוח</button></div></div>
+          <div class="fbox"><b>חשבונות סליקה</b><span class="hint">הקבצים מקארדקום (הוראות קבע ועסקאות), מהלשונית „חשבונות סליקה”</span><span class="hint" id="ret-info2"></span>
+            <div class="arc-list" data-arc="clr"></div>
+            <div class="actions"><label class="btn sm" for="ret-file2">העלאת קובץ מקארדקום</label><input type="file" id="ret-file2" accept=".xlsx,.xls,.csv,.txt,.htm,.html,.docx,.pdf" hidden></div></div>
         </div>
       </div>
       <div class="card">
@@ -1854,7 +1865,7 @@ on('#file-in','change',e=>{ const fs=[...e.target.files]; e.target.value=''; if(
 const drop=$('#drop');
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.remove('over'); }));
-drop.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f) readFile(f); });
+drop.addEventListener('drop',e=>{ const f=e.dataTransfer.files[0]; if(f){ arcAdd('bank',[f]); readFile(f); } });
 on('#btn-paste','click',()=>{ const t=$('#paste-in').value; if(!t.trim()){ toast('הדביקו קודם טבלה בתיבה'); return; } startMapping(parseDelimited(t),'טבלה מודבקת'); $('#paste-in').value=''; });
 on('#mform','submit',e=>{
   e.preventDefault(); const c=cur();
@@ -2316,7 +2327,52 @@ function expLines(k,e,months){
   return out;
 }
 // רינדור מחדש בלי לאבד את השדה שהמשתמשת עומדת בו (למשל כשעוברים בטאב לשדה הבא)
-function renderHalf(){ renderHalfKeep(); }
+function renderHalf(){ renderHalfKeep(); try{ arcRender(); }catch(e){} }
+/* ---------- ארכיון הקבצים שהועלו (חצי שנה) ----------
+   כל קובץ שמעלים בלשוניות של „ניהול פיננסי” נשמר כנכס (asset) של הדף, והפרטים שלו במסמך files/<id>.
+   PDF ותמונות נשמרים כמו שהם; כל השאר (אקסל, CSV, HTML) נשמר כטקסט base64, כדי שכל קידוד וכל סוג קובץ יישמרו בדיוק.
+   כשעולה קובץ חדש, נמחקים הקבצים של אותו לקוח שעברו חצי שנה, מהישן לחדש. */
+const ARC_KIND={bank:'חשבונות בנק',cc:'כרטיסי אשראי',chq:"צ'קים",clr:'חשבונות סליקה'};
+const ARC_IN={'bk-file':'bank','bk-files':'bank','file-in':'bank','ccs-file':'cc','chq-file':'chq','ret-file':'clr','ret-file2':'clr'};
+const ARC_DAYS=183;
+let ARC=[], arcSub=false;
+async function arcAssets(){ try{ return window.claude?await window.claude.use('assets'):null; }catch(e){ return null; } }
+async function arcInit(){ if(VIEW||arcSub) return; const db=await realDb(); if(!db) return; arcSub=true;
+  db.collection('files').onSnapshot(sn=>{ ARC=sn.docs.map(d=>({id:d.id,...d.data()})); arcRender(); }); }
+const arcB64=async f=>{ const b=new Uint8Array(await f.arrayBuffer()); let o=''; for(let i=0;i<b.length;i+=0x8000) o+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000)); return btoa(o); };
+async function arcAdd(kind,files){ if(VIEW||!files||!files.length) return; const ck=DB.current; const db=await realDb(), as=await arcAssets();
+  if(!db||!as){ return; }
+  for(const f of files){ try{
+      if(f.size>14*1024*1024){ toast('הקובץ '+f.name+' גדול מדי לשמירה בארכיון'); continue; }
+      const ext=(String(f.name).split('.').pop()||'').toLowerCase(), raw=ext==='pdf'||/^(jpe?g|png|webp|gif)$/.test(ext);
+      const type=ext==='pdf'?'application/pdf':ext==='png'?'image/png':ext==='webp'?'image/webp':ext==='gif'?'image/gif':/^jpe?g$/.test(ext)?'image/jpeg':'text/plain';
+      const blob=raw?f:new Blob([await arcB64(f)],{type:'text/plain'});
+      const r=await as.upload(blob,{type});
+      // אותו קובץ שהועלה שוב: הגרסה הקודמת שלו יוצאת מהארכיון
+      for(const o of ARC.filter(o=>o.ck===ck&&o.kind===kind&&o.name===f.name&&o.size===f.size)) await arcDel(o,true);
+      const id=uid(); await db.doc('files/'+id).set({ck,kind,name:String(f.name).slice(0,180),size:f.size,ext,at:new Date().toISOString(),asset:r.id,b64:!raw});
+    }catch(e){ toast('לא הצלחתי לשמור את '+f.name+' בארכיון: '+((e&&e.code)||(e&&e.message)||'')); } }
+  // ניקוי: קבצים של הלקוח הזה שעברו חצי שנה, מהישן ביותר
+  const lim=new Date(Date.now()-ARC_DAYS*864e5).toISOString();
+  for(const o of ARC.filter(o=>o.ck===ck&&o.at<lim).sort((a,b)=>a.at<b.at?-1:1)) await arcDel(o,true); }
+async function arcDel(o,quiet){ const db=await realDb(), as=await arcAssets(); try{ if(as&&o.asset) await as.delete(o.asset); }catch(e){} try{ if(db) await db.doc('files/'+o.id).delete(); }catch(e){ if(!quiet) toast('המחיקה לא הצליחה'); return; }
+  ARC=ARC.filter(x=>x.id!==o.id); arcRender(); if(!quiet) toast('הקובץ נמחק מהארכיון'); }
+async function arcGet(o){ const r=await fetch('/_blob/'+o.asset); if(!r.ok) throw new Error('הקובץ לא נמצא'); if(!o.b64) return await r.blob();
+  const t=(await r.text()).trim(), bin=atob(t), u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return new Blob([u]); }
+async function arcDownload(o){ try{ const b=await arcGet(o), dl=window.claude?await window.claude.use('downloads'):null;
+    if(dl){ try{ await dl.save({filename:o.name,data:b}); return; }catch(e){ if(e&&e.code&&!/rejected_extension|extension_not_enabled/.test(e.code)) return; } }
+    const u=URL.createObjectURL(b), a=document.createElement('a'); a.href=u; a.download=o.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),5000);
+  }catch(e){ toast('ההורדה לא הצליחה: '+((e&&e.message)||'')); } }
+const arcSize=n=>n>=1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+function arcRender(){ const ck=DB&&DB.current; $$('.arc-list[data-arc]').forEach(el=>{ const k=el.dataset.arc, L=ARC.filter(o=>o.ck===ck&&o.kind===k).sort((a,b)=>a.at<b.at?1:-1);
+  el.innerHTML=L.length?`<span class="hint">${L.length} קבצים מחצי השנה האחרונה</span>`+L.map(o=>`<div class="arc"><span class="nm" title="${esc(o.name)}">${esc(o.name)}</span><span class="dt">${fmtDate(o.at.slice(0,10))} · ${arcSize(o.size)}</span><button class="btn ghost xs" type="button" data-arcdl="${esc(o.id)}" aria-label="הורדת ${esc(o.name)}">הורדה</button><button class="btn ghost xs danger" type="button" data-arcdel="${esc(o.id)}" aria-label="מחיקת ${esc(o.name)}">מחיקה</button></div>`).join('')
+    :'<span class="hint">עוד אין קבצים שמורים. קובץ שיועלה יישמר כאן לבד.</span>'; }); }
+// כל העלאה בלשוניות של ניהול פיננסי נשמרת בארכיון (נתפס לפני שהקוד שקורא את הקובץ מנקה את השדה)
+document.addEventListener('change',e=>{ const t=e.target; if(!t||t.type!=='file'||!t.files||!t.files.length) return; const kind=ARC_IN[t.id]||(t.dataset&&t.dataset.chqimg!=null?'chq':null); if(kind) arcAdd(kind,[...t.files]); },true);
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-arcdl],[data-arcdel]'); if(!b) return; const o=ARC.find(x=>x.id===(b.dataset.arcdl||b.dataset.arcdel)); if(!o) return;
+  if(b.dataset.arcdl) arcDownload(o); else { if(!armed(b,'למחוק? לחצו שוב')) return; arcDel(o); } });
+setTimeout(arcInit,800);
+
 function renderHalfKeep(){ try{ if(BZ&&BZ_NEW.has(BZ_TAB)) setTimeout(()=>bzRender(),0); }catch(e){}
   const a=document.activeElement, inT=a&&a.closest&&a.closest('#hf-table');
   const keys=['ii','if','hfl','hfm','debtl','debta','debtm','debtn','crn'];

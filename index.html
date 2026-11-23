@@ -661,7 +661,7 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
     <div class="card">
       <div class="card-head"><h2 id="hf-title">תחזית לחודשים</h2></div>
       <div class="fields">
-        <label class="f">הלקוח במשרד<select id="hf-pick"></select></label>
+        <label class="f" hidden>הלקוח במשרד<select id="hf-pick"></select></label>
         <div class="f wide" style="grid-column:1/-1">טווח התחזית<div class="rngchips" id="hf-presets" role="group" aria-label="טווח התחזית"></div></div>
         <label class="f hf-custom">מתאריך<span class="dwrap"><input type="text" class="dmask" id="hf-pf" inputmode="numeric" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off"><button type="button" class="dpick" aria-label="לוח שנה" title="לוח שנה">📅</button><input type="date" class="dnative" tabindex="-1" aria-hidden="true"></span></label>
         <label class="f hf-custom">עד תאריך<span class="dwrap"><input type="text" class="dmask" id="hf-pt" inputmode="numeric" placeholder="DD/MM/YYYY" maxlength="10" autocomplete="off"><button type="button" class="dpick" aria-label="לוח שנה" title="לוח שנה">📅</button><input type="date" class="dnative" tabindex="-1" aria-hidden="true"></span></label>
@@ -682,7 +682,7 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
         <div id="hf-chart-box"><div id="hf-chart"></div><div id="hf-tip" hidden></div></div>
         <p class="chartnote" id="hf-chart-note"></p>
       </div>
-      <div class="card">
+      <div class="card" hidden>
         <div class="card-head"><h2>טבלת הצפי</h2><span class="hint">תא צהוב תוקן ידנית. מוחקים את הסכום בתא כדי לחזור לחישוב. לוחצים על שם שורה לפירוט.</span></div>
         <div class="scroll"><table class="grid" id="hf-table"></table></div>
       </div>
@@ -2529,9 +2529,8 @@ function renderHalf0(){
   $('#hf-kpis').innerHTML=[
     kpi('הכנסות צפויות',fmt(ti)+' ₪',ymLabel(R.months[0])+' – '+ymLabel(R.months[R.months.length-1])),
     kpi('הוצאות צפויות',fmt(to)+' ₪','כולל מע״מ ופריטים ידניים'),
-    kpi('תזרים נטו',fmt(ti-to)+' ₪',ti-to>=0?'עודף לתקופה':'גירעון לתקופה',ti-to<0),
-    R.close?kpi('היתרה הנמוכה',fmt(R.close[mi])+' ₪','בסוף '+ymLabel(R.months[mi]),R.close[mi]<0):kpi('יתרה צפויה','—','חסרה יתרת פתיחה')
-  ].join('');
+    kpi('תזרים נטו',fmt(ti-to)+' ₪',ti-to>=0?'עודף לתקופה':'גירעון לתקופה',ti-to<0)
+  ].join(''); void mi;
   const cols=R.months.length+1;
   let h='<thead><tr><th class="lbl">סעיף (₪)</th>'+R.months.map(m=>`<th>${ymLabel(m)}</th>`).join('')+'<th>סה״כ</th></tr></thead><tbody>';
   if(R.close){ const op=[R.opening,...R.close.slice(0,-1)];

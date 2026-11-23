@@ -381,6 +381,13 @@ body.bz .pill{border-radius:3px}
 .bk-day tr.sub td{background:#fafcfd;font-size:14px;color:var(--bz-text);padding-block:6px}
 .bk-day .neg{color:var(--bz-red);font-weight:700}
 #cc2{display:grid;gap:16px;min-width:0}
+.cx-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.cx-svg{width:100%;max-width:560px;height:auto;direction:ltr;display:block;margin:0 auto}
+.cx-svg text{font:10px Assistant,Arial,sans-serif;fill:#6d7d8b}
+.cx-cards.one .cx-body{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);align-items:start}
+.cx-cards.one .cx-list{border-inline-start:1px solid var(--bz-line);max-height:330px;overflow:auto}
+.cx-list{max-height:260px;overflow:auto}
+@media (max-width:900px){.cx-cards.one .cx-body{grid-template-columns:1fr}}
 body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);padding:0;border:0}
 #ret-status2:empty{display:none}#ret-status2{padding:10px 14px;background:var(--bz-panel);border:1px solid var(--bz-line)}
 .cc-grp td{background:var(--bz-panel);font-weight:700;color:var(--bz-navy)}
@@ -1876,7 +1883,10 @@ const RC_IN=['ok','open','todo','none','card','credit','credit_todo','na'], RC_O
 const EXP_NA=new Set(['fx_salary','fx_bl','tx_vat','tx_income','fx_loan']);
 const CARD_KW=['ישראכרט','isracard','כאל','cal ','מקס','max','לאומי קארד','שב"א','שבא','אמריקן','דיינרס','ויזה','visa','קארדקום','cardcom','סליקה','אשראי','ביט ','bit ','paybox','פייבוקס'];
 const CC_BANK_RE=/ויזה|כא"ל|כאל|ישראכרט|מקס|לאומי קארד|אמריקן|דיינרס|מסטרקארד/;
-function ccRowsAll(c){ const out=[]; (c&&c.ccStmt||[]).forEach(f=>(f.rows||[]).forEach(r=>{ if(!r.id) r.id=uid(); out.push(r); })); return out; }
+function ccRowsAll(c){ const out=[]; (c&&c.ccStmt||[]).forEach(f=>(f.rows||[]).forEach(r=>{ if(!r.id) r.id=uid();
+  // תיקון קבצים ישנים: תאריך כמו 02/11 נקרא בטעות כ„תשלום 2 מתוך 11”
+  if(r.k&&r.n&&r.d&&r.k===+r.d.slice(8,10)&&r.n===+r.d.slice(5,7)){ delete r.k; delete r.n; }
+  out.push(r); })); return out; }
 const driveUrl=fid=>'https://drive.google.com/file/d/'+encodeURIComponent(fid)+'/view';
 function invCell(s,key,ro){ if(!s) return ''; const [l,cls]=RC_ST[s.st]||['—',''];
   return `<span class="pill ${cls}">${l}</span>${s.info?`<span class="hint">${esc(s.info)}</span>`:''}<span class="invacts">${s.fid?`<a class="invlink" href="${driveUrl(s.fid)}" target="_blank" rel="noopener">פתיחת החשבונית ↗</a>`:''}${!ro&&!VIEW&&s.st!=='na'?`<button class="btn ghost xs vh" type="button" data-invlink="${key}">${s.fid?'החלפת חשבונית':'קישור חשבונית'}</button>`:''}</span>`; }
@@ -2232,7 +2242,7 @@ function retLine(k,months){ const c=cur(), RT=c&&c.ccKey===k?(c.retainers||[]):[
   return {id:'inc-ret',sec:'in',label:'הכנסות באשראי - הוראות קבע',vals:vals.map(Math.round),items,fixed:true,details:det,
     note:'לפי דוח הוראות הקבע שהועלה'+(c.retainersFile?' ('+c.retainersFile+')':'')+(c.retainersAt?', '+new Date(c.retainersAt).toLocaleDateString('he-IL'):'')+'. כל לקוח נספר רק במספר התשלומים שנותרו לו'}; }
 // פירוט כרטיס אשראי שהועלה: חיובים עתידיים בתאריך החיוב, תשלומים שממשיכים, והערכה לחודשים שאין להם פירוט
-function ccStmtLine(k,months){ const c=cur(); if(!c||c.ccKey!==k||!c.ccStmt||!c.ccStmt.length) return null;
+function ccStmtLine(k,months){ const c=cur(); if(!c||c.ccKey!==k||!c.ccStmt||!c.ccStmt.length) return null; ccRowsAll(c);
   const rows=c.ccStmt.flatMap(f=>f.rows||[]), today=todayIsoF(), tm=thisYm(); if(!rows.length) return null;
   const BM=[...new Set(rows.map(r=>r.d.slice(0,7)))].sort(), lastBM=BM[BM.length-1];
   const day=(()=>{ const cnt={}; rows.forEach(r=>{ const d=r.d.slice(8,10); cnt[d]=(cnt[d]||0)+1; }); return Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0][0]; })();
@@ -3192,6 +3202,7 @@ function headerBy(rows,COLS,need){ let best=null;
     for(const [k,res] of Object.entries(COLS)){ for(const re of res){ const j=L.findIndex((x,jj)=>x&&x.length<45&&!used.has(jj)&&re.test(x)); if(j>=0){ m[k]=j; used.add(j); break; } } }
     const sc=Object.keys(m).length; if(need.every(k=>m[k]!=null)&&(!best||sc>best.sc)) best={i,m,sc}; }
   return best; }
+const instWords=t=>{ const m=String(t||'').replace(/\d{1,4}[\/.\-]\d{1,2}[\/.\-]\d{1,4}/g,' ').match(/(?:תשלום\s*)?(\d{1,2})\s*(?:מתוך|מ-)\s*(\d{1,2})/); return m&&+m[2]>1&&+m[1]>=1&&+m[1]<=+m[2]?{k:+m[1],n:+m[2]}:null; };
 const instOf=t=>{ const m=String(t||'').match(/(\d{1,2})\s*(?:מתוך|מ-|\/|from|of)\s*(\d{1,2})/); return m&&+m[2]>1&&+m[1]>=1&&+m[1]<=+m[2]?{k:+m[1],n:+m[2]}:null; };
 
 // פירוט כרטיס אשראי
@@ -3199,11 +3210,12 @@ const CCS_COLS={merchant:[/שם\s*בית\s*(ה)?עסק/,/בית\s*(ה)?עסק/,/
   charge:[/סכום\s*(ה)?חיוב/,/סכום\s*לחיוב/,/חיוב\s*בש.?ח/,/^סכום$/],
   cdate:[/תאריך\s*(ה)?חיוב/,/מועד\s*(ה)?חיוב/],
   tdate:[/תאריך\s*(ה)?עסקה/,/תאריך\s*רכישה/,/^תאריך$/],
-  note:[/הערות/,/פירוט\s*נוסף/,/סוג\s*(ה)?עסקה/,/תשלומים/]};
+  note:[/הערות/,/פירוט\s*נוסף/,/סוג\s*(ה)?עסקה/,/תשלומים/],
+  card:[/(4|ארבע)\s*ספרות/,/מספר\s*(ה)?כרטיס/,/^כרטיס$/,/ספרות\s*אחרונות/,/card/i]};
 const CCS_PROMPT='זה פירוט חיובים של כרטיס אשראי (מקס, כאל, ישראכרט או אחר). החזירי מערך JSON בלבד, איבר לכל עסקה שתחויב (לא שורות סיכום): '+
   '{"merchant":"שם בית העסק","amount":סכום החיוב בשקלים כמספר חיובי (סכום החיוב, לא סכום העסקה המקורי),"chargeDate":"תאריך החיוב בבנק YYYY-MM-DD (אם מופיע רק בכותרת, למשל עסקאות לחיוב ב-10/12, השתמשי בו)","k":מספר התשלום הנוכחי או null,"n":מספר התשלומים הכולל או null}. זיכויים כמספר שלילי. עברית מ-PDF עשויה להופיע הפוכה, תקני אותה.';
 function ccsNorm(list){ return (list||[]).map(r=>{ const amt=Math.round((+r.amount||0)*100)/100, d=r.chargeDate?retDate(r.chargeDate):null; if(!amt||!d) return null;
-  return {d,amt,m:String(r.merchant||'').replace(/\s+/g,' ').trim().slice(0,40),k:r.k?+r.k:null,n:r.n?+r.n:null}; }).filter(Boolean); }
+  const o={d,amt,m:String(r.merchant||'').replace(/\s+/g,' ').trim().slice(0,40),k:r.k?+r.k:null,n:r.n?+r.n:null}; if(r.card) o.card=String(r.card).slice(-4); return o; }).filter(Boolean); }
 on('#ccs-file','change',async e=>{
   const f=e.target.files[0]; e.target.value=''; if(!f) return; const st=(BZ&&BZ_TAB==='ccexp'&&$('#ccs-status2'))||$('#ccs-status'), c=cur(); if(!c||!hfKey()){ toast('בוחרים קודם את הלקוח'); return; } st.textContent='קוראת את הפירוט…';
   try{ let out=null; const nm=f.name.toLowerCase();
@@ -3213,15 +3225,16 @@ on('#ccs-file','change',async e=>{
         rows.forEach((r,i)=>{ const line=r.map(x=>x instanceof Date?x.toISOString().slice(0,10):String(x==null?'':x)).join(' ');
           if(/חיוב/.test(line)&&!/^\d/.test(String(r[m.charge]||''))){ const dm=line.match(/(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4})/); if(dm){ secDate=parseDate(dm[0]); } }
           if(i<=H.i) return; const amt=parseNum(r[m.charge]); if(isNaN(amt)||!amt) return; const mer=String(r[m.merchant]||'').trim(); if(!mer||/סה.?כ|total/i.test(mer)) return;
-          const cd=m.cdate!=null?retDate(r[m.cdate]):null, inst=instOf(m.note!=null?r[m.note]:line);
-          raw.push({merchant:mer,amount:amt,chargeDate:cd||secDate,k:inst&&inst.k,n:inst&&inst.n}); });
+          const cd=m.cdate!=null?retDate(r[m.cdate]):null, inst=m.note!=null?instOf(r[m.note]):instWords(line);
+          const cd4=m.card!=null?(String(r[m.card]==null?'':r[m.card]).match(/\d{4}(?!.*\d)/)||[''])[0]:'';
+          raw.push({merchant:mer,amount:amt,chargeDate:cd||secDate,k:inst&&inst.k,n:inst&&inst.n,card:cd4}); });
         out=ccsNorm(raw); }
       if(!out||!out.length) out=ccsNorm(await claudeList(CCS_PROMPT,{text:rowsText(rows)},st,'פירוט האשראי')); }
     if(!out||!out.length) throw new Error('לא נמצאו חיובים בקובץ. מייצאים מאתר חברת האשראי את פירוט החיוב הבא (אקסל) ומעלים אותו כמו שהוא.');
     const key=f.name.replace(/\.[^.]+$/,'').replace(/[\d_\-\s()]+$/,'')||f.name;
-    c.ccStmt=(c.ccStmt||[]).filter(x=>x.key!==key).concat([{key,file:f.name,at:Date.now(),rows:out}]); saveSoon(); renderFilesCard(); renderHalf();
+    c.ccStmt=(c.ccStmt||[]).filter(x=>x.key!==key).concat([{key,file:f.name,at:Date.now(),rows:out}]); saveSoon(); renderFilesCard(); renderHalf(); try{ if(BZ&&BZ_TAB==='ccexp'){ bzCcExp(); } }catch(x){}
     const tot=sum(out.map(r=>r.amt)), inst=out.filter(r=>r.n>1).length, msg=`נקלטו ${out.length} חיובים (${fmt(tot)} ₪)`+(inst?`, מהם ${inst} בתשלומים`:'')+'. שורת „אשראי” בתחזית עודכנה';
-    st.innerHTML='<span class="pill good">✓ '+esc(msg)+'</span>'; toast(msg);
+    const st2=(BZ&&BZ_TAB==='ccexp'&&$('#ccs-status2'))||st; st2.innerHTML='<span class="pill good">✓ '+esc(msg)+'</span>'; toast(msg);
   }catch(err){ st.innerHTML='<span class="pill crit">לא הצלחתי לקרוא את הפירוט</span> '+esc(bkErr(err)); } });
 on('#ccs-clear','click',e=>{ if(!armed(e.currentTarget,'למחוק את פירוטי האשראי? לחצו שוב')) return; const c=cur(); delete c.ccStmt; saveSoon(); renderFilesCard(); renderHalf(); });
 
@@ -3822,26 +3835,63 @@ function bzCheques(){ const el=$('#bz-cheques'), ctx=bzCtx(), c=cur(), t0=todayI
    ${paid.map(t=>`<tr><td>${fmtDate(t.d)}</td><td>${esc(t.desc||'')}</td><td>${esc(t.det||'')}</td><td class="n in">${bzM(t.amt)}</td></tr>`).join('')||'<tr><td colspan="4" class="hint">אין הפקדות צ\'קים בתקופה</td></tr>'}
   </tbody></table></div></div>`; }
 
-/* --- הוצאות אשראי --- */
+/* --- הוצאות אשראי: כרטיס לכל חברת אשראי (כמו „כרטיסי אשראי” בביזיבוקס) --- */
+const CARD_CO=[['כאל',/כא"?ל|כאל|ויזה\s*כ/],['ישראכרט',/ישראכרט|ישראכארט|isracard/i],['מקס',/מקס|max|לאומי\s*קארד|לאומיכארד/i],['אמריקן אקספרס',/אמריקן|amex/i],['דיינרס',/דיינרס|diners/i],['ויזה',/ויזה|visa/i]];
+const cardCo=desc=>{ const x=CARD_CO.find(([,re])=>re.test(desc||'')); return x?x[0]:null; };
+let CX_MODE='sum', CX_CARD='', CX_Q='';
+function cxData(c){ const tm=thisYm(), M12=[...Array(12)].map((_,i)=>ymAdd(tm,i-11)), cos={};
+  (c.tx||[]).filter(t=>t.amt<0&&t.d&&CC_BANK_RE.test(t.desc||'')).forEach(t=>{ const co=cardCo(t.desc)||'כרטיס אשראי', o=cos[co]||(cos[co]={co,m:{},days:{},list:[]}); const m=t.d.slice(0,7); o.m[m]=(o.m[m]||0)-t.amt; const dd=+t.d.slice(8,10); o.days[dd]=(o.days[dd]||0)+1; o.list.push(t); });
+  const rows=ccRowsAll(c), t0=todayIsoF(), fut=rows.filter(r=>r.d>=t0);
+  // פירוט שהועלה: שייך לחברה לפי שם הקובץ, ואם יש רק חברה אחת, אליה
+  const one=Object.keys(cos).length===1?Object.keys(cos)[0]:null;
+  ccRowsAll(c); (c.ccStmt||[]).forEach(f=>{ const co=cardCo(f.file+' '+f.key)||one||'כרטיס אשראי'; const o=cos[co]||(cos[co]={co,m:{},days:{},list:[]}); (o.stmt=o.stmt||[]).push(...(f.rows||[]).map(r=>({...r,file:f.file}))); });
+  Object.values(cos).forEach(o=>{ o.day=+(Object.entries(o.days).sort((a,b)=>b[1]-a[1])[0]||[0])[0]||null; o.avg=Math.round(M12.slice(5,11).reduce((a,m)=>a+(o.m[m]||0),0)/6);
+    const f=(o.stmt||[]).filter(r=>r.d>=t0), nd=f.map(r=>r.d).sort()[0]; o.next=nd?{d:nd,sum:sum(f.filter(r=>r.d===nd).map(r=>r.amt))}:null;
+    o.cfg=(c.cardCfg||{})[o.co]||{}; o.cards=[...new Set((o.stmt||[]).map(r=>r.card).filter(Boolean))]; });
+  return {cos:Object.values(cos).sort((a,b)=>b.avg-a.avg),M12,rows,fut}; }
+function cxBars(o,M12){ const W=300,H=110,pl=4,pr=34,pt=8,pb=18, vals=M12.map(m=>o.m[m]||0), nx=o.next&&o.next.d.slice(0,7), mx=Math.max(1,...vals,o.next?o.next.sum:0), bw=(W-pl-pr)/12, Y=v=>pt+(H-pt-pb)*(1-v/mx);
+  let g=''; [0,.5,1].forEach(f=>{ const y=Y(mx*f); g+=`<line x1="${pl}" x2="${W-pr}" y1="${y}" y2="${y}" stroke="#e3e9ee"/><text x="${W-pr+4}" y="${y+4}">${mx*f>=1000?Math.round(mx*f/1000)+'k':Math.round(mx*f)}</text>`; });
+  M12.forEach((m,i)=>{ const v=vals[i]+(m===nx&&!vals[i]?o.next.sum:0), x=pl+i*bw+bw*.2, w=bw*.6, fut=m===nx&&!vals[i];
+    if(v>0) g+=`<rect x="${x.toFixed(1)}" y="${Y(v).toFixed(1)}" width="${w.toFixed(1)}" height="${(H-pb-Y(v)).toFixed(1)}" rx="2" fill="${fut?'#f2c94c':'#4a6a8a'}" data-tipx="${esc(`<div class="h">${ymLabel(m)}</div><div class="bz-neg" style="font-weight:700">₪${fmt(Math.round(v))}</div>${fut?'<div class="hint">לא סופי</div>':''}`)}"/>`;
+    g+=`<text x="${(x+w/2).toFixed(1)}" y="${H-4}" text-anchor="middle">${m.slice(5)}</text>`; });
+  return `<div class="bz-donuts v2" style="display:block;padding:0;position:relative"><svg viewBox="0 0 ${W} ${H}" class="cx-svg" role="img" aria-label="חיובי ${esc(o.co)} ב־12 חודשים">${g}</svg><div class="bz-dtip" hidden></div></div>`; }
 function bzCcExp(){ const el=$('#bz-ccexp'), c=cur(), t0=todayIsoF(); if(!c){ el.innerHTML=bzNoData(); return; }
-  $('#bz-hx').innerHTML=VIEW?'':`<label class="btn primary" for="ccs-file">העלאת פירוט כרטיס אשראי</label>`;
-  const cs=c.ccStmt||[]; ccRowsAll(c); const rows=cs.flatMap(f=>(f.rows||[]).map(r=>({...r,file:f.file}))), CR=rcMatch(c).ccRes;
-  const byD={}; rows.forEach(r=>{ const o=byD[r.d]||(byD[r.d]={d:r.d,n:0,sum:0}); o.n++; o.sum+=r.amt; });
-  const future=Object.values(byD).filter(o=>o.d>=t0).sort((a,b)=>a.d<b.d?-1:1);
-  const inst=rows.filter(r=>r.n>1&&r.k<r.n);
-  const instLeft=inst.reduce((a,r)=>a+r.amt*(r.n-r.k),0);
-  // חיובי כרטיס בבנק: 6 חודשים
-  const tm=thisYm(), M6=[1,2,3,4,5,6].map(i=>ymAdd(tm,-i)).reverse(), bankCard={};
-  (c.tx||[]).filter(t=>t.amt<0&&/ויזה|כא"ל|כאל|ישראכרט|מקס|לאומי קארד|אמריקן|דיינרס|מסטרקארד/.test(t.desc||'')).forEach(t=>{ const m=t.d.slice(0,7); bankCard[m]=(bankCard[m]||0)-t.amt; });
-  const avg=M6.reduce((a,m)=>a+(bankCard[m]||0),0)/6;
-  el.innerHTML=`<div class="bz-sum"><div><span>החיוב הבא</span><b class="bz-neg">${future[0]?bzS(-future[0].sum):'—'}</b><span class="hint">${future[0]?fmtDate(future[0].d):'אין פירוט עדכני'}</span></div><div><span>עסקאות בתשלומים פתוחות</span><b>${inst.length}</b><span class="hint">נותרו ${bzS(instLeft)}</span></div><div><span>ממוצע חיובי כרטיס בבנק (6 חודשים)</span><b>${bzS(-avg)}</b></div><div><span>פירוט אחרון הועלה</span><b style="font-size:17px">${cs.length?new Date(Math.max(...cs.map(x=>x.at))).toLocaleDateString('he-IL'):'עוד לא'}</b></div></div>
-  <div class="status" id="ccs-status2"></div>
-  ${cs.length?`<div><div class="bz-sec"><h2>עסקאות בפירוט</h2><span class="hint">${esc(cs.map(x=>x.file).join(' · '))}</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך חיוב</th><th>בית עסק</th><th>תשלום</th><th class="n">סכום חיוב</th><th>חשבונית מס קבלה</th></tr></thead><tbody>
-   ${rows.slice().sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:b.amt-a.amt).map(r=>`<tr><td>${fmtDate(r.d)}</td><td>${esc(r.m||'')}</td><td>${r.n>1?`${r.k} מתוך ${r.n}`:'רגיל'}</td><td class="n out">${bzM(r.amt)}</td><td class="st">${invCell(CR[r.id],'cc:'+r.id)}</td></tr>`).join('')}
-  </tbody></table></div></div>`:`<div class="card"><b>עוד לא הועלה פירוט כרטיס אשראי.</b><span class="hint">מורידים מאתר כאל, מקס או ישראכרט את פירוט החיוב הבא, ומעלים בכפתור „העלאת פירוט כרטיס אשראי”. הפירוט ממלא את שורת „אשראי” בתחזית.</span></div>`}
-  <div><div class="bz-sec"><h2>חיובי כרטיס אשראי בבנק</h2><span class="hint">6 החודשים האחרונים</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>חודש</th><th class="n">סה״כ חיובים</th></tr></thead><tbody>
-   ${M6.map(m=>`<tr><td>${ymLabel(m)}</td><td class="n out">${bzM(bankCard[m]||0)}</td></tr>`).join('')}
-  </tbody></table></div></div>`; }
+  const D=cxData(c), CR=rcMatch(c).ccRes, inst=D.rows.filter(r=>r.n>1&&r.k<r.n), instLeft=inst.reduce((a,r)=>a+r.amt*(r.n-r.k),0);
+  const nextAll=D.cos.filter(o=>o.next).reduce((a,o)=>a+o.next.sum,0), avgAll=D.cos.reduce((a,o)=>a+o.avg,0), limAll=D.cos.reduce((a,o)=>a+(+o.cfg.limit||0),0);
+  $('#bz-hx').innerHTML=`<div class="bz-seg" role="group" aria-label="תצוגה"><button type="button" data-cxm="sum" aria-pressed="${CX_MODE==='sum'}">מרוכז</button><button type="button" data-cxm="det" aria-pressed="${CX_MODE==='det'}">מפורט</button></div>`
+    +(D.cos.length>1?`<select id="cx-card" aria-label="כרטיס"><option value="">כל הכרטיסים</option>${D.cos.map(o=>`<option${CX_CARD===o.co?' selected':''}>${esc(o.co)}</option>`).join('')}</select>`:'')
+    +(CX_MODE==='det'?`<span class="bz-search"><input id="cx-q" type="search" value="${esc(CX_Q)}" placeholder="חיפוש בית עסק" aria-label="חיפוש בית עסק"></span>`:'')
+    +(VIEW?'':`<label class="btn primary" for="ccs-file">העלאת פירוט כרטיס אשראי</label>`);
+  const head=`<div class="bz-box" style="overflow:hidden"><div class="bk-sum">
+    <div><span>החיוב הבא</span><b class="bz-neg">${nextAll?bzS(-nextAll):'—'}</b><span class="hint">${D.cos.find(o=>o.next)?fmtDate(D.cos.find(o=>o.next).next.d)+' · לא סופי':'אין פירוט עדכני'}</span></div>
+    <div><span>עסקאות בתשלומים פתוחות</span><b style="color:var(--bz-navy)">${inst.length}</b><span class="hint">נותרו ${bzS(instLeft)}</span></div>
+    <div><span>ממוצע חיובים לחודש</span><b class="bz-neg">${bzS(-avgAll)}</b><span class="hint">6 חודשים, לפי הבנק</span></div>
+    ${limAll?`<div><span>מסגרת פנויה</span><b style="color:var(--bz-navy)">${bzS(limAll-nextAll)}</b><span class="hint">מתוך ${bzS(limAll)}</span></div>`:''}</div></div><div class="status" id="ccs-status2"></div>`;
+  const COS=D.cos.filter(o=>!CX_CARD||o.co===CX_CARD);
+  if(!D.cos.length){ el.innerHTML=head+`<div class="bz-box" style="padding:22px;text-align:center"><b style="color:var(--bz-navy)">אין עדיין חיובי כרטיס אשראי</b><div class="hint">מעלים דף בנק, או פירוט חיובים מאתר חברת האשראי בכפתור למעלה.</div></div>`; return; }
+  if(CX_MODE==='sum'){
+    const card=o=>{ const lim=+o.cfg.limit||0, used=o.next?o.next.sum:0, hist=D.M12.slice().reverse().filter(m=>o.m[m]||(o.next&&o.next.d.startsWith(m)));
+      return `<div class="bz-box" style="overflow:hidden"><div class="bz-colh"><b>${esc(o.co)}${o.cards.length?` <span class="hint">${o.cards.map(x=>'****'+esc(x)).join(' · ')}</span>`:''}</b></div>
+       <div class="bk-sum" style="border:0;border-bottom:1px solid var(--bz-line)">
+        <div><span>מסגרת</span>${VIEW?`<b>${lim?bzS(lim):'—'}</b>`:`<label style="display:flex;align-items:center;gap:4px"><input data-cxlim="${esc(o.co)}" inputmode="decimal" value="${lim||''}" placeholder="0" aria-label="מסגרת ${esc(o.co)}"><span>₪</span></label>`}</div>
+        <div><span>מסגרת פנויה</span><b style="color:var(--bz-navy)">${lim?bzS(lim-used):'—'}</b></div>
+        <div><span>יום חיוב</span><b style="color:var(--bz-navy)">${o.day?o.day+' בחודש':'—'}</b></div></div>
+       <div class="cx-body"><div style="padding:10px 12px 4px">${cxBars(o,D.M12)}</div>
+       <div class="cx-list"><table class="bz-tbl"><tbody>${o.next?`<tr class="y"><td>${fmtDate(o.next.d)} <span class="pill info">לא סופי</span></td><td class="n out">${bzM(-o.next.sum)}</td></tr>`:''}${hist.filter(m=>o.m[m]).slice(0,12).map(m=>`<tr><td>${m.slice(5)}/${m.slice(0,4)}</td><td class="n out">${bzM(-o.m[m])}</td></tr>`).join('')}</tbody></table></div></div></div>`; };
+    const mer={}; D.rows.filter(r=>!CX_CARD||true).forEach(r=>{ const k=r.m||'—', o=mer[k]||(mer[k]={n:0,s:0,inst:0}); o.n++; o.s+=r.amt; if(r.n>1) o.inst++; });
+    const ML=Object.entries(mer).sort((a,b)=>b[1].s-a[1].s).slice(0,15);
+    el.innerHTML=head+`<div class="cx-cards${COS.length===1?' one':''}">${COS.map(card).join('')}</div>
+     ${ML.length?`<div><div class="bz-sec"><h2>על מה יורד הכסף</h2><span class="hint">לפי הפירוט שהועלה</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>בית עסק</th><th class="n">עסקאות</th><th class="n">סכום בחיוב</th></tr></thead><tbody>${ML.map(([k,o])=>`<tr><td>${esc(k)}${o.inst?' <span class="hint">· בתשלומים</span>':''}</td><td class="n">${o.n}</td><td class="n out">${bzM(-o.s)}</td></tr>`).join('')}</tbody></table></div></div>`:''}`;
+  } else {
+    const q=CX_Q.trim(), L=D.rows.filter(r=>(!q||String(r.m||'').includes(q))).sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:b.amt-a.amt), tot=sum(L.map(r=>r.amt));
+    el.innerHTML=head+(L.length?`<div><div class="bz-sec"><h2>עסקאות בפירוט</h2><span class="hint">${esc((c.ccStmt||[]).map(x=>x.file+' · '+new Date(x.at).toLocaleDateString('he-IL')).join(' | '))}</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך חיוב</th><th>בית עסק</th><th>תשלום</th><th class="n">סכום חיוב</th><th>חשבונית מס קבלה</th></tr></thead><tbody>
+     ${L.map(r=>`<tr><td>${fmtDate(r.d)}${r.d>=t0?' <span class="pill info">לא סופי</span>':''}</td><td>${esc(r.m||'')}${r.card?` <span class="hint">****${esc(r.card)}</span>`:''}</td><td>${r.n>1?`${r.k} מתוך ${r.n}`:'רגיל'}</td><td class="n out">${bzM(r.amt)}</td><td class="st">${invCell(CR[r.id],'cc:'+r.id)}</td></tr>`).join('')}</tbody>
+     <tfoot><tr class="total"><td colspan="3"><b>סה״כ ${L.length} עסקאות</b></td><td class="n out"><b>${bzM(tot)}</b></td><td></td></tr></tfoot></table></div></div>`
+     :`<div class="bz-box" style="padding:22px;text-align:center"><b style="color:var(--bz-navy)">${q?'לא נמצאו עסקאות':'עוד לא הועלה פירוט כרטיס אשראי'}</b><div class="hint">מורידים מאתר כאל, מקס או ישראכרט את פירוט החיוב הבא (אקסל), ומעלים בכפתור למעלה.</div></div>`); } }
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-cxm]'); if(!b) return; CX_MODE=b.dataset.cxm; bzCcExp(); });
+document.addEventListener('change',e=>{ const t=e.target; if(t.id==='cx-card'){ CX_CARD=t.value; bzCcExp(); }
+  else if(t.dataset&&t.dataset.cxlim!=null){ const c=cur(), v=parseNum(t.value); c.cardCfg=c.cardCfg||{}; c.cardCfg[t.dataset.cxlim]={...(c.cardCfg[t.dataset.cxlim]||{}),limit:isNaN(v)?0:Math.max(0,Math.round(Math.abs(v)))}; saveSoon(); bzCcExp(); toast('המסגרת נשמרה'); } });
+let cxQT=null; document.addEventListener('input',e=>{ if(e.target.id==='cx-q'){ CX_Q=e.target.value; clearTimeout(cxQT); cxQT=setTimeout(()=>{ const pos=e.target.selectionStart; bzCcExp(); const i=$('#cx-q'); if(i){ i.focus(); try{ i.setSelectionRange(pos,pos); }catch(x){} } },250); } });
 
 /* --- חשבונות בנק: יתרה + מסגרת = יתרה זמינה, מרוכז (לפי יום) / מפורט (תנועות) --- */
 let BK_MODE='sum', BK_DAYS=30, BK_UP=false; const BK_OPEN=new Set();

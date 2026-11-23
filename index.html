@@ -541,16 +541,13 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
     <button class="bz-it" data-bz="overview" type="button">סקירה כללית<svg width="24" height="24" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18v12H3z"/><path d="M8 20h8M12 16v4"/><circle cx="16" cy="9" r="3"/><path d="M16 9l2-1"/></svg></button>
     <div class="bz-grp" data-grp="fin"><button class="bz-it" data-bzg="fin" type="button" aria-expanded="false"><span class="chev" aria-hidden="true">▾</span>ניהול פיננסי<svg width="24" height="24" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V11M9 20V7M14 20v-6M19 20V4"/><path d="M2 20h20"/></svg></button>
       <div class="bz-sub">
-        <div class="bz-subh">הכנסות</div>
         <button class="bz-it" data-bz="incov" type="button">סקירת הכנסות</button>
-        <button class="bz-it" data-bz="bank" data-dir="in" type="button">בנק מזרחי</button>
-        <button class="bz-it" data-bz="cardcom" type="button">אשראי קארדקום</button>
+        <button class="bz-it" data-bz="expov" type="button">סקירת הוצאות</button>
+        <button class="bz-it" data-bz="bank" type="button">חשבונות בנק</button>
+        <button class="bz-it" data-bz="ccexp" type="button">כרטיסי אשראי</button>
+        <button class="bz-it" data-bz="cardcom" type="button">חשבונות סליקה</button>
         <button class="bz-it" data-bz="cheques" type="button">צ'קים</button>
         <button class="bz-it" data-bz="payees" type="button">מוטבים</button>
-        <div class="bz-subh">הוצאות</div>
-        <button class="bz-it" data-bz="expov" type="button">סקירת הוצאות</button>
-        <button class="bz-it" data-bz="bank" data-dir="out" type="button">הוצאות בנק</button>
-        <button class="bz-it" data-bz="ccexp" type="button">הוצאות אשראי</button>
       </div></div>
     <div class="bz-grp" data-grp="flow"><button class="bz-it" data-bzg="flow" type="button" aria-expanded="false"><span class="chev" aria-hidden="true">▾</span>תחזית עסקית<svg width="24" height="24" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 9h.01M18 15h.01"/></svg></button>
       <div class="bz-sub"><button class="bz-it" data-bz="fcov" type="button">סקירת תחזית</button><button class="bz-it" data-bz="half" type="button">תחזית חודשית</button><button class="bz-it" data-bz="daily" type="button">תזרים יומי</button><button class="bz-it" data-bz="recon" type="button">התאמות בנקים</button><button class="bz-it" data-bz="recur" type="button">תנועות קבועות</button></div></div>
@@ -1937,7 +1934,7 @@ function rcMatch(c){
     let st, info='', who='', fid='';
     if(t.inv&&t.inv.fid){ st='gotx'; fid=t.inv.fid; info='קושר ידנית'+(invInfo(t.inv)?' · '+invInfo(t.inv):''); }
     else if(t.rcpt&&RC_ST[t.rcpt]){ st=t.rcpt; info=t.rcptInfo||'נקבע ידנית'; }
-    else if(CC_BANK_RE.test(t.desc||'')){ st='na'; info='חיוב כרטיס אשראי. החשבוניות מקושרות לכל עסקה במסך „הוצאות אשראי”'; }
+    else if(CC_BANK_RE.test(t.desc||'')){ st='na'; info='חיוב כרטיס אשראי. החשבוניות מקושרות לכל עסקה במסך „כרטיסי אשראי”'; }
     else if(t.cat===IGNORE||EXP_NA.has(t.cat)||/עמלה|עמלת|דמי ניהול|ריבית|העברה בין|משכורת|ביטוח לאומי|מס הכנסה|מע"מ|מע״מ|הלוואה/.test(t.desc)) st='na';
     else if(!inv) st='unk';
     else {
@@ -1967,7 +1964,7 @@ function renderTxList(){ try{ if(BZ&&BZ_TAB==='bank') setTimeout(bkTop,0); }catc
     `<div class="actions vh"><span class="hint">יציאות: ${RM.hasInv?`נבדקו מול ${RM.nDrive?`${RM.nDrive} מסמכים מ${esc(c.supInvSrc||'הדרייב')} (${new Date(c.supInvAt).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'})})`:''}${RM.nDrive&&RM.nSumit?' ועוד ':''}${RM.nSumit?`${RM.nSumit} מסמכי הוצאה מסאמיט (${new Date(SUMIT[c.ccKey].synced).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'})})`:''}`:'כדי לדעת על אילו תשלומים כבר התקבלה קבלה מהספק, מחברים את תיקיית הקבלות בגוגל דרייב'}</span>
       ${c.driveFolder?`<button class="btn sm primary" type="button" id="drv-sync">עדכון מהדרייב</button>`:''}<button class="btn sm" type="button" id="drv-set">${c.driveFolder?'החלפת תיקיית דרייב':'חיבור תיקיית קבלות בדרייב'}</button><label class="btn ghost sm" for="inv-file">העלאת רשימה מקובץ</label><input type="file" id="inv-file" accept=".xlsx,.xls,.csv,.txt,.htm,.html" hidden><span class="status" id="drv-status"></span></div>`;
   const detOf=t=>t.det||detAuto(t,(stOf(t)||{}).who);
-  let list=c.tx.slice().reverse().filter(t=>(!q||t.desc.toLowerCase().includes(q)||detOf(t).toLowerCase().includes(q)||String(t.ref||'').includes(q))&&(!fc||t.cat===fc)&&(!fs||(stOf(t)&&stOf(t).st===fs))&&(!BK_DIR||(BK_DIR==='in'?t.amt>0:t.amt<0)));
+  let list=c.tx.slice().reverse().filter(t=>(!q||t.desc.toLowerCase().includes(q)||detOf(t).toLowerCase().includes(q)||String(t.ref||'').includes(q))&&(!fc||t.cat===fc)&&(!fs||(stOf(t)&&stOf(t).st===fs))&&(!BK_DIR||BK_DIR==='all'||(BK_DIR==='in'?t.amt>0:t.amt<0)));
   const total=list.length; if(!showAllTx) list=list.slice(0,150);
   const stCell=t=>{ const s=stOf(t); if(!s) return '<td class="st"></td>'; const [l,cls]=RC_ST[s.st];
     if(t.amt<0) return `<td class="st">${invCell(s,'tx:'+t.id)}<select class="vh" data-rcpt="${t.id}" aria-label="סטטוס ידני"><option value="">אוטומטי</option>${RC_OUT.map(x=>`<option value="${x}"${t.rcpt===x?' selected':''}>${RC_ST[x][0]}</option>`).join('')}</select></td>`;
@@ -2294,7 +2291,7 @@ function expLines(k,e,months){
   if(cs) out.push(cs);
   else { const c=cur(), a=c&&c.ccKey===k?cardOutAvg(6):null;
     const cc0=a&&j0>=0?tmSum(c,t=>t.amt<0&&EXP_CARD_RE.test(t.desc||'')):0;
-    out.push({id:'exp2',sec:'out',label:'אשראי - ממוצע 6 חודשים אחרונים',plain:true,spread:true,vals:months.map((m,i)=>a?(i===j0?Math.max(0,a.avg-cc0):a.avg):0),note:a?'חיובי כרטיסי האשראי בדף הבנק: '+a.per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')+'. פירוט כרטיס שמועלה במסך „הוצאות אשראי” מחליף את הממוצע':'אין חיובי כרטיס אשראי בדף הבנק',details:[]}); }
+    out.push({id:'exp2',sec:'out',label:'אשראי - ממוצע 6 חודשים אחרונים',plain:true,spread:true,vals:months.map((m,i)=>a?(i===j0?Math.max(0,a.avg-cc0):a.avg):0),note:a?'חיובי כרטיסי האשראי בדף הבנק: '+a.per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')+'. פירוט כרטיס שמועלה במסך „כרטיסי אשראי” מחליף את הממוצע':'אין חיובי כרטיס אשראי בדף הבנק',details:[]}); }
   EXP_FIXED.forEach(([id,label,v])=>{
     if(e.recurInit){ let its=rI.filter(x=>x.grp===id), paid0=0;
       if(mine&&j0>=0&&(GRP_CATS[id]||[]).length){ let paid=paid0=tmSum(c0,t=>t.amt<0&&GRP_CATS[id].includes(t.cat));
@@ -2405,9 +2402,9 @@ function hfSources(k,f,base){
     {ok:tx.length>0&&noDesc<tx.length/2,name:'דף בנק',detail:tx.length?`${tx.length} תנועות, ${fmtDate(ds[0])} עד ${fmtDate(ds[ds.length-1])}`:'לא הועלה'}
   ];
   const miss=[];
-  if(!tx.length) miss.push({what:'דף בנק',why:'יתרת הפתיחה של התחזית נלקחת מהיתרה האחרונה בדף הבנק.',how:'מייצאים מאתר הבנק דף חשבון של 6 עד 12 חודשים (PDF, אקסל או וורד) ומעלים בלשונית „תנועות בנק”.'});
+  if(!tx.length) miss.push({what:'דף בנק',why:'יתרת הפתיחה של התחזית נלקחת מהיתרה האחרונה בדף הבנק.',how:'מייצאים מאתר הבנק דף חשבון של 6 עד 12 חודשים (PDF, אקסל או וורד) ומעלים בלשונית „חשבונות בנק”.'});
   else {
-    if(false) miss.push({what:'דף הבנק בלי תיאורים',why:`${noDesc} מתוך ${tx.length} תנועות בלי תיאור, ולכן כל היציאות נספרות כ„תשלומים לספקים” ואין פירוט של שכר, מיסים, הלוואות ואשראי.`,how:'מייצאים שוב מהבנק, כולל העמודה „תיאור” או „פרטים”, ומעלים בלשונית „תנועות בנק”.'});
+    if(false) miss.push({what:'דף הבנק בלי תיאורים',why:`${noDesc} מתוך ${tx.length} תנועות בלי תיאור, ולכן כל היציאות נספרות כ„תשלומים לספקים” ואין פירוט של שכר, מיסים, הלוואות ואשראי.`,how:'מייצאים שוב מהבנק, כולל העמודה „תיאור” או „פרטים”, ומעלים בלשונית „חשבונות בנק”.'});
     if(false) miss.push({what:'מעט חודשים בדף הבנק',why:`יש רק ${full} חודשים מלאים, והממוצע פחות מדויק.`,how:'מעלים דף בנק של לפחות 3 חודשים מלאים, עדיף 6.'});
     const last=ds[ds.length-1]; if(last&&last<ymAdd(tm,-1)+'-01') miss.push({what:'דף בנק ישן',why:`התנועה האחרונה מ־${fmtDate(last)}.`,how:'מעלים דף בנק עדכני.'});
   }
@@ -2451,7 +2448,7 @@ function hfDaily(R,e){
 }
 function hfSummary(R,D){
   const el=$('#hf-sum');
-  if(R.opening==null||!D.days.length){ el.className='hfsum na'; el.innerHTML='<div class="big">חסרה היתרה בבנק היום</div><div class="sub">מעלים דף בנק בלשונית „תנועות בנק”. בלי יתרה התחזית לא יודעת מאיזה סכום להתחיל, ואי אפשר לדעת מתי ייגמר הכסף.</div>'; return; }
+  if(R.opening==null||!D.days.length){ el.className='hfsum na'; el.innerHTML='<div class="big">חסרה היתרה בבנק היום</div><div class="sub">מעלים דף בנק בלשונית „חשבונות בנק”. בלי יתרה התחזית לא יודעת מאיזה סכום להתחיל, ואי אפשר לדעת מתי ייגמר הכסף.</div>'; return; }
   const days=D.days; let lo=days[0]; days.forEach(x=>{ if(x.bal<lo.bal) lo=x; });
   const neg=days.find(x=>x.bal<0), ni=neg?days.indexOf(neg):-1;
   const od=R.openDate?' (לפי דף הבנק, נכון ל־'+fmtDate(R.openDate)+')':'';
@@ -2526,7 +2523,7 @@ function renderHalf0(){
   let h='<thead><tr><th class="lbl">סעיף (₪)</th>'+R.months.map(m=>`<th>${ymLabel(m)}</th>`).join('')+'<th>סה״כ</th></tr></thead><tbody>';
   if(R.close){ const op=[R.opening,...R.close.slice(0,-1)];
     h+=`<tr class="total openrow"><td class="lbl" title="${R.openDate?'החודש הראשון: היתרה בדף הבנק, נכון ל־'+fmtDate(R.openDate):''}">יתרה בתחילת החודש${R.gap?` <span class="hint">(צפי, לפי הבנק + ${R.gap.months.length} חודשי ביניים)</span>`:R.openDate?` <span class="hint">(בנק, ${fmtDate(R.openDate)})</span>`:''}</td>${op.map(v=>`<td class="calc ${v<0?'balneg':'balpos'}">${fmt(v)}</td>`).join('')}<td class="calc"></td></tr>`; }
-  else h+=`<tr class="total openrow"><td class="lbl">יתרה בתחילת החודש</td><td colspan="${R.months.length+1}" class="hint">חסרה יתרה בבנק. מעלים דף בנק בלשונית „תנועות בנק”</td></tr>`;
+  else h+=`<tr class="total openrow"><td class="lbl">יתרה בתחילת החודש</td><td colspan="${R.months.length+1}" class="hint">חסרה יתרה בבנק. מעלים דף בנק בלשונית „חשבונות בנק”</td></tr>`;
   [['in','הכנסות'],['out','הוצאות']].forEach(([sec,name])=>{
     h+=`<tr class="sec sec-${sec}"><td class="lbl">${sec==='in'?'▲ ':sec==='out'?'▼ ':''}${name}</td><td colspan="${cols}"></td></tr>`;
     R.rows.filter(r=>r.sec===sec).forEach(r=>{
@@ -3022,7 +3019,7 @@ async function ccSync(k,silent){
     else toast('העדכון נכשל');
   }finally{ ccBusy=false; $$('[data-ccsync]').forEach(b=>{ b.disabled=false; b.textContent='עדכון מקארדקום'; }); }
 }
-document.addEventListener('click',e=>{ const b=e.target.closest('[data-ccsync]'); if(!b) return; const k=cur().ccKey; if(!k){ toast('בוחרים קודם את הלקוח בקארדקום'); return; } toast(true?'הנתונים מקארדקום מתעדכנים מהקבצים שמעלים. מורידים קובץ חדש מקארדקום ומעלים אותו בלשונית אשראי קארדקום':CCL._status&&CCL._status.credsMissing?'העדכון מקארדקום עצור: פרטי החיבור נמחקו במחשב המשרד. כותבים ל-Claude בשיחה „פתח חיבור לקארדקום”, ומזינים את הפרטים באפליקציית Claude במחשב המשרד':'הנתונים מקארדקום מתעדכנים לבד ממחשב המשרד כל שעתיים, בימים א׳–ה׳'); });
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-ccsync]'); if(!b) return; const k=cur().ccKey; if(!k){ toast('בוחרים קודם את הלקוח בקארדקום'); return; } toast(true?'הנתונים מקארדקום מתעדכנים מהקבצים שמעלים. מורידים קובץ חדש מקארדקום ומעלים אותו בלשונית חשבונות סליקה':CCL._status&&CCL._status.credsMissing?'העדכון מקארדקום עצור: פרטי החיבור נמחקו במחשב המשרד. כותבים ל-Claude בשיחה „פתח חיבור לקארדקום”, ומזינים את הפרטים באפליקציית Claude במחשב המשרד':'הנתונים מקארדקום מתעדכנים לבד ממחשב המשרד כל שעתיים, בימים א׳–ה׳'); });
 /* עדכון אוטומטי: כשהדף פתוח במשרד, כל לקוח שיש לו חיבור לקארדקום במחשב הזה מתעדכן לבד,
    מיד כשנפתח ואחר כך כל שעה, בלי ללחוץ על כלום. */
 const ccAutoFail={}, CC_AUTO_MS=60*60*1000;
@@ -3437,7 +3434,8 @@ on('#sh-base-save','click',async()=>{
 
 /* ================= עיצוב חדש: מעטפת ומסכים ================= */
 var BK_DIR='';
-const BZKEY='cashflow-bz', BZ_TITLES={overview:'סקירה כללית',half:'תחזית חודשית',daily:'תזרים יומי',recon:'התאמות בנקים',recur:'תנועות קבועות',payees:'מוטבים',bank:'בנק מזרחי',cardcom:'אשראי קארדקום',cheques:"צ'קים",ccexp:'הוצאות אשראי',debts:'חובות לקוחות',expov:'סקירת הוצאות',incov:'סקירת הכנסות',fcov:'סקירת תחזית',clients:'לקוחות וגיבוי'};
+const bkSeg=()=>`<div class="bz-seg" role="group" aria-label="סינון תנועות">${[['all','הכל'],['in','זכות'],['out','חובה']].map(([v,l])=>`<button type="button" data-bkdir="${v}" aria-pressed="${(BK_DIR||'all')===v}">${l}</button>`).join('')}</div>`;
+const BZKEY='cashflow-bz', BZ_TITLES={overview:'סקירה כללית',half:'תחזית חודשית',daily:'תזרים יומי',recon:'התאמות בנקים',recur:'תנועות קבועות',payees:'מוטבים',bank:'חשבונות בנק',cardcom:'חשבונות סליקה',cheques:"צ'קים",ccexp:'כרטיסי אשראי',debts:'חובות לקוחות',expov:'סקירת הוצאות',incov:'סקירת הכנסות',fcov:'סקירת תחזית',clients:'לקוחות וגיבוי'};
 const BZ_NEW=new Set(['overview','daily','recon','recur','payees','cheques','ccexp','debts','expov','incov','fcov']);
 let BZ=false, BZ_TAB='overview';
 BZ=true; // העיצוב החדש אושר והוא העיצוב הקבוע, גם בקישור ללקוח
@@ -3446,10 +3444,10 @@ const bzS=n=>'⁦'+(n<0?'-':'')+'₪'+fmt(Math.abs(n))+'⁩';
 function bzCtx(){ const k=hfKey(), f=k&&HF[k]; if(!f) return null; const e=hfEdits(k), R=hfCompute(f,e,k); const D=R.opening==null?{days:[]}:hfDaily(R,e); return {k,f,e,R,D,c:cur()}; }
 function bzSet(on){ BZ=!!on; try{ localStorage.setItem(BZKEY,BZ?'1':'0'); }catch(e){} document.body.classList.toggle('bz',BZ); if(BZ){ setTab(BZ_NEW.has(BZ_TAB)||BZ_TITLES[BZ_TAB]?BZ_TAB:'overview'); } else { if(BZ_NEW.has(BZ_TAB)) setTab('half'); } window.scrollTo(0,0); }
 function bzOnTab(t){ BZ_TAB=t; if(!BZ) return;
-  if(t!=='bank') BK_DIR=''; else if(!BK_DIR) BK_DIR='in';
-  $$('#bz-side [data-bz]').forEach(b=>{ if(b.dataset.bz===t&&(!b.dataset.dir||b.dataset.dir===BK_DIR)) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
+  if(t!=='bank') BK_DIR=''; else if(!BK_DIR) BK_DIR='all';
+  $$('#bz-side [data-bz]').forEach(b=>{ if(b.dataset.bz===t) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
   $$('#bz-side .bz-grp').forEach(g=>{ const has=!!g.querySelector(`[data-bz="${t}"]`); if(has) g.dataset.open='1'; g.querySelector('[data-bzg]').setAttribute('aria-expanded',g.dataset.open==='1'); });
-  $('#bz-h').textContent=t==='bank'&&BK_DIR==='out'?'הוצאות בנק':(BZ_TITLES[t]||''); $('#bz-hx').innerHTML='';
+  $('#bz-h').textContent=BZ_TITLES[t]||''; $('#bz-hx').innerHTML=t==='bank'?bkSeg():'';
   if(t==='bank'){ try{ renderTxList(); }catch(e){} }
   document.body.classList.remove('bz-open');
   bzRender(t); }
@@ -3458,7 +3456,7 @@ function bzRender(t){ if(!BZ) return; t=t||BZ_TAB;
   catch(err){ console.error(err); const el=$('#tab-'+t); if(el&&BZ_NEW.has(t)) el.firstElementChild.innerHTML='<div class="card"><b>משהו לא עבד בתצוגה הזו.</b><span class="hint">'+esc(err.message||'')+'</span></div>'; }
   try{ recurEnsure(); fcSnapSoon(); }catch(e){}
   const c=cur(); if(c){ const sel=$('#bz-client'); sel.innerHTML=Object.keys(DB.clients).map(id=>`<option value="${esc(id)}"${id===DB.current?' selected':''}>${esc(DB.clients[id].name||'ללא שם')}</option>`).join(''); } }
-const bzNoData=msg=>`<div class="card"><b>${msg||'אין עדיין נתוני תחזית ללקוח הזה.'}</b><span class="hint">משייכים את הלקוח בלשונית „תחזית חודשית” ומעלים דף בנק בלשונית „תנועות בנק”.</span></div>`;
+const bzNoData=msg=>`<div class="card"><b>${msg||'אין עדיין נתוני תחזית ללקוח הזה.'}</b><span class="hint">משייכים את הלקוח בלשונית „תחזית חודשית” ומעלים דף בנק בלשונית „חשבונות בנק”.</span></div>`;
 
 /* --- סיווג תנועות בנק לפי סוג תשלום --- */
 const BZ_TYPES=[['סליקה',/ויזה|כא"ל|כאל|ישראכרט|מקס|לאומי קארד|סליקה|max|isracard|visa/i],["צ'ק",/שיק|צ'ק|צ׳ק|המחאה/i],['הוראת קבע',/הו"ק|הוראת קבע|הו״ק/i],['כרטיס אשראי',/כרטיס|אשראי/i],['הלוואה',/הלוואה|הלואה/i],['עמלה',/עמלה|עמלות|דמי ניהול/i],['משכורת',/משכורת|שכר/i],['מס',/מע"מ|מעמ|מס הכנסה|ביטוח לאומי|מקדמות/i],['העברה בנקאית',/העברה|העב'|זיכוי|ביט|bit|paybox|פייבוקס/i]];
@@ -3572,7 +3570,7 @@ function bzAlerts(ctx){ const A=[], t0=todayIsoF(), c=ctx.c, D=ctx.D;
   (ctx.R.late||[]).slice().sort((a,b)=>b.days-a.days).slice(0,6).forEach(l=>A.push({id:'late'+l.name+l.amount,sev:'warn',t:'תשלום באיחור: '+l.name+', '+fmt(l.amount)+' ₪',s:l.days+' ימים אחרי המועד, ולא נמצא בבנק.',go:'recon'}));
   const tx=(c.tx||[]).filter(t=>t.d&&dDays(t.d,t0)<=30);
   tx.filter(t=>/החזר[הת]?\s*(שיק|צ'ק|צ׳ק)|(שיק|צ'ק|צ׳ק)\s*חוזר|שיק\s*שחזר/.test(t.desc||'')).forEach(t=>A.push({id:'rc'+t.d+t.amt,sev:'crit',t:"צ'ק חזר: "+fmt(Math.abs(t.amt))+' ₪',s:(t.desc||'')+' · '+fmtDate(t.d),go:'bank'}));
-  const last=(c.tx||[]).reduce((a,t)=>t.d>a?t.d:a,''); if(last&&dDays(last,t0)>7) A.push({id:'bank'+last,sev:'warn',t:'דף הבנק לא עודכן '+dDays(last,t0)+' ימים',s:'התנועה האחרונה מ־'+fmtDate(last)+'. מעלים דף בנק חדש בלשונית „תנועות בנק”.',go:'bank'});
+  const last=(c.tx||[]).reduce((a,t)=>t.d>a?t.d:a,''); if(last&&dDays(last,t0)>7) A.push({id:'bank'+last,sev:'warn',t:'דף הבנק לא עודכן '+dDays(last,t0)+' ימים',s:'התנועה האחרונה מ־'+fmtDate(last)+'. מעלים דף בנק חדש בלשונית „חשבונות בנק”.',go:'bank'});
   const cs=c.ccStmt||[]; if(cs.length){ const at=Math.max(...cs.map(x=>x.at)); const dd=Math.round((Date.now()-at)/864e5); if(dd>35) A.push({id:'ccs'+at,sev:'warn',t:'פירוט האשראי לא עודכן '+dd+' ימים',s:'מעלים פירוט חדש בלשונית „תחזית חודשית”.',go:'half'}); }
   if(c.retainersAt){ const dd=Math.round((Date.now()-c.retainersAt)/864e5); if(dd>35) A.push({id:'ret'+c.retainersAt,sev:'warn',t:'דוח הוראות הקבע לא עודכן '+dd+' ימים',s:'מורידים מקארדקום ומעלים בלשונית „תחזית חודשית”.',go:'half'}); }
   // הוצאה חריגה: החודש הקודם מול ממוצע 3 החודשים שלפניו, לפי מוטב
@@ -3937,7 +3935,7 @@ function bkTop(){ const c=cur(), top=$('#bk-top'), dc=$('#bk-daycard'), up=$('#b
   // סרגל כלים
   $('#bz-hx').innerHTML=D?`<div class="bz-seg" role="group" aria-label="תצוגה"><button type="button" data-bkm="sum" aria-pressed="${BK_MODE==='sum'}">מרוכז</button><button type="button" data-bkm="det" aria-pressed="${BK_MODE==='det'}">מפורט</button></div>
     ${BK_MODE==='sum'?`<select id="bk-days" aria-label="תקופה">${[[7,'7 ימים אחרונים'],[30,'30 ימים אחרונים'],[90,'90 ימים אחרונים'],[180,'6 חודשים אחרונים']].map(([v,l])=>`<option value="${v}"${BK_DAYS===v?' selected':''}>${l}</option>`).join('')}</select>`:''}
-    ${VIEW?'':`<label class="btn primary" for="bk-files" title="אפשר לבחור כמה קבצים יחד: PDF, אקסל או CSV">העלאת דף בנק</label><button class="btn ghost${BK_UP?' primary':''}" type="button" id="bk-upbtn" aria-expanded="${BK_UP}">הדבקה / הוספה ידנית</button>`}`:(VIEW?'':`<label class="btn primary" for="bk-files">העלאת דף בנק</label>`);
+    ${VIEW?'':`<label class="btn primary" for="bk-files" title="אפשר לבחור כמה קבצים יחד: PDF, אקסל או CSV">העלאת דף בנק</label><button class="btn ghost${BK_UP?' primary':''}" type="button" id="bk-upbtn" aria-expanded="${BK_UP}">הדבקה / הוספה ידנית</button>`}`:(VIEW?'':`<label class="btn primary" for="bk-files">העלאת דף בנק</label>`); if(!D||BK_MODE==='det') $('#bz-hx').insertAdjacentHTML('afterbegin',bkSeg());
   if(up) up.hidden=!!D&&!BK_UP; if(txc) txc.hidden=!!D&&BK_MODE==='sum'; dc.hidden=!D||BK_MODE!=='sum';
   if(!D){ top.innerHTML=''; return; }
   const bal=D.bal, avail=bal==null?null:bal+lim, over=bal!=null&&bal<-lim, neg=bal!=null&&bal<0;
@@ -4088,7 +4086,7 @@ function bzExpOv(){ const el=$('#bz-expov'), c=cur(); if(!c){ el.innerHTML=bzNoD
   ${bzDsBox('exp')}
   ${sel?`<div id="xdet-exp"><div class="bz-sec" style="margin-top:18px"><h2>${esc(sel)}: ${det.length} תנועות</h2><button class="bz-link" type="button" data-dsel="exp" data-dn="${esc(sel)}">סגירה</button></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך</th><th>תיאור</th><th>מקור</th><th class="n">סכום</th><th>חשבונית מס קבלה</th></tr></thead><tbody>
    ${det.map(r=>`<tr><td>${fmtDate(r.d)}</td><td>${esc(r.desc)}${r.det?`<span class="hint" style="display:block">${esc(r.det)}</span>`:''}</td><td>${esc(r.src)}</td><td class="n out">${bzM(-r.amt)}</td><td class="st">${invCell(stOf(r),r.key)}</td></tr>`).join('')}</tbody></table></div></div>`:''}
-  ${noInv.length&&!VIEW?`<div class="bz-sec" style="margin-top:18px"><h2>הוצאות בתקופה שלא נמצאה להן חשבונית</h2><span class="hint">${c.driveFolder?'נבדקו מול תיקיית הקבלות בדרייב':'עוד לא חוברה תיקיית קבלות בדרייב (במסך „הוצאות בנק”)'}</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך</th><th>תיאור</th><th>סוג</th><th class="n">סכום</th><th></th></tr></thead><tbody>
+  ${noInv.length&&!VIEW?`<div class="bz-sec" style="margin-top:18px"><h2>הוצאות בתקופה שלא נמצאה להן חשבונית</h2><span class="hint">${c.driveFolder?'נבדקו מול תיקיית הקבלות בדרייב':'עוד לא חוברה תיקיית קבלות בדרייב (במסך „חשבונות בנק”)'}</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך</th><th>תיאור</th><th>סוג</th><th class="n">סכום</th><th></th></tr></thead><tbody>
    ${noInv.sort((a,b)=>b.amt-a.amt).slice(0,40).map(r=>`<tr><td>${fmtDate(r.d)}</td><td>${esc(r.desc)}</td><td>${esc(r.type)}</td><td class="n out">${bzM(-r.amt)}</td><td><button class="btn ghost xs" type="button" data-invlink="${r.key}">קישור חשבונית</button></td></tr>`).join('')}</tbody></table></div>`:''}`; }
 
 /* הכנסות לפי מוצר */
@@ -4143,7 +4141,7 @@ function bzIncOv(){ const el=$('#bz-incov'), c=cur(), ctx=bzCtx(), t0=todayIsoF(
   ${VIEW?'':`<div class="bz-sec" style="margin-top:22px"><h2>שיוך לקוחות למוצרים</h2><span class="hint">${unN?unN+' לקוחות לא משויכים':'כל הלקוחות משויכים'}. לקוח שמופיע בדוח הפריטים משויך לבד.</span></div>
   <div class="bz-box" style="padding:12px 14px"><form id="prod-add" class="actions"><input id="prod-name" maxlength="50" autocomplete="off" placeholder="שם מוצר חדש, למשל: תכנית ליווי" aria-label="שם מוצר חדש" style="flex:1;min-width:200px"><button class="btn sm primary" type="submit">הוספת מוצר</button></form>
    <div class="hint" style="margin:6px 0">מוצרים: ${PL.length?PL.map(esc).join(' · '):'עוד אין. מוסיפים כאן או מעלים דוח פריטים'}</div>
-   ${PL.length?`<div class="actions" style="margin:6px 0"><span class="hint">שיוך כמה לקוחות יחד: מסמנים בטבלה ובוחרים מוצר</span><select id="pm-bulk" aria-label="מוצר לשיוך">${PL.map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="btn sm" type="button" id="pm-apply">שיוך המסומנים</button>${CL.some(o=>!prodOf(c,o.k,auto)&&sugOf(o))?`<button class="btn sm primary" type="button" id="pm-sugall">אישור כל ההצעות (${CL.filter(o=>!prodOf(c,o.k,auto)&&sugOf(o)).length})</button>`:''}</div>`:`<div class="hint" style="margin:6px 0">כדי שהשיוך ייעשה לבד: מעלים בלשונית „אשראי קארדקום” את דוח הוראות הקבע עם עמודת „מוצר”, או כאן את דוח הפריטים. אפשר גם להוסיף מוצר ידנית ולשייך.</div>`}
+   ${PL.length?`<div class="actions" style="margin:6px 0"><span class="hint">שיוך כמה לקוחות יחד: מסמנים בטבלה ובוחרים מוצר</span><select id="pm-bulk" aria-label="מוצר לשיוך">${PL.map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="btn sm" type="button" id="pm-apply">שיוך המסומנים</button>${CL.some(o=>!prodOf(c,o.k,auto)&&sugOf(o))?`<button class="btn sm primary" type="button" id="pm-sugall">אישור כל ההצעות (${CL.filter(o=>!prodOf(c,o.k,auto)&&sugOf(o)).length})</button>`:''}</div>`:`<div class="hint" style="margin:6px 0">כדי שהשיוך ייעשה לבד: מעלים בלשונית „חשבונות סליקה” את דוח הוראות הקבע עם עמודת „מוצר”, או כאן את דוח הפריטים. אפשר גם להוסיף מוצר ידנית ולשייך.</div>`}
    <div class="tscroll"><table class="bz-tbl bz-map"><thead><tr><th style="width:28px"><input type="checkbox" id="pm-all" aria-label="סימון הכל" style="width:16px;height:16px"></th><th>לקוח</th><th>שורה בתחזית</th><th class="n">צפוי בתקופה</th><th>מוצר</th><th></th></tr></thead><tbody>
    ${CL.slice(0,200).map(o=>{ const man=c.prodMap&&c.prodMap[o.k], au=auto[o.k], p=man||au, sg=!p&&sugOf(o);
      return `<tr><td><input type="checkbox" data-pchk="${esc(o.k)}" data-psug="${esc(sg||'')}" aria-label="סימון" style="width:16px;height:16px"></td><td>${esc(o.name)}</td><td class="hint">${esc(o.row||'')}</td><td class="n in">${bzM(o.amt)}</td><td><select data-pmap="${esc(o.k)}" aria-label="מוצר"><option value="">— לא משויך —</option>${PL.map(x=>`<option${x===p?' selected':''}>${esc(x)}</option>`).join('')}</select>${!man&&au?'<span class="hint" style="display:block">לפי דוח הפריטים</span>':''}</td><td>${sg?`<button class="btn ghost xs" type="button" data-pacc="${esc(o.k)}" data-pv="${esc(sg)}">הצעה: ${esc(sg)}</button>`:''}</td></tr>`; }).join('')||'<tr><td colspan="6" class="hint">אין לקוחות עם הכנסות צפויות בתקופה</td></tr>'}
@@ -4206,7 +4204,7 @@ function invOpen(key){ const T=invTarget(key); if(!T){ toast('התנועה לא 
   $('#inv-cur').innerHTML=T.obj.inv&&T.obj.inv.fid?`<div class="actions" style="margin-top:8px"><span>מקושרת עכשיו: <a class="invlink" href="${driveUrl(T.obj.inv.fid)}" target="_blank" rel="noopener">${esc(T.obj.inv.sup||'החשבונית')} ↗</a></span><button class="btn xs danger" type="button" id="inv-un">ביטול הקישור</button></div>`:'';
   const used=new Set([...c.tx,...ccRowsAll(c)].filter(t=>t.inv&&t.inv.fid&&t!==T.obj).map(t=>t.inv.fid));
   INV_SUG=(c.supInv||[]).filter(x=>x.fid&&!used.has(x.fid)).map(x=>({...x,sc:Math.abs((x.amt||0)-T.amt)/Math.max(T.amt,1)*100+Math.abs(dayDiff(T.d,x.d||T.d))/30})).sort((a,b)=>a.sc-b.sc).slice(0,8);
-  $('#inv-sug').innerHTML=INV_SUG.length?INV_SUG.map((x,i)=>invRowHtml(x,'data-invpick',i,Math.abs((x.amt||0)-T.amt)<=1)).join(''):`<div class="hint">${c.driveFolder?'אין מסמכים בתיקייה. אפשר לחפש בכל הדרייב למטה.':'עוד לא חוברה תיקיית קבלות. מחברים במסך „הוצאות בנק”, או מחפשים בדרייב למטה.'}</div>`;
+  $('#inv-sug').innerHTML=INV_SUG.length?INV_SUG.map((x,i)=>invRowHtml(x,'data-invpick',i,Math.abs((x.amt||0)-T.amt)<=1)).join(''):`<div class="hint">${c.driveFolder?'אין מסמכים בתיקייה. אפשר לחפש בכל הדרייב למטה.':'עוד לא חוברה תיקיית קבלות. מחברים במסך „חשבונות בנק”, או מחפשים בדרייב למטה.'}</div>`;
   $('#inv-res').innerHTML=''; $('#inv-st').textContent=''; $('#inv-q').value=T.obj.det&&!/העברה|באינטרנט|זיכוי/.test(T.obj.det)?String(T.obj.det).replace(/[^א-תA-Za-z0-9 ]/g,' ').replace(/\s+/g,' ').trim().split(' ').slice(0,3).join(' '):(/העברה|באינטרנט|הו"ק|הוראת קבע|שיק|צ'ק/.test(T.desc||'')?'':String(T.desc||'').replace(/[^א-תA-Za-z ]/g,' ').replace(/\s+/g,' ').trim().split(' ').slice(0,2).join(' '));
   $('#inv-url').value=''; $('#inv-ov').hidden=false; }
 async function invSearch(){ const q=$('#inv-q').value.trim().replace(/'/g,"\\'"); if(!q) return; const c=cur(), st=$('#inv-st');
@@ -4297,7 +4295,8 @@ function bzAddSave(){ const k=hfKey(); if(!k){ $('#bz-add-st').textContent='אי
 
 /* --- אירועים --- */
 document.addEventListener('click',ev=>{ const t=ev.target.closest('button'); if(!t) return;
-  if(t.dataset.bz){ if(t.dataset.bz==='bank') BK_DIR=t.dataset.dir||'in'; setTab(t.dataset.bz); window.scrollTo(0,0); return; }
+  if(t.dataset.bkdir){ BK_DIR=t.dataset.bkdir; $('#bz-hx').innerHTML=bkSeg(); try{ renderTxList(); }catch(e){} try{ bzRender('bank'); }catch(e){} return; }
+  if(t.dataset.bz){ if(t.dataset.bz==='bank') BK_DIR='all'; setTab(t.dataset.bz); window.scrollTo(0,0); return; }
   if(t.dataset.bzg){ const g=t.closest('.bz-grp'); g.dataset.open=g.dataset.open==='1'?'0':'1'; t.setAttribute('aria-expanded',g.dataset.open==='1'); return; }
   if(t.hasAttribute('data-bzpay')){ bzPayOpen(); return; }
   if(t.dataset.bzgo){ setTab(t.dataset.bzgo); window.scrollTo(0,0); return; }

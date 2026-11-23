@@ -3778,9 +3778,10 @@ function bzRecur(){ const el=$('#bz-recur'), ctx=bzCtx(); const c=cur(); if(!c){
   const lim={m:40,bm:70,q:100,w:14};
   const lastTd=o=>{ if(!o.last) return '<span class="hint">לא נמצא בבנק</span>'; const d=dDays(o.last.d,t0), old=d>(lim[o.r.freq||'m']||40);
     return `<span class="${old?'bz-neg':'hint'}" style="display:block"${old?' title="לא ירד כבר הרבה זמן. אם התשלום הופסק, כדאי למחוק אותו מהרשימה"':''}>${d<=0?'היום':'לפני '+d+' ימים'}</span>${bzM(o.last.amt)}`; };
-  const catTd=o=>{ const t=o.last; return esc(t&&t.cat&&!o.r.est?catLabel(c,t.cat).replace(/^—$/,''):(o.r.sec==='out'?((RC_GRP_OUT.find(g=>g[0]===(o.r.grp||'exp1'))||[])[1]||''):'הכנסות')); };
+  const catTd=o=>{ const t=o.last; if(o.r.catLbl) return esc(o.r.catLbl); return esc(t&&t.cat&&!o.r.est?catLabel(c,t.cat).replace(/^—$/,''):(o.r.sec==='out'?((RC_GRP_OUT.find(g=>g[0]===(o.r.grp||'exp1'))||[])[1]||''):'הכנסות')); };
   const edRow=r=>`<tr class="rc-ed" data-rid="${esc(r.id)}"><td colspan="7"><div class="rc-form">
     <label>שם<input data-rcf="name" value="${esc(r.name)}" maxlength="60"></label>
+    <label>קטגוריה<input data-rcf="cat" list="rc-cats-${r.sec==='in'?'in':'out'}" value="${esc(r.catLbl||'')}" maxlength="60" placeholder="בוחרים מהרשימה או כותבים חדשה"></label>
     <label>סכום (₪)<input data-rcf="amount" inputmode="decimal" value="${+r.amount||''}"></label>
     <label>תדירות<select data-rcf="freq">${RC_FQ.map(([v,l])=>`<option value="${v}"${(r.freq||'m')===v?' selected':''}>${l}</option>`).join('')}</select></label>
     ${(r.freq||'m')==='w'?`<label>יום בשבוע<select data-rcf="wd">${RC_WD.map((l,i)=>`<option value="${i}"${(+r.wd||0)===i?' selected':''}>${l}</option>`).join('')}</select></label>`:`<label>יום בחודש<input data-rcf="day" inputmode="numeric" value="${r.day||1}"></label>`}
@@ -3795,7 +3796,8 @@ function bzRecur(){ const el=$('#bz-recur'), ctx=bzCtx(); const c=cur(); if(!c){
     return `<tr class="rc-grp" data-rcg="${esc(k)}"><td colspan="4"><span aria-hidden="true">${closed?'▸':'▾'}</span> <b>${esc(k)}</b> <span class="hint">(${g.length})</span></td><td class="n ${tot<0?'out':'in'}">${bzM(tot)}</td><td colspan="2"></td></tr>`+(closed?'':g.map(o=>`<tr class="rc-row${VIEW?'':' clk'}" data-rcopen="${VIEW?'':esc(o.r.id)}"><td>${esc(o.r.name)}${o.r.est?' <span class="pill warn" style="font-size:11px">משוער</span>':''}</td><td>${catTd(o)}</td><td class="hint">${rcBy(o.r)}</td><td class="rc-fq">${rcFreqTxt(o.r)}</td><td class="n ${o.r.sec==='in'?'in':'out'}">${bzM((o.r.sec==='in'?1:-1)*(+o.r.amount||0))}</td><td class="rc-last">${lastTd(o)}</td><td>${rcStatus(itOf(o.r))}</td></tr>`+(RC_EDIT===o.r.id&&!VIEW?edRow(o.r):'')).join('')); }).join('');
   const sug=bzRecurList(c).filter(g=>BZ_RF==='all'||(BZ_RF==='in'?g.sign>0:g.sign<0)), inF=g=>Rall.some(r=>r.rk===(g.sign>0?'+':'-')+g.name||bzNorm(r.name)===g.name);
   const auto=bzRecurList(c).filter(g=>g.fixed&&!g.cov&&!inF(g)), old=L.filter(o=>o.last&&!o.r.est&&dDays(o.last.d,t0)>(lim[o.r.freq||'m']||40));
-  el.innerHTML=`${auto.length&&!VIEW?`<div class="bz-bar pink" style="margin-bottom:12px"><span>זוהו בבנק <b>${auto.length}</b> תנועות שחוזרות כל חודש באותו סכום ועוד לא נמצאות כאן: ${auto.slice(0,4).map(g=>esc(g.name)).join(', ')}${auto.length>4?' ועוד':''}</span><button class="btn primary sm" type="button" id="rc-autoall">הוספת כולן לקבועות</button></div>`:''}
+  const catsIn=[...new Set([...c.rows.filter(x=>x.sec==='in').map(x=>x.label),...Rall.filter(r=>r.sec==='in'&&r.catLbl).map(r=>r.catLbl)])], catsOut=[...new Set([...c.rows.filter(x=>x.sec!=='in'&&x.id!==IGNORE).map(x=>x.label),...Rall.filter(r=>r.sec==='out'&&r.catLbl).map(r=>r.catLbl)])];
+  el.innerHTML=`<datalist id="rc-cats-in">${catsIn.map(x=>`<option value="${esc(x)}">`).join('')}</datalist><datalist id="rc-cats-out">${catsOut.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>${auto.length&&!VIEW?`<div class="bz-bar pink" style="margin-bottom:12px"><span>זוהו בבנק <b>${auto.length}</b> תנועות שחוזרות כל חודש באותו סכום ועוד לא נמצאות כאן: ${auto.slice(0,4).map(g=>esc(g.name)).join(', ')}${auto.length>4?' ועוד':''}</span><button class="btn primary sm" type="button" id="rc-autoall">הוספת כולן לקבועות</button></div>`:''}
   ${old.length?`<div class="bz-bar pink" style="margin-bottom:12px"><span><b>${old.length}</b> תנועות קבועות לא ירדו בבנק כבר הרבה זמן: ${old.slice(0,4).map(o=>esc(o.r.name)).join(', ')}. אם הן הופסקו, כדאי למחוק אותן כדי שלא ייספרו בתחזית</span></div>`:''}
   <div class="bz-sum"><div><span>ממוצע חודשי הכנסות</span><b class="bz-pos">${bzS(avgIn)}</b><span class="hint">בלי הוראות הקבע מקארדקום</span></div><div><span>ממוצע חודשי הוצאות</span><b class="bz-neg">${bzS(avgOut)}</b></div><div style="justify-content:flex-end"><span><button class="btn ghost xs" type="button" id="rc-openall">פתח הכל</button> | <button class="btn ghost xs" type="button" id="rc-closeall">סגור הכל</button></span></div></div>
   <div class="tscroll bz-box"><table class="bz-tbl rc-tbl2"><thead><tr><th>תיאור</th><th>קטגוריה</th><th>עודכן ע״י</th><th>תדירות</th><th class="n">סכום</th><th>החיוב האחרון</th><th>סטטוס החודש</th></tr></thead><tbody>
@@ -3822,6 +3824,7 @@ document.addEventListener('change',e=>{ const t=e.target; if(!t.dataset||t.datas
     else if(f==='freq'){ r.freq=t.value==='m'?undefined:t.value; if(!r.freq) delete r.freq; }
     else if(f==='wd'){ r.wd=+t.value; }
     else if(f==='pay'){ if(t.value) r.pay=t.value; else delete r.pay; }
+    else if(f==='cat'){ const v=t.value.trim().slice(0,60); if(v) r.catLbl=v; else delete r.catLbl; }
     else if(f==='day'){ const v=Math.round(parseNum(t.value)); if(v>=1&&v<=31){ r.day=v; delete r.dayAuto; } else toast('יום בין 1 ל־31'); }
     else if(f==='from'){ if(/^\d{4}-\d{2}$/.test(t.value)) r.from=t.value; }
     else if(f==='to'){ r.to=/^\d{4}-\d{2}$/.test(t.value)?t.value:''; }
@@ -3851,7 +3854,7 @@ function bzFcOv(){ const el=$('#bz-fcov'), ctx=bzCtx(); if(!ctx){ el.innerHTML=b
   el.innerHTML=`${nPend?`<div class="bz-bar pink" style="margin-bottom:12px"><span>${[CT.late.length?`<b>${CT.late.length}</b> תנועות מהתחזית לא נמצאו בבנק`:'',CT.cm.length?`<b>${CT.cm.length}</b> חודשי אשראי עם פער`:''].filter(Boolean).join(' · ')}</span><button class="btn primary sm" type="button" data-ctl="1">לבדיקה</button></div>`:''}
   <div class="bz-sum"><div><span>הכנסות צפויות</span><b class="bz-pos">${bzS(tin)}</b><span class="hint">${fmtDate(t0)} עד ${fmtDate(fEnd)}</span></div><div><span>הוצאות צפויות</span><b class="bz-neg">${bzS(-tout)}</b></div>
    <div><span>יתרה צפויה בסוף התקופה</span><b class="${endB<0?'bz-neg':'bz-pos'}">${bzS(endB)}</b><span class="hint">הנקודה הנמוכה: ${bzS(lo.bal)} ב־${fmtDate(lo.d)}</span></div><div><span>מהימנות ההכנסות</span><b>${sure}%</b><span class="hint">מגובות בצ'קים ובהוראות קבע</span></div></div>
-  <div class="bz-sec" style="margin-top:6px"><h2>צפי הכנסות והוצאות לפי שורות התחזית</h2><span class="hint">${fmtDate(t0)} עד ${fmtDate(fEnd)}</span></div>
+  <div class="bz-sec" style="margin-top:6px"><h2>צפי הכנסות והוצאות לפי מקור</h2><span class="hint">${fmtDate(t0)} עד ${fmtDate(fEnd)}</span></div>
   ${bzDsBox('fcr')}
   <div class="bz-sec" style="margin-top:22px"><h2>צפי הכנסות והוצאות לפי לקוח / ספק</h2><span class="hint">הערכות כלליות מופיעות כ„לא מפורט”</span></div>
   ${bzDsBox('fcn')}`; }

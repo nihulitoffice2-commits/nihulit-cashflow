@@ -445,6 +445,7 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
 .ln-body{margin-top:12px;border-top:1px solid var(--bz-line,#dde);padding-top:12px}.ln-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 14px}
 .ln-f{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted,#667)}.ln-f b{color:var(--ink,#123);font-size:14px}.ln-f input,.ln-f select{min-width:0}
 @media (max-width:600px){.ln-head{flex-wrap:wrap}.ln-am{align-items:flex-start;text-align:right;width:100%}}
+.bz-gq{max-width:230px;min-width:150px}.bz-gst{margin:0 0 8px}
 .rc-tbl2 tr.rc-grp td{background:var(--surface-2,#eef2f5);cursor:pointer;font-size:14px}
 .rc-tbl2 tr.clk{cursor:pointer}.rc-tbl2 tr.clk:hover td{background:rgba(45,160,150,.07)}
 .rc-tbl2 td.rc-fq .hint,.rc-tbl2 td.rc-last{font-size:12.5px}.rc-tbl2 td.rc-fq .hint{display:block}
@@ -1995,7 +1996,7 @@ function renderTxList(){ try{ if(BZ&&BZ_TAB==='bank') setTimeout(bkTop,0); }catc
     `<div class="actions vh"><span class="hint">יציאות: ${RM.hasInv?`נבדקו מול ${RM.nDrive?`${RM.nDrive} מסמכים מ${esc(c.supInvSrc||'הדרייב')} (${new Date(c.supInvAt).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'})})`:''}${RM.nDrive&&RM.nSumit?' ועוד ':''}${RM.nSumit?`${RM.nSumit} מסמכי הוצאה מסאמיט (${new Date(SUMIT[c.ccKey].synced).toLocaleString('he-IL',{dateStyle:'short',timeStyle:'short'})})`:''}`:'כדי לדעת על אילו תשלומים כבר התקבלה קבלה מהספק, מחברים את תיקיית הקבלות בגוגל דרייב'}</span>
       ${c.driveFolder?`<button class="btn sm primary" type="button" id="drv-sync">עדכון מהדרייב</button>`:''}<button class="btn sm" type="button" id="drv-set">${c.driveFolder?'החלפת תיקיית דרייב':'חיבור תיקיית קבלות בדרייב'}</button><label class="btn ghost sm" for="inv-file">העלאת רשימה מקובץ</label><input type="file" id="inv-file" accept=".xlsx,.xls,.csv,.txt,.htm,.html" hidden><span class="status" id="drv-status"></span></div>`;
   const detOf=t=>t.det||detAuto(t,(stOf(t)||{}).who);
-  let list=c.tx.slice().reverse().filter(t=>(!q||t.desc.toLowerCase().includes(q)||detOf(t).toLowerCase().includes(q)||String(t.ref||'').includes(q))&&(!fc||t.cat===fc)&&(!fs||(stOf(t)&&stOf(t).st===fs))&&(!BK_DIR||BK_DIR==='all'||(BK_DIR==='in'?t.amt>0:t.amt<0)));
+  let list=c.tx.slice().reverse().filter(t=>(!q||smartMatch([t.desc,detOf(t),t.ref||'',fmtDate(t.d),t.amt,catLabel(c,t.cat)].join(' '),q,[t.amt]))&&(!fc||t.cat===fc)&&(!fs||(stOf(t)&&stOf(t).st===fs))&&(!BK_DIR||BK_DIR==='all'||(BK_DIR==='in'?t.amt>0:t.amt<0)));
   const total=list.length; if(!showAllTx) list=list.slice(0,150);
   const stCell=t=>{ const s=stOf(t); if(!s) return '<td class="st"></td>'; const [l,cls]=RC_ST[s.st];
     if(t.amt<0) return `<td class="st">${invCell(s,'tx:'+t.id)}<select class="vh" data-rcpt="${t.id}" aria-label="סטטוס ידני"><option value="">אוטומטי</option>${RC_OUT.map(x=>`<option value="${x}"${t.rcpt===x?' selected':''}>${RC_ST[x][0]}</option>`).join('')}</select></td>`;
@@ -3532,9 +3533,38 @@ function bzOnTab(t){ BZ_TAB=t; if(!BZ) return;
   if(t==='bank'){ try{ renderTxList(); }catch(e){} }
   document.body.classList.remove('bz-open');
   bzRender(t); }
+
+/* ---------- חיפוש חכם ----------
+   כמה מילים = כולן צריכות להופיע (בכל סדר). מתעלם מגרשיים, מרכאות, פסיקים במספרים ומאותיות סופיות.
+   סכום: 2203 מוצא גם 2,203.27 · ‎>1000 / <500 / 1000-5000 = טווח סכומים · 10/11 או 10.11 = תאריך · ‎-מילה = בלי המילה. */
+const sqNorm=x=>String(x||'').toLowerCase().replace(/[״"׳'`]/g,'').replace(/ם/g,'מ').replace(/ן/g,'נ').replace(/ץ/g,'צ').replace(/ף/g,'פ').replace(/ך/g,'כ').replace(/(\d),(?=\d{3})/g,'$1').replace(/[.\-](?=\d{1,2}[\/.\-]\d)/g,'/').replace(/(\d{1,2})[.\-](\d{1,2})(?=\D|$)/g,'$1/$2').replace(/\s+/g,' ');
+function sqNums(t){ return (String(t).replace(/(\d),(?=\d{3})/g,'$1').match(/-?\d+(?:\.\d+)?/g)||[]).map(x=>Math.abs(+x)); }
+function smartMatch(text,q,amts){ q=String(q||'').trim(); if(!q) return true; const T=sqNorm(text), N=amts?amts.map(x=>Math.abs(+x||0)):sqNums(text);
+  return q.split(/\s+/).every(tok=>{ let m;
+    if((m=tok.match(/^([<>]=?)(\d[\d,]*(?:\.\d+)?)$/))){ const v=+m[2].replace(/,/g,''); return N.some(n=>m[1]==='>'?n>v:m[1]==='>='?n>=v:m[1]==='<'?n<v&&n>0:n<=v&&n>0); }
+    if((m=tok.match(/^(\d[\d,]*)-(\d[\d,]*)$/))&&!/\//.test(tok)){ const a=+m[1].replace(/,/g,''), b=+m[2].replace(/,/g,''); if(a<b&&b>31) return N.some(n=>n>=a&&n<=b); }
+    if(tok.length>1&&tok[0]==='-'&&!/\d/.test(tok[1])) return !T.includes(sqNorm(tok.slice(1)));
+    return T.includes(sqNorm(tok)); }); }
+// מסכים שאין להם חיפוש משלהם: תיבת חיפוש למעלה שמסננת את השורות בטבלאות (ואת כרטיסי ההלוואות)
+const BZ_GS=new Set(['daily','cheques','cats','loans','incov','expov']), BZ_GQ={};
+function bzGSearch(t){ if(!BZ_GS.has(t)) return; const hx=$('#bz-hx'); if(!hx||hx.querySelector('.bz-gq')) { bzGApply(t); return; }
+  hx.insertAdjacentHTML('afterbegin',`<input type="search" class="bz-gq" placeholder="חיפוש: שם, סכום, תאריך, ‎>1000" value="${esc(BZ_GQ[t]||'')}" aria-label="חיפוש חכם" title="כמה מילים יחד · סכום (2203 מוצא גם 2,203.27) · ‎>1000 או ‎<500 או 1000-5000 · תאריך 10/11 · ‎-מילה כדי להוציא">`);
+  bzGApply(t); }
+const sqAmts=el=>{ const L=[...el.querySelectorAll('td.n,.ln-am b')].flatMap(td=>sqNums(td.innerText)); return L.length?L:null; };
+const sqText=el=>el.innerText+' '+[...el.querySelectorAll('input:not([type=checkbox]):not([type=file]),select')].map(i=>i.tagName==='SELECT'?(i.selectedOptions[0]||{}).textContent||'':i.value).join(' ');
+function bzGApply(t){ const q=(BZ_GQ[t]||'').trim(), panel=$('#tab-'+t); if(!panel) return; let shown=0, total=0;
+  panel.querySelectorAll('.ln-card').forEach(c=>{ total++; const ok=!q||smartMatch(sqText(c),q,sqAmts(c)); c.hidden=!ok; if(ok) shown++; });
+  panel.querySelectorAll('table.bz-tbl').forEach(tb=>{ if(tb.closest('.bz-donuts')||tb.closest('.ln-card')) return; const rows=[...tb.tBodies].flatMap(b=>[...b.rows]);
+    let par=null, parOk=false; const groups=[]; rows.forEach(r=>{ const sub=r.classList.contains('sub')||r.classList.contains('rc-ed'); if(!sub){ par={r,subs:[]}; groups.push(par); } else if(par) par.subs.push(r); else groups.push({r,subs:[]}); });
+    groups.forEach(g=>{ if(g.r.querySelector('td[colspan]')&&g.r.cells.length===1){ g.r.hidden=!!q; return; } total++;
+      const selfOk=!q||smartMatch(sqText(g.r),q,sqAmts(g.r)), subOk=g.subs.map(r=>!q||smartMatch(sqText(r),q,sqAmts(r))), any=selfOk||subOk.some(Boolean);
+      g.r.hidden=!any; g.subs.forEach((r,i)=>{ r.hidden=!(selfOk||subOk[i]); }); if(any) shown++; }); void parOk; });
+  let st=panel.querySelector('.bz-gst'); if(q){ if(!st){ st=document.createElement('div'); st.className='bz-gst hint'; panel.firstElementChild.prepend(st); } st.textContent=shown?`נמצאו ${shown} תוצאות לחיפוש „${q}”`:`לא נמצאו תוצאות לחיפוש „${q}”`; } else if(st) st.remove(); }
+document.addEventListener('input',e=>{ if(!e.target.classList||!e.target.classList.contains('bz-gq')) return; BZ_GQ[BZ_TAB]=e.target.value; bzGApply(BZ_TAB); });
 function bzRender(t){ if(!BZ) return; t=t||BZ_TAB;
   try{ if(t==='overview') bzOverview(); else if(t==='daily') bzDaily(); else if(t==='recon') bzRecon(); else if(t==='recur') bzRecur(); else if(t==='payees') bzPayees(); else if(t==='cats') bzCats(); else if(t==='loans') bzLoans(); else if(t==='cheques') bzCheques(); else if(t==='ccexp') bzCcExp(); else if(t==='debts') bzDebts(); else if(t==='expov') bzExpOv(); else if(t==='incov') bzIncOv(); else if(t==='fcov') bzFcOv(); else if(t==='bank') bkTop(); else if(t==='cardcom') ccOrders(); }
   catch(err){ console.error(err); const el=$('#tab-'+t); if(el&&BZ_NEW.has(t)) el.firstElementChild.innerHTML='<div class="card"><b>משהו לא עבד בתצוגה הזו.</b><span class="hint">'+esc(err.message||'')+'</span></div>'; }
+  try{ bzGSearch(t); }catch(e){}
   try{ recurEnsure(); fcSnapSoon(); }catch(e){}
   const c=cur(); if(c){ const sel=$('#bz-client'); sel.innerHTML=Object.keys(DB.clients).map(id=>`<option value="${esc(id)}"${id===DB.current?' selected':''}>${esc(DB.clients[id].name||'ללא שם')}</option>`).join(''); } }
 const bzNoData=msg=>`<div class="card"><b>${msg||'אין עדיין נתוני תחזית ללקוח הזה.'}</b><span class="hint">משייכים את הלקוח בלשונית „תחזית חודשית” ומעלים דף בנק בלשונית „חשבונות בנק”.</span></div>`;
@@ -3742,12 +3772,12 @@ function bzRecon(){ const el=$('#bz-recon'), ctx=bzCtx(); if(!ctx){ el.innerHTML
   if(BZ_RTAB==='done'){ const done=evs.filter(o=>o.m.st==='ok').sort((a,b)=>a.ev.date<b.ev.date?1:-1);
     el.innerHTML=`<div class="tscroll" style="border:1px solid var(--bz-line)"><table class="bz-tbl"><thead><tr><th>צפוי</th><th>תאריך צפוי</th><th>בבנק</th><th>תאריך בבנק</th><th class="n">סכום</th></tr></thead><tbody>${done.map(o=>`<tr><td>${esc(o.x.cust||'')}</td><td>${fmtDate(o.ev.date)}</td><td>${esc(o.m.desc||'')}</td><td>${o.m.d?fmtDate(o.m.d):''}</td><td class="n ${o.x.kind==='bank'?'out':'in'}">${bzM(o.ev.amount)}</td></tr>`).join('')||'<tr><td colspan="5" class="hint">עדיין אין תנועות שהותאמו</td></tr>'}</tbody></table></div>`; return; }
   const q1=BZ_RQ1.trim(), q2=BZ_RQ2.trim();
-  const bank=(HF_TX||[]).map((t,i)=>({t,i})).filter(o=>!HF_USED.has(o.i)&&dDays(o.t.d,t0)<=30&&!ok.has(bzTxKey(o.t))&&(!q1||(o.t.desc||'').includes(q1))).sort((a,b)=>a.t.d<b.t.d?1:-1);
-  const exp=evs.filter(o=>o.m.st==='late'||o.m.st==='nobank').filter(o=>!q2||(o.x.cust||'').includes(q2)).sort((a,b)=>a.ev.date<b.ev.date?-1:1);
+  const bank=(HF_TX||[]).map((t,i)=>({t,i})).filter(o=>!HF_USED.has(o.i)&&dDays(o.t.d,t0)<=30&&!ok.has(bzTxKey(o.t))&&(!q1||smartMatch([o.t.desc||'',o.t.det||'',fmtDate(o.t.d),o.t.amt].join(' '),q1,[o.t.amt]))).sort((a,b)=>a.t.d<b.t.d?1:-1);
+  const exp=evs.filter(o=>o.m.st==='late'||o.m.st==='nobank').filter(o=>!q2||smartMatch([o.x.cust||'',o.x.desc||'',fmtDate(o.ev.date),o.ev.amount].join(' '),q2,[o.ev.amount])).sort((a,b)=>a.ev.date<b.ev.date?-1:1);
   el.innerHTML=`<div class="bz-two">
-   <div><div class="bz-colh"><b>תנועות בנק שלא צפיתי / לא הותאמו</b>${bank.length&&!VIEW?`<button class="bz-link" type="button" id="bz-okall">סימון הכל כתקין</button>`:''}<label class="bz-search"><input id="bz-rq1" aria-label="חיפוש" placeholder="הקלידו טקסט לחיפוש" value="${esc(BZ_RQ1)}"></label></div>
+   <div><div class="bz-colh"><b>תנועות בנק שלא צפיתי / לא הותאמו</b>${bank.length&&!VIEW?`<button class="bz-link" type="button" id="bz-okall">סימון הכל כתקין</button>`:''}<label class="bz-search"><input id="bz-rq1" aria-label="חיפוש" placeholder="חיפוש: שם, סכום, תאריך" title="כמה מילים יחד · סכום (2203 מוצא גם 2,203.27) · ‎&gt;1000 או ‎&lt;500 או 1000-5000 · תאריך 10/11 · ‎-מילה כדי להוציא" value="${esc(BZ_RQ1)}"></label></div>
     ${bank.length?bank.map(o=>`<div class="bz-mrow"><div><b>${esc(o.t.desc||'ללא תיאור')}</b><div class="s">${fmtDate(o.t.d)} · ${esc(bzType(o.t.desc))}</div></div><b class="${o.t.amt<0?'bz-neg':'bz-pos'}">${bzM(o.t.amt)}</b>${VIEW?'':`<div class="acts"><button class="btn sm" type="button" data-bzok="${esc(bzTxKey(o.t))}">תקין, לא צריך התאמה</button></div>`}</div>`).join(''):'<div class="bz-empty">אין תנועות בנק מ־30 הימים האחרונים שמחכות להתאמה</div>'}</div>
-   <div><div class="bz-colh"><b>תנועות תזרים צפויות שטרם קרו / לא הותאמו</b><label class="bz-search"><input id="bz-rq2" placeholder="הקלידו טקסט לחיפוש" value="${esc(BZ_RQ2)}" aria-label="חיפוש"></label></div>
+   <div><div class="bz-colh"><b>תנועות תזרים צפויות שטרם קרו / לא הותאמו</b><label class="bz-search"><input id="bz-rq2" placeholder="חיפוש: שם, סכום, תאריך" title="כמה מילים יחד · סכום (2203 מוצא גם 2,203.27) · ‎&gt;1000 או ‎&lt;500 או 1000-5000 · תאריך 10/11 · ‎-מילה כדי להוציא" value="${esc(BZ_RQ2)}" aria-label="חיפוש"></label></div>
     ${exp.length?exp.map(o=>`<div class="bz-mrow"><div><b>${esc(o.x.cust||'ללא שם')}${o.ev.n>1?` <span class="hint">(${o.ev.k+1}/${o.ev.n})</span>`:''}</b><div class="s">היה צפוי ב־${fmtDate(o.ev.date)} · ${o.m.st==='late'?`<span class="bz-neg">באיחור ${o.m.days} ימים</span>`:'דף הבנק עוד לא מעודכן לתאריך הזה'}</div></div><b class="${o.x.kind==='bank'?'bz-neg':'bz-pos'}">${bzM(o.x.kind==='bank'?-o.ev.amount:o.ev.amount)}</b>${VIEW?'':`<div class="acts"><button class="btn sm" type="button" data-bzm="got" data-id="${esc(o.x.id)}" data-k="${o.ev.k}">${o.x.kind==='bank'?'ירד':'התקבל'}</button><button class="btn sm" type="button" data-bzm="week" data-id="${esc(o.x.id)}" data-k="${o.ev.k}">דחייה בשבוע</button><button class="btn sm" type="button" data-bzm="month" data-id="${esc(o.x.id)}" data-k="${o.ev.k}">דחייה בחודש</button><button class="btn sm danger" type="button" data-bzm="skip" data-id="${esc(o.x.id)}" data-k="${o.ev.k}">ביטול</button></div>`}</div>`).join(''):'<div class="bz-empty">אין תנועות צפויות שמחכות</div>'}</div></div>`; }
 
 /* --- תנועות קבועות --- */
@@ -3784,7 +3814,7 @@ function bzRecur(){ const el=$('#bz-recur'), ctx=bzCtx(); const c=cur(); if(!c){
   if(!ctx){ el.innerHTML=bzNoData(); return; }
   const e=ctx.e, Rall=e.recur||[], its=recurItems(e), itOf=r=>its.find(x=>x.rid===r.id), t0=todayIsoF();
   const avgIn=Rall.filter(r=>r.sec==='in').reduce((a,r)=>a+rcPerMonth(r),0), avgOut=Rall.filter(r=>r.sec==='out').reduce((a,r)=>a+rcPerMonth(r),0);
-  const q=RC_Q.trim(), L=Rall.filter(r=>(RC_F==='all'||r.sec===RC_F)&&(!q||String(r.name).includes(q))).map(r=>{ const tx=rcTx(c,r); return {r,tx,last:tx[0],pay:rcPay(c,r,tx)}; });
+  const q=RC_Q.trim(), L=Rall.filter(r=>(RC_F==='all'||r.sec===RC_F)&&(!q||smartMatch([r.name,r.amount,r.catLbl||'',r.cat?catLabel(c,r.cat):'',r.pay||''].join(' '),q,[r.amount]))).map(r=>{ const tx=rcTx(c,r); return {r,tx,last:tx[0],pay:rcPay(c,r,tx)}; });
   const G={}; L.forEach(o=>(G[o.pay]=G[o.pay]||[]).push(o)); const keys=RC_PAY.filter(k=>G[k]);
   const lim={m:40,bm:70,q:100,w:14};
   const lastTd=o=>{ if(!o.last) return '<span class="hint">לא נמצא בבנק</span>'; const d=dDays(o.last.d,t0), old=d>(lim[o.r.freq||'m']||40);
@@ -4033,11 +4063,11 @@ document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closes
   else if(b.dataset.lnunskip){ l.skip=[]; lnSave(); }
   else if(b.dataset.lnkw){ l.kw=b.dataset.lnkw; lnSave(); } });
 function bzPayees(){ const el=$('#bz-payees'), c=cur(); if(!c||!(c.tx||[]).length){ el.innerHTML=bzNoData('אין עדיין תנועות בנק ללקוח הזה.'); return; }
-  $('#bz-hx').innerHTML=`<label class="bz-search"><input id="bz-pq" placeholder="הקלידו טקסט לחיפוש" aria-label="חיפוש" value="${esc(BZ_PQ)}"></label><div class="bz-seg" role="group" aria-label="סינון"><button type="button" data-bzpf="all" aria-pressed="${BZ_PF==='all'}">הכל</button><button type="button" data-bzpf="in" aria-pressed="${BZ_PF==='in'}">זכות</button><button type="button" data-bzpf="out" aria-pressed="${BZ_PF==='out'}">חובה</button></div>`;
+  $('#bz-hx').innerHTML=`<label class="bz-search"><input id="bz-pq" placeholder="חיפוש: שם, סכום, תאריך" title="כמה מילים יחד · סכום (2203 מוצא גם 2,203.27) · ‎&gt;1000 או ‎&lt;500 או 1000-5000 · תאריך 10/11 · ‎-מילה כדי להוציא" aria-label="חיפוש" value="${esc(BZ_PQ)}"></label><div class="bz-seg" role="group" aria-label="סינון"><button type="button" data-bzpf="all" aria-pressed="${BZ_PF==='all'}">הכל</button><button type="button" data-bzpf="in" aria-pressed="${BZ_PF==='in'}">זכות</button><button type="button" data-bzpf="out" aria-pressed="${BZ_PF==='out'}">חובה</button></div>`;
   const t0=todayIsoF(), from=isoAddDays(t0,-91), G={};
   (c.tx||[]).filter(t=>t.d>=from&&+t.amt).forEach(t=>{ const k=bzNorm(t.desc); const g=G[k]||(G[k]={name:k,sum:0,n:0,last:'',cat:t.cat||''}); g.sum+=t.amt; g.n++; if(t.d>g.last) g.last=t.d; });
   const q=BZ_PQ.trim();
-  const L=Object.values(G).filter(g=>(BZ_PF==='all'||(BZ_PF==='in'?g.sum>0:g.sum<0))&&(!q||g.name.includes(q))).sort((a,b)=>Math.abs(b.sum)-Math.abs(a.sum));
+  const L=Object.values(G).filter(g=>(BZ_PF==='all'||(BZ_PF==='in'?g.sum>0:g.sum<0))&&(!q||smartMatch([g.name,g.cat?catLabel(c,g.cat):'',g.type||'',Math.abs(g.sum)].join(' '),q,[g.sum,g.sum/3]))).sort((a,b)=>Math.abs(b.sum)-Math.abs(a.sum));
   el.innerHTML=`<div class="tscroll" style="border:1px solid var(--bz-line)"><table class="bz-tbl"><thead><tr><th>מוטב</th><th>סוג תשלום</th><th>קטגוריה</th><th class="n">ממוצע 3 חודשים</th><th class="n">סה״כ 3 חודשים</th><th>תנועות</th><th>אחרונה</th></tr></thead><tbody>
   ${L.map(g=>`<tr><td><b style="color:var(--bz-navy)">${esc(g.name)}</b></td><td>${esc(bzType(g.name))}</td><td>${g.cat?esc(catLabel(c,g.cat).replace(/^—$/,'')):''}</td><td class="n ${g.sum<0?'out':'in'}">${bzM(g.sum/3)}</td><td class="n">${bzM(g.sum)}</td><td>${g.n}</td><td>${fmtDate(g.last)}</td></tr>`).join('')||'<tr><td colspan="7" class="hint">לא נמצאו מוטבים</td></tr>'}
   </tbody></table></div>`; }
@@ -4118,7 +4148,7 @@ function bzCcExp(){ const el=$('#bz-ccexp'), c=cur(), t0=todayIsoF(); if(!c){ el
     el.innerHTML=head+`<div class="cx-cards${COS.length===1?' one':''}">${COS.map(card).join('')}</div>
      ${ML.length?`<div><div class="bz-sec"><h2>על מה יורד הכסף</h2><span class="hint">לפי הפירוט שהועלה</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>בית עסק</th><th class="n">עסקאות</th><th class="n">סכום בחיוב</th></tr></thead><tbody>${ML.map(([k,o])=>`<tr><td>${esc(k)}${o.inst?' <span class="hint">· בתשלומים</span>':''}</td><td class="n">${o.n}</td><td class="n out">${bzM(-o.s)}</td></tr>`).join('')}</tbody></table></div></div>`:''}`;
   } else {
-    const q=CX_Q.trim(), L=D.rows.filter(r=>(!q||String(r.m||'').includes(q))).sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:b.amt-a.amt), tot=sum(L.map(r=>r.amt));
+    const q=CX_Q.trim(), L=D.rows.filter(r=>(!q||smartMatch([r.m||'',r.amt,fmtDate(r.d),r.card||''].join(' '),q,[r.amt]))).sort((a,b)=>a.d<b.d?1:a.d>b.d?-1:b.amt-a.amt), tot=sum(L.map(r=>r.amt));
     el.innerHTML=head+(L.length?`<div><div class="bz-sec"><h2>עסקאות בפירוט</h2><span class="hint">${esc((c.ccStmt||[]).map(x=>x.file+' · '+new Date(x.at).toLocaleDateString('he-IL')).join(' | '))}</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך חיוב</th><th>בית עסק</th><th>תשלום</th><th class="n">סכום חיוב</th><th>חשבונית מס קבלה</th></tr></thead><tbody>
      ${L.map(r=>`<tr><td>${fmtDate(r.d)}${r.d>=t0?' <span class="pill info">לא סופי</span>':''}</td><td>${esc(r.m||'')}${r.card?` <span class="hint">****${esc(r.card)}</span>`:''}</td><td>${r.n>1?`${r.k} מתוך ${r.n}`:'רגיל'}</td><td class="n out">${bzM(r.amt)}</td><td class="st">${invCell(CR[r.id],'cc:'+r.id)}</td></tr>`).join('')}</tbody>
      <tfoot><tr class="total"><td colspan="3"><b>סה״כ ${L.length} עסקאות</b></td><td class="n out"><b>${bzM(tot)}</b></td><td></td></tr></tfoot></table></div></div>`
@@ -4199,7 +4229,7 @@ function ccOrders(){ const el=$('#cc2'), c=cur(); if(!el||!c) return;
     ${CC_MODE==='sum'?`<select id="cc-h" aria-label="תקופה">${[[1,'החודש'],[3,'3 חודשים קדימה'],[6,'6 חודשים קדימה'],[12,'12 חודשים קדימה']].map(([v,l])=>`<option value="${v}"${CC_H===v?' selected':''}>${l}</option>`).join('')}</select>`:''}
     <span class="bz-search"><input id="cc-q" type="search" value="${esc(CC_Q)}" placeholder="חיפוש לקוח או תוכנית" aria-label="חיפוש"></span>`:'')+(VIEW?'':`<label class="btn primary" for="ret-file" title="בקארדקום: הוראות קבע › דוח רישום הוראות לחיוב › ייצוא לאקסל">העלאת דוח הוראות קבע</label>`);
   if(!has){ el.innerHTML=`<div class="bz-box" style="padding:22px;text-align:center;display:grid;gap:6px"><b style="color:var(--bz-navy);font-size:18px">עוד לא הועלה דוח הוראות קבע</b><span class="hint">בקארדקום: הוראות קבע › דוח רישום הוראות לחיוב › ייצוא לאקסל, ומעלים כאן בכפתור למעלה.</span></div>`; return; }
-  const q=CC_Q.trim(), mq=r=>!q||String(r.name).includes(q)||String(r.product||'').includes(q)||String(r.custNo||'')===q;
+  const q=CC_Q.trim(), mq=r=>!q||smartMatch([r.name,r.product||'',r.custNo||'',r.amount||'',r.orderNo||''].join(' '),q);
   const pf=r=>!CC_PROD||(r.product||'ללא תיאור')===CC_PROD;
   const sch=ccSchedule(c,CC_H), schF=sch.filter(x=>mq(x.r)&&pf(x.r)), tot=sum(schF.map(x=>x.r.amount));
   const tm=thisYm(), thisM=sum(schF.filter(x=>x.d.startsWith(tm)).map(x=>x.r.amount)), monthly=sum(act.map(r=>+r.amount||0));
@@ -4464,12 +4494,12 @@ async function chqPhoto(files,id){ const k=hfKey(), st=$('#chq-status2')||$('#ch
 /* --- חובות לקוחות --- */
 let BZ_DQ='';
 function bzDebts(){ const el=$('#bz-debts'), c=cur(), ctx=bzCtx(), t0=todayIsoF(); if(!c){ el.innerHTML=bzNoData(); return; }
-  $('#bz-hx').innerHTML=`<label class="bz-search"><input id="bz-dq" placeholder="חיפוש לקוח" aria-label="חיפוש לקוח" value="${esc(BZ_DQ)}"></label>`;
+  $('#bz-hx').innerHTML=`<label class="bz-search"><input id="bz-dq" placeholder="חיפוש: לקוח, סכום" title="כמה מילים יחד · סכום (2203 מוצא גם 2,203.27) · ‎&gt;1000 או ‎&lt;500 או 1000-5000 · תאריך 10/11 · ‎-מילה כדי להוציא" aria-label="חיפוש לקוח" value="${esc(BZ_DQ)}"></label>`;
   const C=ccOf(c), G={};
   const add=(name,amt,date,src,phone,cnt)=>{ name=String(name||'ללא שם').trim(); const g=G[name]||(G[name]={name,total:0,count:0,oldest:date||'',phone:phone||'',src:new Set()}); g.total+=amt; g.count+=cnt||1; if(date&&(!g.oldest||date<g.oldest)) g.oldest=date; if(phone&&!g.phone) g.phone=phone; g.src.add(src); };
   (C&&C.debts||[]).forEach(d=>add(d.customer,+d.total||0,d.oldest,'חשבונות פתוחים',d.phone,d.count));
   const lateSet=new Set(); if(ctx){ (ctx.e.incItems||[]).forEach(x=>itemEvents(x).forEach(ev=>{ const m=MATCH[x.id+'#'+ev.k]; if(m&&m.st==='late'&&x.kind!=='bank'){ add(x.cust,ev.amount,ev.date,'תשלום שהובטח ולא הגיע'); } })); }
-  const q=BZ_DQ.trim(); const L=Object.values(G).filter(g=>g.total>0&&(!q||g.name.includes(q))).sort((a,b)=>b.total-a.total);
+  const q=BZ_DQ.trim(); const L=Object.values(G).filter(g=>g.total>0&&(!q||smartMatch(g.name+' '+g.total,q,[g.total]))).sort((a,b)=>b.total-a.total);
   const tot=L.reduce((a,g)=>a+g.total,0), old=L.filter(g=>g.oldest&&dDays(g.oldest,t0)>60);
   const syn=C&&C.synced?new Date(C.synced):null, stale=syn&&(Date.now()-syn)/864e5>7;
   el.innerHTML=`<div class="bz-sum"><div><span>סה״כ חובות פתוחים</span><b class="bz-neg">${bzS(tot)}</b></div><div><span>לקוחות עם חוב</span><b>${L.length}</b></div><div><span>חובות מעל 60 יום</span><b class="${old.length?'bz-neg':''}">${old.length}</b><span class="hint">${bzS(old.reduce((a,g)=>a+g.total,0))}</span></div></div>

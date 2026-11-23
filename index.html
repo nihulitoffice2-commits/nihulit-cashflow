@@ -3598,7 +3598,7 @@ function bzOverview(){ const el=$('#bz-ov'), ctx=bzCtx(); if(!ctx){ el.innerHTML
   const late=Object.values(M).filter(m=>m.st==='late'||m.st==='nobank').length;
   const lateIn=(R.late||[]).reduce((a,l)=>a+l.amount,0);
   const unexp=(HF_TX||[]).filter((t,i)=>!HF_USED.has(i)&&dDays(t.d,t0)<=30&&!bzOkSet(ctx.e).has(bzTxKey(t))).length;
-  const neg=D.days.slice(0,31).find(x=>x.bal<0), CTO=VIEW?null:ctlData();
+  const neg=D.days.slice(0,31).find(x=>x.bal<0);
   const A=bzAlerts(ctx);
   // הפקדות ומשיכות
   const from=bzPerFrom(BZ_PER,c,t0), dep={}, wd={};
@@ -3624,24 +3624,16 @@ function bzOverview(){ const el=$('#bz-ov'), ctx=bzCtx(); if(!ctx){ el.innerHTML
   const fi=(k,l,v,cls)=>`<div><svg width="30" height="30" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg><span>${l}</span><b class="${cls}">${bzS(v)}</b></div>`;
   const rec=(c.tx||[]).filter(t=>t.d).slice().sort((a,b)=>a.d<b.d?1:-1).slice(0,8);
   el.innerHTML=`
-  <div class="bz-bars">
-    <div class="bz-bar"><span class="ex ${neg?'':'ok'}" aria-hidden="true">${neg?'!':'✓'}</span><span><b>מצב התזרים לחודש הקרוב</b>&nbsp;&nbsp;${neg?`<span class="r">צפויה יתרה שלילית ב־${fmtDate(neg.d)} (${bzS(neg.bal)})</span>`:`<span class="g">תקין, היתרה נשארת חיובית</span>`}</span></div>
-    <div class="bz-bar pink"><span>${CTO?(CTO.late.length+CTO.cm.length?[CTO.late.length?`<b>${CTO.late.length}</b> תנועות מהתחזית לא נמצאו בבנק`:'',CTO.cm.length?`<b>${CTO.cm.length}</b> חודשי אשראי עם פער`:''].filter(Boolean).join(' · '):'אין תנועות פתוחות לבדיקה'):`קיימות <b>${late+unexp}</b> תנועות שטרם נפרעו / לא הותאמו`}</span>${VIEW?'':'<button class="btn primary sm" type="button" data-ctl="1">לבקרת התחזית</button>'}</div>
-  </div>
   <div class="bz-row">
-    <div><div class="bz-sec"><h2>ריכוז יתרות</h2><span><button class="bz-link" data-bzgo="bank" type="button">למסך תנועות בנק</button> | <button class="bz-link" data-bzgo="daily" type="button">למסך תזרים יומי</button></span></div>
+    <div><div class="bz-sec"><h2>ריכוז יתרות</h2><span><button class="bz-link" data-bzgo="bank" type="button">למסך חשבונות בנק</button> | <button class="bz-link" data-bzgo="daily" type="button">למסך תזרים יומי</button></span></div>
       <div class="bz-box"><div class="bz-acc"><div class="on ${R.opening<0?'neg':''}"><span>יתרה בבנק${R.openDate?' · '+fmtDate(R.openDate):''}</span><b class="${R.opening<0?'bz-neg':'bz-pos'}">${bzS(R.opening||0)}</b></div><div><span>צפי בעוד 30 יום</span><b class="${(D.days[30]||D.days.slice(-1)[0]||{bal:0}).bal<0?'bz-neg':'bz-pos'}">${bzS((D.days[30]||D.days.slice(-1)[0]||{bal:0}).bal)}</b></div><div><span>הנקודה הנמוכה</span><b class="${D.days.reduce((a,x)=>Math.min(a,x.bal),Infinity)<0?'bz-neg':'bz-pos'}">${bzS(D.days.length?D.days.reduce((a,x)=>Math.min(a,x.bal),Infinity):0)}</b></div></div><div class="bz-chart" id="bz-balc"></div></div></div>
     <div><div class="bz-sec"><h2>עדכונים והתראות</h2></div>
       <div class="bz-box bz-alerts"><div class="tb"><span>כל ההתראות (${A.length})</span>${A.length?'<button class="bz-link" type="button" id="bz-seen">סימון הכל כנקרא</button>':''}</div>
       ${A.length?A.map(a=>`<div class="bz-al"><span class="ex ${a.sev}" aria-hidden="true">${a.sev==='good'?'✓':'!'}</span><div><b>${esc(a.t)}</b><span>${esc(a.s)}</span><div class="act"><button class="bz-link" type="button" data-bzgo="${a.go}">לפרטים</button></div></div></div>`).join(''):`<div class="empty"><svg width="70" height="70" viewBox="0 0 24 24" fill="none" stroke="#022258" stroke-width="1.6" aria-hidden="true"><path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 21h4"/><circle cx="17" cy="6" r="3.2" fill="#022258"/><path d="M15.6 6l1 1 1.8-1.8" stroke="#fff"/></svg><span>אין לכם התראות חדשות, שיהיה יום טוב ומוצלח!</span></div>`}</div></div>
   </div>
-  <div class="bz-row">
-    <div><div class="bz-sec"><h2>הפקדות ומשיכות לפי מקור</h2>${/day|week/.test(BZ_PER)?`<span class="hint">${bzPerLab(BZ_PER,from,c)}</span>`:''}${bzPerSel('bz-per',BZ_PER,BZ_PERS)}</div>
-      ${bzDsBox('src')}</div>
-    <div><div class="bz-sec"><h2>ריכוז נתונים פיננסיים</h2></div>
-      <div class="bz-box bz-fin">${fi('chq',"צ'קים לפירעון",chq,'bz-pos')}${fi('ret','הוראות קבע (30 יום)',ret?ret.vals[0]:0,'bz-pos')}${fi('in','הכנסות צפויות (30 יום)',inc30,'bz-pos')}${fi('out','הוצאות צפויות (30 יום)',-out30,'bz-neg')}${fi('card','אשראי לחיוב',-(exp2?exp2.vals[0]:0),'bz-neg')}${fi('bank','יתרה בבנק',R.opening||0,R.opening<0?'bz-neg':'bz-pos')}</div>
-      <div class="bz-sec" style="margin-top:18px"><h2>תנועות אחרונות</h2><button class="bz-link" data-bzgo="bank" type="button">לכל התנועות</button></div>
-      <div class="bz-box bz-recent">${rec.map(t=>`<div><span class="d">${t.d===isoAddDays(t0,-1)?'אתמול':fmtDate(t.d).slice(0,5)}</span><span class="t">${esc(t.desc||'')}</span><b class="${t.amt<0?'bz-neg':'bz-pos'}" style="font-variant-numeric:tabular-nums">${bzM(t.amt)}</b></div>`).join('')||'<div class="hint">אין תנועות</div>'}</div></div>
+  <div style="margin-top:22px">
+    <div class="bz-sec"><h2>הפקדות ומשיכות לפי מקור</h2>${/day|week/.test(BZ_PER)?`<span class="hint">${bzPerLab(BZ_PER,from,c)}</span>`:''}${bzPerSel('bz-per',BZ_PER,BZ_PERS)}</div>
+      ${bzDsBox('src')}
   </div>
   <div class="bz-sec" style="margin-top:22px"><h2>הכנסות והוצאות לפי סוג</h2>${/day|week/.test(BZ_PER2)?`<span class="hint">${bzPerLab(BZ_PER2,from2,c)}</span>`:''}${bzPerSel('bz-per2',BZ_PER2,BZ_PERS)}</div>
   ${bzDsBox('cat')}

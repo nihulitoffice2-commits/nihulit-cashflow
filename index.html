@@ -446,6 +446,8 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
 .ln-f{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted,#667)}.ln-f b{color:var(--ink,#123);font-size:14px}.ln-f input,.ln-f select{min-width:0}
 @media (max-width:600px){.ln-head{flex-wrap:wrap}.ln-am{align-items:flex-start;text-align:right;width:100%}}
 .bz-gq{max-width:230px;min-width:150px}.bz-gst{margin:0 0 8px}
+.cc-txt tr.cc-hk td{background:rgba(107,79,187,.08)}.cc-txt tr.cc-hk:hover td{background:rgba(107,79,187,.15)}.cc-txt tr.cc-hk td:first-child{box-shadow:inset -3px 0 0 #6b4fbb}
+.cc-txt tr.hkh td{background:rgba(107,79,187,.04);font-size:13px}.pill.hk{background:#ece6fb;color:#4f3796}
 .rc-tbl2 tr.rc-grp td{background:var(--surface-2,#eef2f5);cursor:pointer;font-size:14px}
 .rc-tbl2 tr.clk{cursor:pointer}.rc-tbl2 tr.clk:hover td{background:rgba(45,160,150,.07)}
 .rc-tbl2 td.rc-fq .hint,.rc-tbl2 td.rc-last{font-size:12.5px}.rc-tbl2 td.rc-fq .hint{display:block}
@@ -564,7 +566,7 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
         <button class="bz-it" data-bz="expov" type="button">סקירת הוצאות</button>
         <button class="bz-it" data-bz="bank" type="button">חשבונות בנק</button>
         <button class="bz-it" data-bz="ccexp" type="button">כרטיסי אשראי</button>
-        <button class="bz-it" data-bz="cardcom" type="button">חשבונות סליקה</button>
+        <button class="bz-it" data-bz="cardcom" type="button">פירוט מקארדקום</button>
         <button class="bz-it" data-bz="cheques" type="button">צ'קים</button>
         <button class="bz-it" data-bz="payees" type="button">מוטבים</button>
         <button class="bz-it" data-bz="cats" type="button">קטגוריות</button>
@@ -713,7 +715,7 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
           <div class="fbox"><b>צ'קים</b><span class="hint">דוח צ'קים מהבנק וצילומי צ'קים, מהלשונית „צ'קים”</span><span class="hint" id="chq-info"></span>
             <div class="status" id="chq-status"></div><div class="arc-list" data-arc="chq"></div>
             <div class="actions"><label class="btn sm" for="chq-file">העלאת דוח צ'קים</label><input type="file" id="chq-file" accept=".xlsx,.xls,.csv,.txt,.pdf" hidden><button class="btn ghost sm danger" id="chq-clear" type="button" hidden>הסרת הצ'קים מהדוח</button></div></div>
-          <div class="fbox"><b>חשבונות סליקה</b><span class="hint">הקבצים מקארדקום (הוראות קבע ועסקאות), מהלשונית „חשבונות סליקה”</span><span class="hint" id="ret-info2"></span>
+          <div class="fbox"><b>פירוט מקארדקום</b><span class="hint">הקבצים מקארדקום (הוראות קבע ועסקאות), מהלשונית „פירוט מקארדקום”</span><span class="hint" id="ret-info2"></span>
             <div class="arc-list" data-arc="clr"></div>
             <div class="actions"><label class="btn sm" for="ret-file2">העלאת קובץ מקארדקום</label><input type="file" id="ret-file2" accept=".xlsx,.xls,.csv,.txt,.htm,.html,.docx,.pdf" hidden></div></div>
         </div>
@@ -2344,7 +2346,7 @@ function renderHalf(){ renderHalfKeep(); try{ arcRender(); }catch(e){} }
    כל קובץ שמעלים בלשוניות של „ניהול פיננסי” נשמר כנכס (asset) של הדף, והפרטים שלו במסמך files/<id>.
    PDF ותמונות נשמרים כמו שהם; כל השאר (אקסל, CSV, HTML) נשמר כטקסט base64, כדי שכל קידוד וכל סוג קובץ יישמרו בדיוק.
    כשעולה קובץ חדש, נמחקים הקבצים של אותו לקוח שעברו חצי שנה, מהישן לחדש. */
-const ARC_KIND={bank:'חשבונות בנק',cc:'כרטיסי אשראי',chq:"צ'קים",clr:'חשבונות סליקה'};
+const ARC_KIND={bank:'חשבונות בנק',cc:'כרטיסי אשראי',chq:"צ'קים",clr:'פירוט מקארדקום'};
 const ARC_IN={'bk-file':'bank','bk-files':'bank','file-in':'bank','ccs-file':'cc','chq-file':'chq','ret-file':'clr','ret-file2':'clr'};
 const ARC_DAYS=183;
 let ARC=[], arcSub=false;
@@ -3079,7 +3081,7 @@ function ccBuild(docs,name){
   return {synced,name,summary,lines:[debt,rec,sl],receipts};
 }
 let ccBusy=false, ccPendingKey=null;
-function ccOpenForm(k){ toast('החיבור הישיר לקארדקום הוסר. מעלים את הקבצים מקארדקום בלשונית „חשבונות סליקה”'); return; ccPendingKey=k; const c=ccCred(k); $('#cc-ov-name').textContent=(HF[k]&&HF[k].name)||(CC[k]&&CC[k].name)||k; $('#cc-ov-user').value=c?c.user:''; $('#cc-ov-pass').value=c?c.pass:''; $('#cc-ov').hidden=false; $('#cc-ov-user').focus(); }
+function ccOpenForm(k){ toast('החיבור הישיר לקארדקום הוסר. מעלים את הקבצים מקארדקום בלשונית „פירוט מקארדקום”'); return; ccPendingKey=k; const c=ccCred(k); $('#cc-ov-name').textContent=(HF[k]&&HF[k].name)||(CC[k]&&CC[k].name)||k; $('#cc-ov-user').value=c?c.user:''; $('#cc-ov-pass').value=c?c.pass:''; $('#cc-ov').hidden=false; $('#cc-ov-user').focus(); }
 on('#cc-ov-x','click',()=>{ $('#cc-ov').hidden=true; });
 on('#cc-ov-forget','click',e=>{ if(!armed(e.currentTarget,'למחוק? לחצו שוב')) return; try{ localStorage.removeItem(ccCredKey(ccPendingKey)); }catch(err){} $('#cc-ov').hidden=true; toast('הפרטים נמחקו מהמחשב הזה'); });
 on('#cc-ov-form','submit',e=>{ e.preventDefault(); const k=ccPendingKey, user=$('#cc-ov-user').value.trim(), pass=$('#cc-ov-pass').value.trim(); if(!k||!user||!pass) return; try{ localStorage.setItem(ccCredKey(k),JSON.stringify({user,pass})); }catch(err){} $('#cc-ov').hidden=true; ccSync(k); });
@@ -3101,7 +3103,7 @@ async function ccSync(k,silent){
     else toast('העדכון נכשל');
   }finally{ ccBusy=false; $$('[data-ccsync]').forEach(b=>{ b.disabled=false; b.textContent='עדכון מקארדקום'; }); }
 }
-document.addEventListener('click',e=>{ const b=e.target.closest('[data-ccsync]'); if(!b) return; const k=cur().ccKey; if(!k){ toast('בוחרים קודם את הלקוח בקארדקום'); return; } toast(true?'הנתונים מקארדקום מתעדכנים מהקבצים שמעלים. מורידים קובץ חדש מקארדקום ומעלים אותו בלשונית חשבונות סליקה':CCL._status&&CCL._status.credsMissing?'העדכון מקארדקום עצור: פרטי החיבור נמחקו במחשב המשרד. כותבים ל-Claude בשיחה „פתח חיבור לקארדקום”, ומזינים את הפרטים באפליקציית Claude במחשב המשרד':'הנתונים מקארדקום מתעדכנים לבד ממחשב המשרד כל שעתיים, בימים א׳–ה׳'); });
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-ccsync]'); if(!b) return; const k=cur().ccKey; if(!k){ toast('בוחרים קודם את הלקוח בקארדקום'); return; } toast(true?'הנתונים מקארדקום מתעדכנים מהקבצים שמעלים. מורידים קובץ חדש מקארדקום ומעלים אותו בלשונית פירוט מקארדקום':CCL._status&&CCL._status.credsMissing?'העדכון מקארדקום עצור: פרטי החיבור נמחקו במחשב המשרד. כותבים ל-Claude בשיחה „פתח חיבור לקארדקום”, ומזינים את הפרטים באפליקציית Claude במחשב המשרד':'הנתונים מקארדקום מתעדכנים לבד ממחשב המשרד כל שעתיים, בימים א׳–ה׳'); });
 /* עדכון אוטומטי: כשהדף פתוח במשרד, כל לקוח שיש לו חיבור לקארדקום במחשב הזה מתעדכן לבד,
    מיד כשנפתח ואחר כך כל שעה, בלי ללחוץ על כלום. */
 const ccAutoFail={}, CC_AUTO_MS=60*60*1000;
@@ -3254,6 +3256,11 @@ async function retUpload(f,st){ st.innerHTML='<span class="prog"><span>קורא�
       how='claude';
     } else {
       const rows=(await fileRows(f)).map(r=>Array.isArray(r)?r:[]);
+      // קובץ תנועות מקארדקום (כל החיובים, כולל הוראות קבע): מזהים לבד, מסמנים הוראות קבע ומפיקים מהן את התחזית
+      const TX=ccTxParse(rows);
+      if(TX&&TX.length){ const r=ccTxSave(cur(),TX,f.name); renderHalf(); try{ if(BZ_TAB==='cardcom'){ CC_MODE='tx'; ccOrders(); } }catch(e){}
+        const msg=`נקלטו ${r.added} תנועות חדשות מקארדקום${r.dup?` (${r.dup} כבר היו)`:''}. זוהו בקובץ ${r.hk} הוראות קבע. בתחזית יש עכשיו ${r.act} הוראות קבע פעילות`;
+        st.innerHTML='<span class="pill good">✓ '+esc(msg)+'</span>'; toast(msg); return; }
       const H=retHeader(rows);
       if(H){
         const m=H.m, raw=[];
@@ -3517,7 +3524,7 @@ on('#sh-base-save','click',async()=>{
 /* ================= עיצוב חדש: מעטפת ומסכים ================= */
 var BK_DIR='';
 const bkSeg=()=>`<div class="bz-seg" role="group" aria-label="סינון תנועות">${[['all','הכל'],['in','זכות'],['out','חובה']].map(([v,l])=>`<button type="button" data-bkdir="${v}" aria-pressed="${(BK_DIR||'all')===v}">${l}</button>`).join('')}</div>`;
-const BZKEY='cashflow-bz', BZ_TITLES={loans:'הלוואות',cats:'קטגוריות',overview:'סקירה כללית',half:'תחזית חודשית',daily:'תזרים יומי',recon:'התאמות בנקים',recur:'תנועות קבועות',payees:'מוטבים',bank:'חשבונות בנק',cardcom:'חשבונות סליקה',cheques:"צ'קים",ccexp:'כרטיסי אשראי',debts:'חובות לקוחות',expov:'סקירת הוצאות',incov:'סקירת הכנסות',fcov:'סקירת תחזית',clients:'לקוחות וגיבוי'};
+const BZKEY='cashflow-bz', BZ_TITLES={loans:'הלוואות',cats:'קטגוריות',overview:'סקירה כללית',half:'תחזית חודשית',daily:'תזרים יומי',recon:'התאמות בנקים',recur:'תנועות קבועות',payees:'מוטבים',bank:'חשבונות בנק',cardcom:'פירוט מקארדקום',cheques:"צ'קים",ccexp:'כרטיסי אשראי',debts:'חובות לקוחות',expov:'סקירת הוצאות',incov:'סקירת הכנסות',fcov:'סקירת תחזית',clients:'לקוחות וגיבוי'};
 const BZ_NEW=new Set(['loans','cats','overview','daily','recon','recur','payees','cheques','ccexp','debts','expov','incov','fcov']);
 let BZ=false, BZ_TAB='overview';
 BZ=true; // העיצוב החדש אושר והוא העיצוב הקבוע, גם בקישור ללקוח
@@ -4214,7 +4221,73 @@ document.addEventListener('keydown',e=>{ const r=e.target.closest&&e.target.clos
 document.addEventListener('change',e=>{ const t=e.target; if(t.id==='bk-days'){ BK_DAYS=+t.value; bkTop(); }
   else if(t.id==='bk-lim'){ const v=parseNum(t.value); const c=cur(); c.bankLimit=isNaN(v)?0:Math.max(0,Math.round(Math.abs(v))); saveSoon(); bkTop(); toast('המסגרת נשמרה'); } });
 
-/* --- אשראי קארדקום: מסודר לפי דוח הוראות הקבע (כמו „חשבונות סליקה” בביזיבוקס) --- */
+/* --- אשראי קארדקום: מסודר לפי דוח הוראות הקבע (כמו מסך הסליקה בביזיבוקס) --- */
+
+/* ---------- קובץ תנועות מקארדקום ----------
+   כל שורה = חיוב אחד: {id,d,name,amt,type,hk,deal,card,pays,product,custNo}. הוראת קבע מזוהה לפי סוג העסקה / מספר הוראה,
+   או כשאותו לקוח חויב באותו סכום ב־2 חודשים שונים לפחות (ולא בעסקת תשלומים). מקבצים לפי מספר ההוראה, או לפי לקוח+סכום. */
+const TX_COLS={
+  d:[/^תאריך\s*(ה)?(עסקה|חיוב|ביצוע|תנועה)$/,/^תאריך$/,/תאריך\s*(ה)?(עסקה|חיוב|ביצוע)/,/^date$/i,/transaction\s*date/i],
+  name:[/^שם\s*(ה)?לקוח/,/שם\s*בעל\s*(ה)?כרטיס/,/^שם\s*(ה)?משלם/,/^לקוח$/,/שם\s*(ה)?חשבון/,/^שם$/,/customer/i,/^name$/i],
+  amt:[/^סכום\s*(ה)?(עסקה|חיוב|תשלום)?$/,/סכום\s*(ב)?ש"?ח/,/^סכום/,/^amount/i,/^total$/i],
+  type:[/סוג\s*(ה)?(עסקה|חיוב|תנועה)/,/^סוג$/,/אופן\s*(ה)?(חיוב|תשלום)/,/מקור\s*(ה)?עסקה/,/type/i],
+  hk:[/מספר\s*הוראת\s*(ה)?קבע/,/מס['׳"]?\s*הוראה/,/מספר\s*הוראה/,/recurring\s*id/i],
+  deal:[/מספר\s*(ה)?עסקה/,/מס['׳"]?\s*עסקה/,/מספר\s*שובר/,/^אסמכתא/,/internal\s*deal/i,/deal\s*number/i],
+  card:[/4\s*ספרות/,/ספרות\s*אחרונות/,/מספר\s*כרטיס/,/^כרטיס$/],
+  pays:[/מס['׳"]?\s*תשלומים/,/מספר\s*תשלומים/,/^תשלומים$/,/payments/i],
+  product:[/תיאור\s*(ה)?(עסקה|חיוב|מוצר)/,/^מוצר/,/שם\s*(ה)?מוצר/,/^פריט/,/^תיאור$/,/description/i],
+  custNo:[/מספר\s*לקוח/,/מס['׳"]?\s*לקוח/],
+  status:[/סטטוס/,/^מצב/,/status/i]
+};
+function ccTxParse(rows){ let best=null;
+  for(let i=0;i<Math.min(rows.length,40);i++){ const L=(rows[i]||[]).map(x=>String(x==null?'':x).replace(/\s+/g,' ').trim()), m={}, used=new Set();
+    for(const [k,res] of Object.entries(TX_COLS)){ for(const re of res){ const j=L.findIndex((x,jj)=>x&&x.length<45&&!used.has(jj)&&re.test(x)&&!(k==='name'&&RET_BAD.test(x))&&!(k==='amt'&&/נותר|יתרה|מצטבר|עמלה/.test(x))); if(j>=0){ m[k]=j; used.add(j); break; } } }
+    // דוח הוראות קבע (עם תשלומים שנותרו / חיוב הבא) נקרא בדרך הרגילה
+    const isOrders=L.some(x=>/נותר|נשאר|חיוב\s*(ה)?בא|תאריך\s*(ה)?סיום|יתרת\s*(תשלומים|חיובים)/.test(x));
+    const sc=Object.keys(m).length; if(m.d!=null&&m.name!=null&&m.amt!=null&&!isOrders&&(!best||sc>best.sc)) best={i,m,sc}; }
+  if(!best) return null; const m=best.m, g=(r,k)=>m[k]==null?'':r[m[k]], out=[];
+  rows.slice(best.i+1).forEach(r=>{ const d=retDate(g(r,'d')), name=String(g(r,'name')||'').replace(/\s+/g,' ').trim().slice(0,60), amt=parseNum(g(r,'amt'));
+    if(!d||!name||!amt||/^סה.?כ|^total/i.test(name)) return; const st=String(g(r,'status')||''); if(/נכשל|נדחה|בוטל|declin|fail/i.test(st)) return;
+    const o={d,name,amt:Math.round(amt*100)/100}; ['type','hk','deal','card','pays','product','custNo'].forEach(k=>{ const v=String(g(r,k)==null?'':g(r,k)).replace(/\s+/g,' ').trim(); if(v) o[k]=v.slice(0,60); });
+    o.id=o.deal?'d'+o.deal:'k'+d+'|'+custKey(name)+'|'+o.amt+'|'+(o.card||''); out.push(o); });
+  return out; }
+const ccTxKey=t=>t.hk?'h:'+t.hk:'n:'+custKey(t.name)+'|'+Math.round(Math.abs(t.amt));
+// מסמן הוראות קבע ומקבץ את התנועות של כל הוראה
+function ccTxGroups(c){ const L=c.ccTx||[], G={};
+  L.forEach(t=>{ const k=ccTxKey(t); (G[k]=G[k]||[]).push(t); });
+  const hkKeys=new Set(); Object.entries(G).forEach(([k,g])=>{ const flag=g.some(t=>t.hk||/הוראת\s*קבע|הו"?ק|הו״ק|recurr|מנוי|subscription/i.test(t.type||''));
+    const inst=g.every(t=>/תשלומים|installment/i.test(t.type||'')&&!/קבע/.test(t.type||'')), months=new Set(g.map(t=>t.d.slice(0,7)));
+    if(flag||(!inst&&months.size>=2&&g.every(t=>t.amt>0))) hkKeys.add(k); });
+  Object.values(G).forEach(g=>g.sort((a,b)=>a.d<b.d?1:-1)); return {G,hkKeys}; }
+function ccTxSave(c,TX,fname){ c.ccTx=c.ccTx||[]; const have=new Set(c.ccTx.map(t=>t.id)); let added=0, dup=0;
+  TX.forEach(t=>{ if(have.has(t.id)){ dup++; return; } have.add(t.id); c.ccTx.push(t); added++; });
+  const lim=isoAddMonths(todayIsoF(),-18); c.ccTx=c.ccTx.filter(t=>t.d>=lim).sort((a,b)=>a.d<b.d?1:-1); c.ccTxAt=Date.now(); c.ccTxFile=fname;
+  // הוראות הקבע הפעילות (חויבו ב־45 הימים האחרונים) נכנסות לתחזית: חיוב הבא = חודש אחרי החיוב האחרון, באותו יום
+  const {G,hkKeys}=ccTxGroups(c), t45=isoAddDays(todayIsoF(),-45), prev=c.retainers||[], ret=[], ended=[];
+  hkKeys.forEach(k=>{ const g=G[k], last=g[0], first=g[g.length-1]; let nx=isoAddMonths(last.d,1); while(nx<todayIsoF()) nx=isoAddMonths(nx,1);
+    const old=prev.find(r=>custKey(r.name)===custKey(last.name)&&Math.abs((+r.amount||0)-last.amt)<1);
+    const o={name:last.name,amount:Math.abs(last.amt),remaining:old&&old.remaining!=null?Math.max(0,(+old.remaining)-g.filter(t=>t.d>(old.last||'')).length+0):null,next:nx,end:old&&old.end||null,active:last.d>=t45,product:last.product||(old&&old.product)||undefined,custNo:last.custNo||(old&&old.custNo)||undefined,orderNo:last.hk||(old&&old.orderNo)||undefined,opened:first.d,last:last.d,done:g.length,total:old&&old.total||undefined,src:'tx'};
+    if(o.remaining===0) o.active=false; (o.active?ret:ended).push(o); });
+  // הוראות שהגיעו מדוח הוראות קבע קודם ולא זוהו בקובץ התנועות נשארות, כדי שלא ייעלמו מהתחזית
+  prev.filter(r=>r.src!=='tx'&&!ret.some(x=>custKey(x.name)===custKey(r.name)&&Math.abs(x.amount-(+r.amount||0))<1)).forEach(r=>ret.push(r));
+  c.retainers=ret.sort((a,b)=>String(a.next).localeCompare(String(b.next))||a.name.localeCompare(b.name,'he')); c.retOrders=ended.slice(0,800); c.retainersAt=Date.now(); c.retainersFile=fname;
+  saveSoon(); try{ renderRetainers(); }catch(e){} return {added,dup,hk:hkKeys.size,act:c.retainers.length}; }
+let CC_TF='all'; const CC_TXOPEN=new Set();
+function ccTxView(c,mq,pf){ const {G,hkKeys}=ccTxGroups(c), isHK=t=>hkKeys.has(ccTxKey(t));
+  const L0=(c.ccTx||[]).filter(t=>mq({name:t.name,product:t.product||t.type||'',custNo:t.custNo||'',amount:t.amt,orderNo:t.hk||t.deal||''})&&pf({product:t.product}));
+  const cnt={all:L0.length,hk:L0.filter(isHK).length}; cnt.reg=cnt.all-cnt.hk;
+  const L=(CC_TF==='hk'?L0.filter(isHK):CC_TF==='reg'?L0.filter(t=>!isHK(t)):L0);
+  const m30=isoAddDays(todayIsoF(),-30), r30=L0.filter(t=>t.d>=m30), s30=sum(r30.map(t=>t.amt)), h30=sum(r30.filter(isHK).map(t=>t.amt));
+  const rows=L.slice(0,500).map(t=>{ const hk=isHK(t), k=ccTxKey(t), g=hk?G[k]:null, prevs=g?g.filter(x=>x!==t&&x.d<=t.d):[], open=CC_TXOPEN.has(t.id);
+    return `<tr class="${hk?'cc-hk clk':''}${open?' open':''}"${hk?` data-cctx="${esc(t.id)}" tabindex="0" aria-expanded="${open}"`:''}><td>${hk?`<span aria-hidden="true">${open?'▾':'▸'}</span> `:''}${fmtDate(t.d)}</td><td style="white-space:normal">${esc(t.name)}${t.custNo?`<span class="hint" style="display:block">לקוח ${esc(t.custNo)}</span>`:''}</td><td style="white-space:normal">${hk?'<span class="pill hk">הו״ק</span> ':''}${esc(t.product||t.type||'')}${t.pays&&+t.pays>1?` <span class="hint">${esc(t.pays)} תשלומים</span>`:''}</td><td class="n in">${bzM(t.amt)}</td><td class="cc-hide-m hint">${esc(t.hk?'הוראה '+t.hk:t.deal?'עסקה '+t.deal:'')}${t.card?' · '+esc(t.card):''}</td></tr>`
+     +(open?`<tr class="cc-sub hkh"><td colspan="5"><b>${prevs.length?`החיובים הקודמים בהוראה הזו (${prevs.length})`:'זה החיוב הראשון של ההוראה בקבצים שהועלו'}</b>${g?` · <span class="hint">${g.length} חיובים בסך ${bzS(sum(g.map(x=>x.amt)))} · מ־${fmtDate(g[g.length-1].d)}</span>`:''}</td></tr>`+prevs.map(x=>`<tr class="cc-sub hkh"><td>${fmtDate(x.d)}</td><td>${esc(x.name)}</td><td>${esc(x.product||x.type||'')}</td><td class="n in">${bzM(x.amt)}</td><td class="cc-hide-m hint">${esc(x.deal?'עסקה '+x.deal:'')}</td></tr>`).join(''):''); }).join('');
+  return `<div class="bz-box" style="overflow:hidden"><div class="bk-sum"><div><span>חיובים ב־30 הימים האחרונים</span><b class="bz-pos">${bzS(s30)}</b><span class="hint">${r30.length} חיובים</span></div><div><span>מתוכם הוראות קבע</span><b style="color:var(--hk,#6b4fbb)">${bzS(h30)}</b><span class="hint">${hkKeys.size} הוראות שזוהו</span></div><div style="margin-inline-start:auto"><span class="hint">${c.ccTxFile?esc(c.ccTxFile)+' · ':''}עודכן ${c.ccTxAt?new Date(c.ccTxAt).toLocaleDateString('he-IL'):''}</span></div></div></div>
+   <div class="bz-sec" style="margin-top:14px"><h2>כל התנועות מקארדקום</h2><div class="bz-seg" role="group" aria-label="סינון"><button type="button" data-cctf="all" aria-pressed="${CC_TF==='all'}">הכל (${cnt.all})</button><button type="button" data-cctf="hk" aria-pressed="${CC_TF==='hk'}">הוראות קבע (${cnt.hk})</button><button type="button" data-cctf="reg" aria-pressed="${CC_TF==='reg'}">עסקאות רגילות (${cnt.reg})</button></div></div>
+   <div class="tscroll bz-box"><table class="bz-tbl cc-t cc-txt"><thead><tr><th>תאריך</th><th>לקוח</th><th>מוצר / סוג</th><th class="n">סכום</th><th class="cc-hide-m">מספר</th></tr></thead><tbody>${rows||'<tr><td colspan="5" class="hint">אין תנועות</td></tr>'}</tbody></table></div>
+   ${L.length>500?`<p class="hint">מוצגות 500 מתוך ${L.length}. אפשר לחפש למעלה.</p>`:''}<p class="hint" style="margin:6px 4px 0">שורות בצבע סגול הן הוראות קבע. לוחצים על שורה כזו כדי לראות את החיובים הקודמים של אותה הוראה. הוראה שחויבה ב־45 הימים האחרונים נחשבת פעילה ונכנסת לתחזית.</p>`; }
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-cctf],[data-cctx]'); if(!b) return;
+  if(b.dataset.cctf){ CC_TF=b.dataset.cctf; ccOrders(); return; } const id=b.dataset.cctx; CC_TXOPEN.has(id)?CC_TXOPEN.delete(id):CC_TXOPEN.add(id); ccOrders(); });
+document.addEventListener('keydown',e=>{ if(e.key!=='Enter') return; const b=e.target.closest&&e.target.closest('[data-cctx]'); if(b){ e.preventDefault(); b.click(); } });
 let CC_MODE='sum', CC_H=3, CC_F='act', CC_Q='', CC_SORT='next', CC_PROD=''; const CCX_OPEN=new Set();
 function ccAllOrders(c){ return [...(c.retainers||[]).map(r=>({...r,active:r.active!==false})),...(c.retOrders||[])]; }
 // כל החיובים הצפויים מהיום ועד סוף התקופה
@@ -4224,13 +4297,14 @@ function ccSchedule(c,months){ const t0=todayIsoF(), end=lastDayOf(ymAdd(thisYm(
     while(left>0&&d<=end&&k<60){ if(d>=t0&&(!r.end||d.slice(0,7)<=String(r.end).slice(0,7))) out.push({d,r,num:tot?paid0+k+1:null,tot,unl:r.remaining==null}); d=isoAddMonths(String(r.next).slice(0,10),++k); left--; } });
   return out.sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:a.r.name.localeCompare(b.r.name,'he')); }
 function ccOrders(){ const el=$('#cc2'), c=cur(); if(!el||!c) return;
-  const all=ccAllOrders(c), act=all.filter(r=>r.active), has=all.length;
-  $('#bz-hx').innerHTML=(has?`<div class="bz-seg" role="group" aria-label="תצוגה"><button type="button" data-ccm="sum" aria-pressed="${CC_MODE==='sum'}">מרוכז</button><button type="button" data-ccm="det" aria-pressed="${CC_MODE==='det'}">מפורט</button></div>
+  const all=ccAllOrders(c), act=all.filter(r=>r.active), hasTx=(c.ccTx||[]).length>0, has=all.length||hasTx; if(!hasTx&&CC_MODE==='tx') CC_MODE='sum'; if(hasTx&&!ccOrders.init){ ccOrders.init=1; CC_MODE='tx'; }
+  $('#bz-hx').innerHTML=(has?`<div class="bz-seg" role="group" aria-label="תצוגה">${hasTx?`<button type="button" data-ccm="tx" aria-pressed="${CC_MODE==='tx'}">תנועות</button>`:''}<button type="button" data-ccm="sum" aria-pressed="${CC_MODE==='sum'}">צפי</button><button type="button" data-ccm="det" aria-pressed="${CC_MODE==='det'}">מפורט</button></div>
     ${CC_MODE==='sum'?`<select id="cc-h" aria-label="תקופה">${[[1,'החודש'],[3,'3 חודשים קדימה'],[6,'6 חודשים קדימה'],[12,'12 חודשים קדימה']].map(([v,l])=>`<option value="${v}"${CC_H===v?' selected':''}>${l}</option>`).join('')}</select>`:''}
-    <span class="bz-search"><input id="cc-q" type="search" value="${esc(CC_Q)}" placeholder="חיפוש לקוח או תוכנית" aria-label="חיפוש"></span>`:'')+(VIEW?'':`<label class="btn primary" for="ret-file" title="בקארדקום: הוראות קבע › דוח רישום הוראות לחיוב › ייצוא לאקסל">העלאת דוח הוראות קבע</label>`);
-  if(!has){ el.innerHTML=`<div class="bz-box" style="padding:22px;text-align:center;display:grid;gap:6px"><b style="color:var(--bz-navy);font-size:18px">עוד לא הועלה דוח הוראות קבע</b><span class="hint">בקארדקום: הוראות קבע › דוח רישום הוראות לחיוב › ייצוא לאקסל, ומעלים כאן בכפתור למעלה.</span></div>`; return; }
+    <span class="bz-search"><input id="cc-q" type="search" value="${esc(CC_Q)}" placeholder="חיפוש לקוח או תוכנית" aria-label="חיפוש"></span>`:'')+(VIEW?'':`<label class="btn primary" for="ret-file" title="מעלים קובץ אחד מקארדקום (דוח העסקאות, אקסל). המערכת מזהה לבד את הוראות הקבע">העלאת קובץ מקארדקום</label>`);
+  if(!has){ el.innerHTML=`<div class="bz-box" style="padding:22px;text-align:center;display:grid;gap:6px"><b style="color:var(--bz-navy);font-size:18px">עוד לא הועלה קובץ מקארדקום</b><span class="hint">בקארדקום: דוחות › דוח עסקאות › ייצוא לאקסל, ומעלים כאן בכפתור למעלה. המערכת מזהה לבד את הוראות הקבע.</span></div>`; return; }
   const q=CC_Q.trim(), mq=r=>!q||smartMatch([r.name,r.product||'',r.custNo||'',r.amount||'',r.orderNo||''].join(' '),q);
   const pf=r=>!CC_PROD||(r.product||'ללא תיאור')===CC_PROD;
+  if(CC_MODE==='tx'&&hasTx){ el.innerHTML=ccTxView(c,mq,pf); return; }
   const sch=ccSchedule(c,CC_H), schF=sch.filter(x=>mq(x.r)&&pf(x.r)), tot=sum(schF.map(x=>x.r.amount));
   const tm=thisYm(), thisM=sum(schF.filter(x=>x.d.startsWith(tm)).map(x=>x.r.amount)), monthly=sum(act.map(r=>+r.amount||0));
   const custs=new Set(act.map(r=>r.custNo||r.name)).size, unl=act.filter(r=>r.remaining==null).length;
@@ -4386,7 +4460,7 @@ function bzIncOv(){ const el=$('#bz-incov'), c=cur(), ctx=bzCtx(), t0=todayIsoF(
   ${VIEW?'':`<div class="bz-sec" style="margin-top:22px"><h2>שיוך לקוחות למוצרים</h2><span class="hint">${unN?unN+' לקוחות לא משויכים':'כל הלקוחות משויכים'}. לקוח שמופיע בדוח הפריטים משויך לבד.</span></div>
   <div class="bz-box" style="padding:12px 14px"><form id="prod-add" class="actions"><input id="prod-name" maxlength="50" autocomplete="off" placeholder="שם מוצר חדש, למשל: תכנית ליווי" aria-label="שם מוצר חדש" style="flex:1;min-width:200px"><button class="btn sm primary" type="submit">הוספת מוצר</button></form>
    <div class="hint" style="margin:6px 0">מוצרים: ${PL.length?PL.map(esc).join(' · '):'עוד אין. מוסיפים כאן או מעלים דוח פריטים'}</div>
-   ${PL.length?`<div class="actions" style="margin:6px 0"><span class="hint">שיוך כמה לקוחות יחד: מסמנים בטבלה ובוחרים מוצר</span><select id="pm-bulk" aria-label="מוצר לשיוך">${PL.map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="btn sm" type="button" id="pm-apply">שיוך המסומנים</button>${CL.some(o=>!prodOf(c,o.k,auto)&&sugOf(o))?`<button class="btn sm primary" type="button" id="pm-sugall">אישור כל ההצעות (${CL.filter(o=>!prodOf(c,o.k,auto)&&sugOf(o)).length})</button>`:''}</div>`:`<div class="hint" style="margin:6px 0">כדי שהשיוך ייעשה לבד: מעלים בלשונית „חשבונות סליקה” את דוח הוראות הקבע עם עמודת „מוצר”, או כאן את דוח הפריטים. אפשר גם להוסיף מוצר ידנית ולשייך.</div>`}
+   ${PL.length?`<div class="actions" style="margin:6px 0"><span class="hint">שיוך כמה לקוחות יחד: מסמנים בטבלה ובוחרים מוצר</span><select id="pm-bulk" aria-label="מוצר לשיוך">${PL.map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="btn sm" type="button" id="pm-apply">שיוך המסומנים</button>${CL.some(o=>!prodOf(c,o.k,auto)&&sugOf(o))?`<button class="btn sm primary" type="button" id="pm-sugall">אישור כל ההצעות (${CL.filter(o=>!prodOf(c,o.k,auto)&&sugOf(o)).length})</button>`:''}</div>`:`<div class="hint" style="margin:6px 0">כדי שהשיוך ייעשה לבד: מעלים בלשונית „פירוט מקארדקום” את דוח הוראות הקבע עם עמודת „מוצר”, או כאן את דוח הפריטים. אפשר גם להוסיף מוצר ידנית ולשייך.</div>`}
    <div class="tscroll"><table class="bz-tbl bz-map"><thead><tr><th style="width:28px"><input type="checkbox" id="pm-all" aria-label="סימון הכל" style="width:16px;height:16px"></th><th>לקוח</th><th>שורה בתחזית</th><th class="n">צפוי בתקופה</th><th>מוצר</th><th></th></tr></thead><tbody>
    ${CL.slice(0,200).map(o=>{ const man=c.prodMap&&c.prodMap[o.k], au=auto[o.k], p=man||au, sg=!p&&sugOf(o);
      return `<tr><td><input type="checkbox" data-pchk="${esc(o.k)}" data-psug="${esc(sg||'')}" aria-label="סימון" style="width:16px;height:16px"></td><td>${esc(o.name)}</td><td class="hint">${esc(o.row||'')}</td><td class="n in">${bzM(o.amt)}</td><td><select data-pmap="${esc(o.k)}" aria-label="מוצר"><option value="">— לא משויך —</option>${PL.map(x=>`<option${x===p?' selected':''}>${esc(x)}</option>`).join('')}</select>${!man&&au?'<span class="hint" style="display:block">לפי דוח הפריטים</span>':''}</td><td>${sg?`<button class="btn ghost xs" type="button" data-pacc="${esc(o.k)}" data-pv="${esc(sg)}">הצעה: ${esc(sg)}</button>`:''}</td></tr>`; }).join('')||'<tr><td colspan="6" class="hint">אין לקוחות עם הכנסות צפויות בתקופה</td></tr>'}

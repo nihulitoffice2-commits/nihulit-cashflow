@@ -433,7 +433,7 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
 #bz-incov,#bz-expov{min-width:0}
 #bz-incov .pill,#bz-cheques .pill,#bz-expov .pill{white-space:normal;max-width:100%}
 #bz-incov>*,#bz-expov>*{min-width:0;max-width:100%}
-@media (max-width:700px){.bz-map th:nth-child(2),.bz-map td:nth-child(2){display:none}.bz-map td select{max-width:150px}}
+@media (max-width:700px){.bz-map th:nth-child(3),.bz-map td:nth-child(3){display:none}.bz-map td select{max-width:150px}}
 .chq-num{font-variant-numeric:tabular-nums;color:#4a5b6a}
 .bz-donut tr.on td{background:#f1f6f9}
 .bz-donut input[type=checkbox]{width:15px;height:15px;margin:0 0 0 6px;vertical-align:-2px;accent-color:#16a4b5}
@@ -818,7 +818,7 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
     <div id="cc2" class="bz-only"></div>
     <div class="card">
       <div class="card-head"><h2>קארדקום</h2><span class="hint" id="cc-synced"></span></div>
-      <p class="hint" style="margin:0"><span class="pill warn">החיבור לקארדקום מנותק כרגע</span> מוצגים הנתונים מהעדכון האחרון. אפשר להמשיך להעלות כאן את טבלת הוראות הקבע.</p>
+      <p class="hint" style="margin:0">הנתונים מקארדקום נקלטים מהקבצים שמורידים מקארדקום ומעלים כאן.</p>
       <div class="fields"><label class="f">הלקוח בקארדקום<select id="cc-pick"></select></label></div>
       <div class="actions" id="cc-auto"></div>
       <div class="status" id="cc-status"></div>
@@ -1067,17 +1067,18 @@ const DEFAULT_ROWS=[
   {id:'vr_mkt',sec:'var',label:'שיווק ופרסום'},
   {id:'vr_car',sec:'var',label:'רכב ודלק'},
   {id:'vr_other',sec:'var',label:'הוצאות אחרות ועמלות'},
+  {id:'vr_owner',sec:'var',label:'משיכות בעלים והוצאות פרטיות'},
   {id:'tx_vat',sec:'tax',label:'מע״מ'},
   {id:'tx_income',sec:'tax',label:'מקדמות מס הכנסה'}
 ];
 // [keywords, category, required sign]. Order matters: first match wins.
 const DEFAULT_RULES=[
-  [['מע"מ','מע״מ','מעמ','מס ערך מוסף'],'tx_vat'],
+  [['מע"מ','מע״מ','מעמ','מס ערך מוסף','מ. ע. מ','מ.ע.מ','מ ע מ'],'tx_vat'],
   [['ביטוח לאומי','בטוח לאומי','ב.לאומי'],'fx_bl'],
   [['מס הכנסה','פקיד שומה','מקדמות מס','מקדמה'],'tx_income'],
   [['שכר דירה','שכ"ד','שכ״ד','שכירות'],'fx_rent'],
   [['משכורת','משכורות','שכר עבודה','שכר'],'fx_salary',-1],
-  [['הלוואה','הלואה'],'fx_loan',-1],
+  [['הלוואה','הלואה','הלוואות','הלואות'],'fx_loan',-1],
   [['הלוואה','הלואה','הזרמת','הזרמה'],'in_loans',1],
   [['רואה חשבון','רו"ח','רו״ח','הנהלת חשבונות','הנה"ח'],'fx_acct',-1],
   [['ביטוח','הראל','מגדל','הפניקס','מנורה','איילון','כלל חב'],'fx_ins',-1],
@@ -1139,6 +1140,8 @@ function fixClient(c){
   o.tx=Array.isArray(o.tx)?o.tx.filter(t=>t&&t.d&&typeof t.amt==='number'):[];
   o.tx.forEach(t=>{ if(!t.id) t.id=uid(); });
   o.rules=Array.isArray(o.rules)?o.rules:[];
+  // סיווג משופר (פירוט התנועה, מע״מ, הלוואות, משיכות בעלים): פעם אחת, רק לתנועות שלא סווגו ידנית
+  if((o.clsV||0)<2){ o.tx.forEach(t=>{ if(!t.manual) t.cat=classify(o,t); }); o.clsV=2; }
   delete o.cardcom; o.ccKey=typeof o.ccKey==='string'?o.ccKey:'';
   return o;
 }
@@ -1262,7 +1265,11 @@ function classify(c,t){
   const n=norm(t.desc);
   const ur=n&&c.rules.find(r=>r.kw===n);
   if(ur&&catExists(c,ur.cat)) return ur.cat;
-  const low=' '+String(t.desc).toLowerCase()+' ';
+  const low=' '+String(t.desc+' '+(t.det||'')).toLowerCase()+' ';
+  // העברה לבעלים או מהם: השם של בעל העסק מופיע בפירוט (למשל „מאיר ויעל פיינגולד”)
+  const sur=String(c.name||'').trim().split(/\s+/).filter(w=>w.length>=3).pop();
+  if(sur&&c.rows.some(r=>r.id==='vr_owner')&&(t.det||'').includes(sur)) return t.amt<0?'vr_owner':'in_loans';
+  if(/משיכת בעלים|משיכה פרטית|משיכות בעלים/.test(low)) return t.amt<0?'vr_owner':'in_loans';
   for(const [kws,cat,sign] of DEFAULT_RULES){ if(sign&&Math.sign(t.amt)!==sign) continue; if(kws.some(k=>low.includes(k.toLowerCase()))) return cat; }
   return t.amt>0?'in_sales':'vr_sup';
 }
@@ -2047,7 +2054,7 @@ function renderCardcom(){
   $('#cc-pick').disabled=ccState!=='ok';
   $('#cc-status').textContent=ccState==='loading'?'טוענת נתונים…':ccState==='none'?'הנתונים המשותפים לא זמינים בתצוגה הזו. פותחים את הדף מתוך claude.ai, מחוברים לחשבון.':ccState==='error'?'לא הצלחתי לטעון את הנתונים המשותפים. נסו לרענן את הדף.':(keys.length?'':'עוד לא הגיעו נתונים ממחשב המשרד.');
   const x=ccOf(c);
-  $('#cc-synced').textContent=x&&x.synced?'עודכן מקארדקום '+new Date(x.synced).toLocaleString('he-IL'):'';
+  $('#cc-synced').textContent=x&&x.synced?'עודכן מקובץ קארדקום '+new Date(x.synced).toLocaleString('he-IL'):'';
   const auto=$('#cc-auto'); if(auto&&!VIEW){ const k=c.ccKey, has=k&&ccCred(k), fail=k&&ccAutoFail[k];
     const ls=x&&x.synced?Date.parse(x.synced):0, age=ls?(Date.now()-ls)/36e5:1e9;
     auto.innerHTML=!k?'':age<3?'<span class="pill good">✓ מעודכן מקארדקום</span> <span class="hint">הנתונים מגיעים ממחשב המשרד.</span>'
@@ -2142,7 +2149,14 @@ function recurSeed(ed){ if(ed.recurInit) return false; ed.recur=ed.recur||[]; co
   ed.incItems=(ed.incItems||[]).filter(x=>{ if(x.src!=='recur') return true; const m=String(x.date).slice(0,7);
     ed.recur.push({id:uid(),sec:x.kind==='bank'?'out':'in',name:x.cust,amount:+x.amount,day:+String(x.date).slice(8,10)||1,from:m,to:ymAdd(m,(+x.n||12)-1),grp:x.kind==='bank'?'exp1':'inc3',est:false,got:x.got,mv:x.mv,skip:x.skip,rk:x.rk}); return false; });
   ed.recurInit=1; return true; }
-function recurEnsure(){ if(VIEW||!hfDb) return; const k=hfKey(); if(!k||!HF[k]||!HFE[k]||HFE[k].recurInit) return; const ed=hfEdits(k); if(recurSeed(ed)) hfSave(k,ed); }
+function recurEnsure(){ if(VIEW||!hfDb) return; const k=hfKey(); if(!k||!HF[k]||!HFE[k]) return;
+  if(!HFE[k].recurInit){ const ed=hfEdits(k); if(recurSeed(ed)) hfSave(k,ed); return; }
+  if(!HFE[k].dayFix){ const c=cur(); if(!c||c.ccKey!==k||!(c.tx||[]).length) return; const ed=hfEdits(k); recurDayFix(ed,c); ed.dayFix=1; hfSave(k,ed); } }
+// יום התשלום של מיסים ותלושים: היום שבו הם ירדו בפועל בחודשים הקודמים (חציון משוקלל לפי סכום), במקום 1 לחודש
+function grpDay(c,grp){ const cats=GRP_CATS[grp]||[]; if(!cats.length) return null; const M=lastFullMonths(c,6);
+  const L=(c.tx||[]).filter(t=>t.amt<0&&t.d&&M.includes(t.d.slice(0,7))&&cats.includes(t.cat)).map(t=>({d:+t.d.slice(8,10),w:-t.amt})).sort((a,b)=>a.d-b.d);
+  const W=L.reduce((a,x)=>a+x.w,0); if(!W||L.length<2) return null; let acc=0; for(const x of L){ acc+=x.w; if(acc>=W/2) return x.d; } return null; }
+function recurDayFix(ed,c){ (ed.recur||[]).forEach(r=>{ if(!r.est||!GRP_CATS[r.grp]||(+r.day||1)!==1) return; const d=grpDay(c,r.grp); if(d&&d>1){ r.day=d; r.dayAuto=1; } }); }
 // ממוצעים מ־6 החודשים המלאים האחרונים בדף הבנק
 const CC_IN_RE=/סליקה|ויזה|כא"ל|כאל|ישראכרט|מקס|לאומי קארד|קארדקום|cardcom|isracard|visa|שב"א|max/i;
 // כמה כבר נכנס/ירד החודש בבנק (לפי סינון), כדי שהחודש הנוכחי לא ייספר פעמיים
@@ -2158,14 +2172,21 @@ function creditGenAuto(k,e,months){ const c=cur(); if(!c||c.ccKey!==k||!(c.tx||[
   const v=Math.max(0,Math.round(avg-ret-ccp));
   return {v,note:`ממוצע תקבולי האשראי שנכנסו לבנק ב־${per.length} החודשים האחרונים: ${fmt(Math.round(avg))} ₪ (${per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')}). פחות הוראות הקבע (${fmt(Math.round(ret))} ₪ בחודש) ופחות עסקאות התשלומים (${fmt(Math.round(ccp))} ₪ בחודש), שמופיעות בשורות נפרדות. אפשר לשנות כל חודש ידנית`}; }
 function varExpAvg(k,e){ const c=cur(); if(!c||c.ccKey!==k||!(c.tx||[]).length) return null; const M=lastFullMonths(c,6); if(M.length<2) return null;
-  const EX=new Set(['tx_vat','tx_income','fx_bl','fx_salary','fx_loan']), R=(e.recur||[]).filter(r=>r.sec==='out'&&r.name);
+  const EX=new Set(['tx_vat','tx_income','fx_bl','fx_salary','vr_owner']), R=(e.recur||[]).filter(r=>r.sec==='out'&&r.name);
   const skip=t=>t.cat===IGNORE||EX.has(t.cat)||CC_BANK_RE.test(t.desc||'')||R.some(r=>bzNorm(t.desc)===bzNorm(r.name)||String((t.desc||'')+' '+(t.det||'')).includes(r.name)||(r.rk&&r.rk==='-'+bzNorm(t.desc)));
   const inc=(c.tx||[]).filter(t=>t.amt<0&&t.d&&M.includes(t.d.slice(0,7))&&!skip(t));
   const per=M.map(m=>({m,v:Math.round(inc.filter(t=>t.d.startsWith(m)).reduce((a,t)=>a-t.amt,0))}));
   const avg=Math.round(sum(per.map(x=>x.v))/per.length); if(!(avg>0)) return null;
   const big=inc.slice().sort((a,b)=>a.amt-b.amt).slice(0,8), cur0=tmSum(c,t=>t.amt<0&&!skip(t));
-  return {avg,cur:cur0,note:`ממוצע ${per.length} החודשים האחרונים בדף הבנק (${per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')}): כל ההוצאות מהבנק, בלי מיסים, שכר, ביטוח לאומי, הלוואות, חיובי כרטיס אשראי והוצאות שמופיעות ב„תנועות קבועות”. אפשר לשנות כל חודש ידנית`,
+  return {avg,cur:cur0,note:`ממוצע ${per.length} החודשים האחרונים בדף הבנק (${per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')}): כל ההוצאות מהבנק, בלי מיסים, שכר, ביטוח לאומי, משיכות בעלים, חיובי כרטיס אשראי והוצאות שמופיעות ב„תנועות קבועות”. אפשר לשנות כל חודש ידנית`,
     details:[...per.map(x=>({label:ymLabel(x.m),amount:x.v})),...big.map(t=>({label:'מהגדולות: '+(t.desc||'')+(t.det?' · '+t.det:'')+' ('+fmtDate(t.d)+')',amount:Math.round(-t.amt)}))]}; }
+function ownerAvg(k,e){ const c=cur(); if(!c||c.ccKey!==k||!(c.tx||[]).length) return null; const M=lastFullMonths(c,6); if(M.length<2) return null;
+  const R=(e.recur||[]).filter(r=>r.sec==='out'&&r.name), own=t=>t.cat==='vr_owner'&&!R.some(r=>String((t.desc||'')+' '+(t.det||'')).includes(r.name));
+  const L=(c.tx||[]).filter(t=>t.amt<0&&t.d&&M.includes(t.d.slice(0,7))&&own(t));
+  const per=M.map(m=>({m,v:Math.round(L.filter(t=>t.d.startsWith(m)).reduce((a,t)=>a-t.amt,0))}));
+  const avg=Math.round(sum(per.map(x=>x.v))/per.length); if(!(avg>0)) return null;
+  return {avg,cur:tmSum(c,t=>t.amt<0&&own(t)),note:`משיכות בעלים והוצאות פרטיות, ממוצע ${per.length} החודשים האחרונים (${per.map(x=>ymLabel(x.m)+' '+fmt(x.v)).join(', ')}). זו החלטה של בעלת העסק ולא הוצאה של העסק: אפשר לשנות כל חודש ידנית לסכום שמתכננים למשוך, או 0. מסמנים תנועה כמשיכה במסך הבנק, בקטגוריה „משיכות בעלים והוצאות פרטיות”`,
+    details:[...per.map(x=>({label:ymLabel(x.m),amount:x.v})),...L.slice().sort((a,b)=>a.amt-b.amt).slice(0,8).map(t=>({label:(t.desc||'')+(t.det?' · '+t.det:'')+' ('+fmtDate(t.d)+')',amount:Math.round(-t.amt)}))]}; }
 function bankInAvg(k,e){ const c=cur(); if(!c||c.ccKey!==k||!(c.tx||[]).length) return null; const M=lastFullMonths(c,6); if(M.length<2) return null;
   const R=(e.recur||[]).filter(r=>r.sec==='in'&&r.name);
   const skip=t=>t.cat===IGNORE||t.cat==='in_loans'||CC_IN_RE.test(t.desc||'')||R.some(r=>bzNorm(t.desc)===bzNorm(r.name)||String((t.desc||'')+' '+(t.det||'')).includes(r.name));
@@ -2195,7 +2216,7 @@ function hfMatch(k,e){ MATCH={}; HF_LATE=[]; HF_BANKLAST=null; HF_TX=[]; HF_USED
       if(st==='late'&&x.kind!=='bank') HF_LATE.push({name:x.cust||'',amount:ev.amount,days}); } });
 }
 // אירועים שעוד לא התקבלו בבנק. מה שכבר נמצא בבנק כלול ביתרה, ולכן לא נספר שוב
-const liveEvents=x=>itemEvents(x).filter(ev=>{ const m=MATCH[x.id+'#'+ev.k]; return !(m&&m.st==='ok'); });
+const liveEvents=x=>x.kind==='chq'&&x.cst==='nik'?[]:itemEvents(x).filter(ev=>{ const m=MATCH[x.id+'#'+ev.k]; return !(m&&m.st==='ok'); });
 function itemStatus(x){ const ev=itemEvents(x); if(!ev.length) return ''; if(x.kind==='ccp') return '<span class="hint" title="תשלומי אשראי נכנסים בבנק כסכום מרוכז מחברת הסליקה, ולכן לא נבדקים מול תנועה בודדת">באשראי</span>';
   const M=ev.map(v=>MATCH[x.id+'#'+v.k]||null), ok=M.filter(m=>m&&m.st==='ok'), late=M.filter(m=>m&&m.st==='late'), nb=M.filter(m=>m&&m.st==='nobank'), n=ev.length, word=x.kind==='bank'?'ירד':'התקבל';
   const okTxt=ok.length?(n===1?`✓ ${word} ${fmtDate(ok[0].d)}`:`✓ ${ok.length}/${n} ${x.kind==='bank'?'ירדו':'התקבלו'}`):'';
@@ -2281,6 +2302,7 @@ function expLines(k,e,months){
       out.push({id,sec:'out',label,fixed:true,items:its,vals:live(its),note:its.length?'לפי „תנועות קבועות”. משנים סכומים ומוסיפים הוצאות שם'+(paid0?`. ב${ymLabel(tm)} כבר ירדו מהבנק ${fmt(paid0)} ₪ בשורה הזו, ולכן נשאר רק ההפרש`:''):'אין כאן הוצאות. מוסיפים במסך „תנועות קבועות” ובוחרים את השורה „'+label+'”',details:its.map(x=>({label:x.cust+(x.est?' (משוער)':'')+' · ב־'+(+x.date.slice(8,10))+' לחודש',amount:Math.round(x.amount),monthly:true}))}); }
     else out.push({id,sec:'out',label,plain:true,vals:months.map(()=>v),note:'',details:[]}); });
   const va=varExpAvg(k,e); if(va) out.push({id:'exp7',sec:'out',label:'הוצאות משתנות - ממוצע 6 חודשים',plain:true,spread:true,vals:months.map((m,i)=>i===j0?Math.max(0,va.avg-va.cur):va.avg),note:va.note+(j0>=0?`. ב${ymLabel(tm)} כבר ירדו ${fmt(va.cur)} ₪ מההוצאות האלה, ולכן נשאר ${fmt(Math.max(0,va.avg-va.cur))} ₪`:''),details:va.details});
+  const oa=ownerAvg(k,e); if(oa) out.push({id:'exp8',sec:'out',label:'משיכות בעלים - ממוצע 6 חודשים',plain:true,vals:months.map((m,i)=>i===j0?Math.max(0,oa.avg-oa.cur):oa.avg),note:oa.note+(j0>=0?`. ב${ymLabel(tm)} כבר ירדו ${fmt(oa.cur)} ₪, ולכן נשאר ${fmt(Math.max(0,oa.avg-oa.cur))} ₪`:''),details:oa.details});
   return out;
 }
 // רינדור מחדש בלי לאבד את השדה שהמשתמשת עומדת בו (למשל כשעוברים בטאב לשדה הבא)
@@ -2302,7 +2324,7 @@ const BK_ALL={income:'כניסות מלקוחות',loanIn:'הלוואה שהתק
 const BK_OUT=['salary','bl','incomeTax','vat','loan','card','rent','fee','supplier','other'];
 const BK_IN_OTHER=['loanIn','otherIn'];
 // ממוצע חודשי לקטגוריה, מהחודשים המלאים האחרונים שיש בדף הבנק
-const ROW2BK={in_sales:'income',in_other:'otherIn',in_loans:'loanIn',fx_rent:'rent',fx_salary:'salary',fx_bl:'bl',fx_acct:'supplier',fx_ins:'other',fx_tel:'supplier',fx_loan:'loan',vr_sup:'supplier',vr_mkt:'supplier',vr_car:'other',vr_other:'fee',tx_vat:'vat',tx_income:'incomeTax'};
+const ROW2BK={in_sales:'income',in_other:'otherIn',in_loans:'loanIn',fx_rent:'rent',fx_salary:'salary',fx_bl:'bl',fx_acct:'supplier',fx_ins:'other',fx_tel:'supplier',fx_loan:'loan',vr_sup:'supplier',vr_mkt:'supplier',vr_car:'other',vr_other:'fee',vr_owner:'other',tx_vat:'vat',tx_income:'incomeTax'};
 function bankOf(k){
   const c=cur(); if(!c||!k||c.ccKey!==k||!c.tx||!c.tx.length) return null;
   const secOf={}; c.rows.forEach(r=>secOf[r.id]=r.sec);
@@ -2487,7 +2509,7 @@ function renderHalf0(){
   $('#hf-status').textContent=hfState==='loading'?'טוענת…':hfState==='none'?'הנתונים המשותפים לא זמינים בתצוגה הזו. פותחים את הדף מתוך claude.ai, מחוברים לחשבון.':hfState==='error'?'לא הצלחתי לטעון את הצפי. נסו לרענן את הדף.':'';
   const k=hfKey(), f=k&&HF[k];
   $('#hf-empty').hidden=!!f; $('#hf-body').hidden=!f;
-  const lv=k&&CCL[k]; $('#hf-built').textContent=f?'קארדקום עודכן '+new Date(lv&&(lv.synced||'')>(f.built||'')?lv.synced:f.built).toLocaleString('he-IL')+' · החיבור לקארדקום מנותק כרגע':'';
+  const lv=k&&CCL[k]; $('#hf-built').textContent=f?'קארדקום עודכן '+new Date(lv&&(lv.synced||'')>(f.built||'')?lv.synced:f.built).toLocaleString('he-IL')+' · מהקובץ האחרון שהועלה':'';
   if(!f){ $('#hf-empty-s').textContent=keys.length?'בוחרים למעלה את הלקוח המתאים.':'הצפי יופיע כאן אחרי שמחשב המשרד ישלח אותו.'; return; }
   const e=hfEdits(k), R=hfCompute(f,e,k);
   const oi=$('#hf-open'); if(document.activeElement!==oi) oi.value=R.opening==null?'':fmt(R.opening);
@@ -3000,7 +3022,7 @@ async function ccSync(k,silent){
     else toast('העדכון נכשל');
   }finally{ ccBusy=false; $$('[data-ccsync]').forEach(b=>{ b.disabled=false; b.textContent='עדכון מקארדקום'; }); }
 }
-document.addEventListener('click',e=>{ const b=e.target.closest('[data-ccsync]'); if(!b) return; const k=cur().ccKey; if(!k){ toast('בוחרים קודם את הלקוח בקארדקום'); return; } toast(true?'החיבור לקארדקום מנותק כרגע. הנתונים שמוצגים הם מהעדכון האחרון':CCL._status&&CCL._status.credsMissing?'העדכון מקארדקום עצור: פרטי החיבור נמחקו במחשב המשרד. כותבים ל-Claude בשיחה „פתח חיבור לקארדקום”, ומזינים את הפרטים באפליקציית Claude במחשב המשרד':'הנתונים מקארדקום מתעדכנים לבד ממחשב המשרד כל שעתיים, בימים א׳–ה׳'); });
+document.addEventListener('click',e=>{ const b=e.target.closest('[data-ccsync]'); if(!b) return; const k=cur().ccKey; if(!k){ toast('בוחרים קודם את הלקוח בקארדקום'); return; } toast(true?'הנתונים מקארדקום מתעדכנים מהקבצים שמעלים. מורידים קובץ חדש מקארדקום ומעלים אותו בלשונית אשראי קארדקום':CCL._status&&CCL._status.credsMissing?'העדכון מקארדקום עצור: פרטי החיבור נמחקו במחשב המשרד. כותבים ל-Claude בשיחה „פתח חיבור לקארדקום”, ומזינים את הפרטים באפליקציית Claude במחשב המשרד':'הנתונים מקארדקום מתעדכנים לבד ממחשב המשרד כל שעתיים, בימים א׳–ה׳'); });
 /* עדכון אוטומטי: כשהדף פתוח במשרד, כל לקוח שיש לו חיבור לקארדקום במחשב הזה מתעדכן לבד,
    מיד כשנפתח ואחר כך כל שעה, בלי ללחוץ על כלום. */
 const ccAutoFail={}, CC_AUTO_MS=60*60*1000;
@@ -3568,7 +3590,7 @@ function bzOverview(){ const el=$('#bz-ov'), ctx=bzCtx(); if(!ctx){ el.innerHTML
   const late=Object.values(M).filter(m=>m.st==='late'||m.st==='nobank').length;
   const lateIn=(R.late||[]).reduce((a,l)=>a+l.amount,0);
   const unexp=(HF_TX||[]).filter((t,i)=>!HF_USED.has(i)&&dDays(t.d,t0)<=30&&!bzOkSet(ctx.e).has(bzTxKey(t))).length;
-  const neg=D.days.slice(0,31).find(x=>x.bal<0);
+  const neg=D.days.slice(0,31).find(x=>x.bal<0), CTO=VIEW?null:ctlData();
   const A=bzAlerts(ctx);
   // הפקדות ומשיכות
   const from=bzPerFrom(BZ_PER,c,t0), dep={}, wd={};
@@ -3596,7 +3618,7 @@ function bzOverview(){ const el=$('#bz-ov'), ctx=bzCtx(); if(!ctx){ el.innerHTML
   el.innerHTML=`
   <div class="bz-bars">
     <div class="bz-bar"><span class="ex ${neg?'':'ok'}" aria-hidden="true">${neg?'!':'✓'}</span><span><b>מצב התזרים לחודש הקרוב</b>&nbsp;&nbsp;${neg?`<span class="r">צפויה יתרה שלילית ב־${fmtDate(neg.d)} (${bzS(neg.bal)})</span>`:`<span class="g">תקין, היתרה נשארת חיובית</span>`}</span></div>
-    <div class="bz-bar pink"><span>קיימות <b>${late+unexp}</b> תנועות שטרם נפרעו / לא הותאמו${lateIn?` (<span class="g">${bzS(lateIn)}</span>)`:''}</span>${VIEW?'':'<button class="btn primary sm" type="button" data-ctl="1">לבקרת התחזית</button>'}</div>
+    <div class="bz-bar pink"><span>${CTO?(CTO.late.length+CTO.cm.length?[CTO.late.length?`<b>${CTO.late.length}</b> תנועות מהתחזית לא נמצאו בבנק`:'',CTO.cm.length?`<b>${CTO.cm.length}</b> חודשי אשראי עם פער`:''].filter(Boolean).join(' · '):'אין תנועות פתוחות לבדיקה'):`קיימות <b>${late+unexp}</b> תנועות שטרם נפרעו / לא הותאמו`}</span>${VIEW?'':'<button class="btn primary sm" type="button" data-ctl="1">לבקרת התחזית</button>'}</div>
   </div>
   <div class="bz-row">
     <div><div class="bz-sec"><h2>ריכוז יתרות</h2><span><button class="bz-link" data-bzgo="bank" type="button">למסך תנועות בנק</button> | <button class="bz-link" data-bzgo="daily" type="button">למסך תזרים יומי</button></span></div>
@@ -3622,20 +3644,20 @@ function bzOverview(){ const el=$('#bz-ov'), ctx=bzCtx(); if(!ctx){ el.innerHTML
 /* --- תזרים יומי --- */
 let BZ_DN=30, BZ_DMODE='sum', BZ_DOPEN=new Set();
 function bzDaily(){ const el=$('#bz-daily'), ctx=bzCtx(); if(!ctx){ el.innerHTML=bzNoData(); return; }
-  const {R,D}=ctx, t0=todayIsoF(), days=D.days.slice(0,BZ_DN);
+  const {R,D}=ctx, t0=todayIsoF(), days=D.days.slice(0,BZ_DN), lim=+(ctx.c&&ctx.c.bankLimit)||0, LC=lim?'<td></td>':'';
   $('#bz-hx').innerHTML=`<select id="bz-dn" aria-label="תקופה"><option value="30"${BZ_DN===30?' selected':''}>30 הימים הקרובים</option><option value="60"${BZ_DN===60?' selected':''}>60 הימים הקרובים</option><option value="90"${BZ_DN===90?' selected':''}>90 הימים הקרובים</option></select>${VIEW?'':`<button class="btn bz-btn-in" type="button" data-bzadd="in">הכנסה צפויה</button><button class="btn bz-btn-out" type="button" data-bzadd="out">הוצאה צפויה</button>`}<div class="bz-seg" role="group" aria-label="תצוגה"><button type="button" data-bzdm="sum" aria-pressed="${BZ_DMODE==='sum'}">מרוכז</button><button type="button" data-bzdm="det" aria-pressed="${BZ_DMODE==='det'}">מפורט</button></div>`;
   const late=(R.late||[]), lateIn=late.reduce((a,l)=>a+l.amount,0);
   const tin=days.reduce((a,x)=>a+x.ev.filter(e=>e.amt>0).reduce((s,e)=>s+e.amt,0),0), tout=days.reduce((a,x)=>a+x.ev.filter(e=>e.amt<0).reduce((s,e)=>s-e.amt,0),0);
   const low=days.reduce((a,x)=>x.bal<a.bal?x:a,days[0]||{bal:0,d:t0});
   const lab=d=>d===t0?'היום':d===isoAddDays(t0,1)?'מחר':d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(2,4);
   let rows='';
-  if(late.length) rows+=`<tr class="y clk" data-bzday="late"><td>היום (נגררות) <span class="hint">${late.length} באיחור</span></td><td class="n in">${bzM(lateIn)}</td><td class="n">${bzM(0)}</td><td class="n"></td></tr>`+(BZ_DMODE==='det'||BZ_DOPEN.has('late')?late.map(l=>`<tr class="sub"><td>↳ ${esc(l.name)} · באיחור ${l.days} ימים</td><td class="n in">${bzM(l.amount)}</td><td></td><td></td></tr>`).join(''):'');
+  if(late.length) rows+=`<tr class="y clk" data-bzday="late"><td>היום (נגררות) <span class="hint">${late.length} באיחור</span></td><td class="n in">${bzM(lateIn)}</td><td class="n">${bzM(0)}</td><td class="n"></td>${LC}</tr>`+(BZ_DMODE==='det'||BZ_DOPEN.has('late')?late.map(l=>`<tr class="sub"><td>↳ ${esc(l.name)} · באיחור ${l.days} ימים</td><td class="n in">${bzM(l.amount)}</td><td></td><td></td>${LC}</tr>`).join(''):'');
   days.forEach(x=>{ const i=x.ev.filter(e=>e.amt>0).reduce((a,e)=>a+e.amt,0), o=x.ev.filter(e=>e.amt<0).reduce((a,e)=>a-e.amt,0);
-    rows+=`<tr class="${x.ev.length?'clk':''}" ${x.ev.length?`data-bzday="${x.d}" aria-expanded="${BZ_DOPEN.has(x.d)||BZ_DMODE==='det'}"`:''}><td>${lab(x.d)} <span class="hint">${['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'][new Date(x.d+'T12:00').getDay()]}</span></td><td class="n ${i?'in':''}">${bzM(i)}</td><td class="n ${o?'out':''}">${bzM(o)}</td><td class="n ${x.bal<0?'neg':''}">${bzM(x.bal)}</td></tr>`;
-    if(BZ_DMODE==='det'||BZ_DOPEN.has(x.d)) rows+=x.ev.map(e=>`<tr class="sub"><td>↳ ${esc(e.name)}</td><td class="n in">${e.amt>0?bzM(e.amt):''}</td><td class="n out">${e.amt<0?bzM(-e.amt):''}</td><td></td></tr>`).join(''); });
-  el.innerHTML=`<div class="bz-sum"><div><span>יתרה להיום בבוקר</span><b class="${R.opening<0?'bz-neg':''}">${bzS(R.opening||0)}</b></div><div><span>סה״כ הכנסות צפויות</span><b class="bz-pos">${bzS(tin)}</b></div><div><span>סה״כ הוצאות צפויות</span><b class="bz-neg">${bzS(-tout)}</b></div><div><span>יתרה נמוכה בתקופה</span><b class="${low.bal<0?'bz-neg':''}">${bzS(low.bal)}</b><span class="hint">${fmtDate(low.d)}</span></div><div><span>טרם נפרעו / לא הותאמו</span><b class="bz-pos">${bzS(lateIn)}</b></div></div>
-  <div class="tscroll" style="border:1px solid var(--bz-line)"><table class="bz-tbl"><thead><tr><th>תאריך</th><th class="n">הכנסה צפויה</th><th class="n">הוצאה צפויה</th><th class="n">יתרה צפויה</th></tr></thead><tbody>${rows}</tbody></table></div>
-  <p class="hint" style="margin:0">לוחצים על יום כדי לראות את התנועות שלו. שורות שאין להן תאריך (מיסים, תלושים וכדומה) נספרות בזהירות: הוצאות בתחילת החודש והכנסות בסופו.</p>`; }
+    rows+=`<tr class="${x.ev.length?'clk':''}" ${x.ev.length?`data-bzday="${x.d}" aria-expanded="${BZ_DOPEN.has(x.d)||BZ_DMODE==='det'}"`:''}><td>${lab(x.d)} <span class="hint">${['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'][new Date(x.d+'T12:00').getDay()]}</span></td><td class="n ${i?'in':''}">${bzM(i)}</td><td class="n ${o?'out':''}">${bzM(o)}</td><td class="n ${x.bal<0?'neg':''}">${bzM(x.bal)}</td>${lim?`<td class="n ${x.bal+lim<0?'neg':''}">${bzM(x.bal+lim)}</td>`:''}</tr>`;
+    if(BZ_DMODE==='det'||BZ_DOPEN.has(x.d)) rows+=x.ev.map(e=>`<tr class="sub"><td>↳ ${esc(e.name)}</td><td class="n in">${e.amt>0?bzM(e.amt):''}</td><td class="n out">${e.amt<0?bzM(-e.amt):''}</td><td></td>${LC}</tr>`).join(''); });
+  el.innerHTML=`<div class="bz-sum"><div><span>יתרה להיום בבוקר</span><b class="${R.opening<0?'bz-neg':''}">${bzS(R.opening||0)}</b>${lim?`<span class="hint">לשימוש ${bzS((R.opening||0)+lim)} (עם המסגרת)</span>`:''}</div><div><span>סה״כ הכנסות צפויות</span><b class="bz-pos">${bzS(tin)}</b></div><div><span>סה״כ הוצאות צפויות</span><b class="bz-neg">${bzS(-tout)}</b></div><div><span>יתרה נמוכה בתקופה</span><b class="${low.bal<0?'bz-neg':''}">${bzS(low.bal)}</b><span class="hint">${fmtDate(low.d)}${lim?' · לשימוש '+bzS(low.bal+lim):''}</span></div><div><span>נגררות: טרם נפרעו</span><b class="bz-pos">${bzS(lateIn)}</b><span class="hint">${late.length} הכנסות באיחור</span></div></div>
+  <div class="tscroll" style="border:1px solid var(--bz-line)"><table class="bz-tbl"><thead><tr><th>תאריך</th><th class="n">הכנסה צפויה</th><th class="n">הוצאה צפויה</th><th class="n">יתרה צפויה</th>${lim?'<th class="n" title="היתרה ועוד מסגרת האשראי בבנק: כמה כסף אפשר עוד להוציא">יתרה לשימוש</th>':''}</tr></thead><tbody>${rows}</tbody></table></div>
+  <p class="hint" style="margin:0">${lim?'„יתרה לשימוש” = היתרה ועוד מסגרת האשראי בבנק ('+fmt(lim)+' ₪). ':'כדי לראות „יתרה לשימוש” (יתרה + מסגרת) מקלידים את מסגרת האשראי במסך הבנק. '}„נגררות” = הכנסות שהיו צפויות לפני היום ועוד לא נכנסו לבנק, והן לא נספרות ביתרה עד שייכנסו. לוחצים על יום כדי לראות את התנועות שלו. שורות שאין להן תאריך (מיסים, תלושים וכדומה) נספרות בזהירות: הוצאות בתחילת החודש והכנסות בסופו.</p>`; }
 
 /* --- התאמות בנקים --- */
 let BZ_RTAB='todo', BZ_RQ1='', BZ_RQ2='';
@@ -3659,12 +3681,15 @@ function bzRecon(){ const el=$('#bz-recon'), ctx=bzCtx(); if(!ctx){ el.innerHTML
 
 /* --- תנועות קבועות --- */
 function bzRecurList(c){ const tx=(c.tx||[]).filter(t=>t.d&&+t.amt), tm=thisYm(), M6=[1,2,3,4,5,6].map(i=>ymAdd(tm,-i)), G={};
-  tx.forEach(t=>{ const m=t.d.slice(0,7); if(!M6.includes(m)) return; if(t.cat===IGNORE) return; const k=(t.amt>0?'+':'-')+bzNorm(t.desc); const g=G[k]||(G[k]={name:bzNorm(t.desc),sign:t.amt>0?1:-1,m:{},days:[],last:'',src:'בנק'}); g.m[m]=(g.m[m]||0)+Math.abs(t.amt); g.days.push(+t.d.slice(8,10)); if(t.d>g.last) g.last=t.d; });
+  tx.forEach(t=>{ const m=t.d.slice(0,7); if(!M6.includes(m)) return; if(t.cat===IGNORE) return; const k=(t.amt>0?'+':'-')+bzNorm(t.desc); const g=G[k]||(G[k]={name:bzNorm(t.desc),sign:t.amt>0?1:-1,m:{},days:[],last:'',src:'בנק',cats:{},desc:t.desc}); g.m[m]=(g.m[m]||0)+Math.abs(t.amt); g.days.push(+t.d.slice(8,10)); g.cats[t.cat]=(g.cats[t.cat]||0)+1; if(t.d>g.last) g.last=t.d; });
   // פירוט כרטיסי אשראי: בית עסק שחוזר בכמה חודשים
   ccRowsAll(c).forEach(r=>{ if(!r.d||!(r.amt>0)||r.n>1) return; const m=r.d.slice(0,7); const k='-'+bzNorm(r.m)+' (אשראי)'; const g=G[k]||(G[k]={name:bzNorm(r.m)+' (אשראי)',sign:-1,m:{},days:[],last:'',src:'אשראי'}); g.m[m]=(g.m[m]||0)+r.amt; g.days.push(+r.d.slice(8,10)); if(r.d>g.last) g.last=r.d; });
   const med=a=>{ const b=a.slice().sort((x,y)=>x-y); return b.length?b[Math.floor(b.length/2)]:0; };
   return Object.values(G).map(g=>{ const ms=Object.keys(g.m).sort(), need=g.src==='אשראי'?2:4; if(ms.length<need) return null; const vals=ms.map(m=>g.m[m]); const mn=Math.min(...vals), mx=Math.max(...vals);
-    return {...g,count:ms.length,amount:Math.round(med(vals)),day:med(g.days),fixed:mx<=mn*1.15}; }).filter(Boolean).sort((a,b)=>b.amount-a.amount); }
+    const cat=g.cats?(Object.entries(g.cats).sort((a,b)=>b[1]-a[1])[0]||[])[0]:'';
+    // מה כבר מכוסה בשורה אחרת בתחזית, כדי לא לספור פעמיים
+    const cov=g.src!=='בנק'?'':CC_BANK_RE.test(g.desc||'')?'בשורת האשראי':['tx_vat','tx_income','fx_bl'].includes(cat)?'בשורת „מיסים”':cat==='fx_salary'?'בשורת „תלושים”':cat==='vr_owner'?'בשורת „משיכות בעלים”':g.sign>0&&CC_IN_RE.test(g.desc||'')?'בשורות האשראי מקארדקום':'';
+    return {...g,count:ms.length,amount:Math.round(med(vals)),day:med(g.days),fixed:mx<=mn*1.15,cov}; }).filter(Boolean).sort((a,b)=>b.amount-a.amount); }
 let BZ_RF='all';
 function rcStatus(it){ if(!it) return ''; const tm=thisYm(), evs=itemEvents(it).filter(ev=>ev.date.slice(0,7)===tm); if(!evs.length){ const nx=itemEvents(it).find(ev=>ev.date>=todayIsoF()); return nx?`<span class="hint">הבא: ${fmtDate(nx.date)}</span>`:'<span class="hint">הסתיים</span>'; }
   const ev=evs[0]; if(it.est) return `<span class="hint">משוער · ${fmtDate(ev.date)}</span>`; const m=MATCH[it.id+'#'+ev.k];
@@ -3680,26 +3705,27 @@ function bzRecur(){ const el=$('#bz-recur'), ctx=bzCtx(); const c=cur(); if(!c){
   const tbl=sec=>{ const L=R.filter(r=>r.sec===sec), tot=L.reduce((a,r)=>a+monthAmt(r),0);
     if(VIEW) return `<div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>${sec==='out'?'הוצאה':'הכנסה'}</th><th class="n">סכום חודשי</th><th>יום בחודש</th><th>עד</th><th>סטטוס החודש</th></tr></thead><tbody>${L.map(r=>`<tr><td>${esc(r.name)}${r.est?' <span class="hint">(משוער)</span>':''}</td><td class="n ${sec==='out'?'out':'in'}">${bzM(r.amount)}</td><td>${r.day||1}</td><td>${r.to?ymLabel(r.to):'ללא סוף'}</td><td>${rcStatus(itOf(r))}</td></tr>`).join('')||'<tr><td colspan="5" class="hint">אין</td></tr>'}</tbody></table></div>`;
     return `<div class="tscroll bz-box"><table class="bz-tbl rc-tbl"><thead><tr><th>${sec==='out'?'שם ההוצאה':'שם ההכנסה'}</th><th>סכום חודשי (₪)</th><th>יום בחודש</th><th>מחודש</th><th>עד חודש</th>${sec==='out'?'<th>שורה בתחזית</th>':''}<th title="סכום משוער לא נבדק מול תנועה מסוימת בבנק">משוער</th><th>סטטוס החודש</th><th></th></tr></thead><tbody>
-    ${L.map(r=>`<tr data-rid="${esc(r.id)}"><td class="nm"><input data-rcf="name" value="${esc(r.name)}" maxlength="60" aria-label="שם"></td><td class="am"><input data-rcf="amount" inputmode="decimal" value="${+r.amount||''}" aria-label="סכום"></td><td class="dy"><input data-rcf="day" inputmode="numeric" value="${r.day||1}" aria-label="יום בחודש"></td>
+    ${L.map(r=>`<tr data-rid="${esc(r.id)}"><td class="nm"><input data-rcf="name" value="${esc(r.name)}" maxlength="60" aria-label="שם"></td><td class="am"><input data-rcf="amount" inputmode="decimal" value="${+r.amount||''}" aria-label="סכום"></td><td class="dy"><input data-rcf="day" inputmode="numeric" value="${r.day||1}" aria-label="יום בחודש">${r.dayAuto?'<span class="hint" style="display:block;font-size:11px" title="היום הטיפוסי שבו התשלומים האלה ירדו בבנק ב־6 החודשים האחרונים">לפי הבנק</span>':''}</td>
       <td class="mo"><input type="month" data-rcf="from" value="${esc(r.from||tm)}" aria-label="מחודש"></td><td class="mo"><input type="month" data-rcf="to" value="${esc(r.to||'')}" aria-label="עד חודש (ריק = ללא סוף)"></td>
       ${sec==='out'?`<td class="gp"><select data-rcf="grp" aria-label="שורה בתחזית">${RC_GRP_OUT.map(([v,l])=>`<option value="${v}"${(r.grp||'exp1')===v?' selected':''}>${l}</option>`).join('')}</select></td>`:''}
       <td style="text-align:center"><input type="checkbox" data-rcf="est"${r.est?' checked':''} aria-label="סכום משוער" style="width:18px;height:18px"></td><td>${rcStatus(itOf(r))}</td><td><button class="btn ghost xs danger" type="button" data-rcdel="${esc(r.id)}" aria-label="מחיקה">✕</button></td></tr>`).join('')||`<tr><td colspan="9" class="hint">עוד אין ${sec==='out'?'הוצאות':'הכנסות'} קבועות. מוסיפים בכפתור למעלה או מההצעות למטה.</td></tr>`}
     </tbody><tfoot><tr><td>סה״כ ב${ymLabel(tm)}</td><td class="n ${sec==='out'?'out':'in'}">${bzM(tot)}</td><td colspan="7"></td></tr></tfoot></table></div>`; };
   const sug=bzRecurList(c).filter(g=>BZ_RF==='all'||(BZ_RF==='in'?g.sign>0:g.sign<0)), inF=g=>R.some(r=>r.rk===(g.sign>0?'+':'-')+g.name||bzNorm(r.name)===g.name);
-  el.innerHTML=`<p class="hint" style="margin:0">מה שמופיע כאן נכנס לתחזית בכל חודש, ביום שנבחר. הוצאה בסכום מדויק נבדקת מול הבנק, ואם לא ירדה היא תופיע בבקרת התחזית. „משוער” = הערכה כללית (למשל מיסים), שלא נבדקת מול תנועה מסוימת.</p>
+  const auto=bzRecurList(c).filter(g=>g.fixed&&!g.cov&&!inF(g));
+  el.innerHTML=`${auto.length&&!VIEW?`<div class="bz-bar pink" style="margin-bottom:12px"><span>זוהו בבנק <b>${auto.length}</b> תנועות שחוזרות כל חודש באותו סכום ועוד לא נמצאות כאן: ${auto.slice(0,4).map(g=>esc(g.name)).join(', ')}${auto.length>4?' ועוד':''}</span><button class="btn primary sm" type="button" id="rc-autoall">הוספת כולן לקבועות</button></div>`:''}<p class="hint" style="margin:0">מה שמופיע כאן נכנס לתחזית בכל חודש, ביום שנבחר. הוצאה בסכום מדויק נבדקת מול הבנק, ואם לא ירדה היא תופיע בבקרת התחזית. „משוער” = הערכה כללית (למשל מיסים), שלא נבדקת מול תנועה מסוימת.</p>
   <div class="bz-sec"><h2 class="bz-neg">הוצאות קבועות</h2></div>${tbl('out')}
   <div class="bz-sec" style="margin-top:18px"><h2 class="bz-pos">הכנסות קבועות</h2><span class="hint">הוראות הקבע באשראי מגיעות מהדוח של קארדקום, ואין צורך להוסיף אותן כאן</span></div>${tbl('in')}
   <div class="bz-sec" style="margin-top:22px"><h2>הצעות מ־6 החודשים האחרונים</h2><span class="hint">תנועות שחזרו ב־4 חודשים לפחות בבנק, או ב־2 פירוטי אשראי</span>
    <div class="bz-seg" role="group" aria-label="סינון"><button type="button" data-bzrf="all" aria-pressed="${BZ_RF==='all'}">הכל</button><button type="button" data-bzrf="in" aria-pressed="${BZ_RF==='in'}">זכות</button><button type="button" data-bzrf="out" aria-pressed="${BZ_RF==='out'}">חובה</button></div></div>
   <div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תנועה</th><th>מקור</th><th class="n">סכום חודשי</th><th>יום בחודש</th><th>חודשים מתוך 6</th><th>אופי</th><th>אחרונה</th><th></th></tr></thead><tbody>
-  ${sug.map(g=>`<tr><td>${esc(g.name)}</td><td>${g.src}</td><td class="n ${g.sign>0?'in':'out'}">${bzM(g.sign*g.amount)}</td><td>${g.day}</td><td>${g.count}</td><td>${g.fixed?'<span class="pill good">קבוע</span>':'<span class="pill warn">משתנה</span>'}</td><td>${fmtDate(g.last)}</td><td>${VIEW?'':inF(g)?'<span class="pill good">✓ ברשימה</span>':`<button class="btn sm" type="button" data-bzrec="${esc((g.sign>0?'+':'-')+g.name)}">הוספה לקבועות</button>`}</td></tr>`).join('')||'<tr><td colspan="8" class="hint">לא נמצאו תנועות חוזרות</td></tr>'}
+  ${sug.map(g=>`<tr><td>${esc(g.name)}</td><td>${g.src}</td><td class="n ${g.sign>0?'in':'out'}">${bzM(g.sign*g.amount)}</td><td>${g.day}</td><td>${g.count}</td><td>${g.fixed?'<span class="pill good">קבוע</span>':'<span class="pill warn">משתנה</span>'}</td><td>${fmtDate(g.last)}</td><td>${VIEW?'':inF(g)?'<span class="pill good">✓ ברשימה</span>':g.cov?`<span class="hint">כבר ${g.cov}</span>`:`<button class="btn sm" type="button" data-bzrec="${esc((g.sign>0?'+':'-')+g.name)}">הוספה לקבועות</button>`}</td></tr>`).join('')||'<tr><td colspan="8" class="hint">לא נמצאו תנועות חוזרות</td></tr>'}
   </tbody></table></div>`; }
 function rcEdit(fn){ const k=hfKey(); if(!k) return; const ed=hfEdits(k); recurSeed(ed); fn(ed); hfSave(k,ed); setTimeout(()=>bzRender(),60); }
 document.addEventListener('change',e=>{ const t=e.target; if(!t.dataset||t.dataset.rcf==null) return; const tr=t.closest('[data-rid]'); if(!tr) return; const f=t.dataset.rcf;
   rcEdit(ed=>{ const r=(ed.recur||[]).find(x=>x.id===tr.dataset.rid); if(!r) return;
     if(f==='name') r.name=t.value.trim().slice(0,60)||r.name;
     else if(f==='amount'){ const v=parseNum(t.value); if(v>0) r.amount=Math.round(v*100)/100; else toast('סכום לא תקין'); }
-    else if(f==='day'){ const v=Math.round(parseNum(t.value)); if(v>=1&&v<=31) r.day=v; else toast('יום בין 1 ל־31'); }
+    else if(f==='day'){ const v=Math.round(parseNum(t.value)); if(v>=1&&v<=31){ r.day=v; delete r.dayAuto; } else toast('יום בין 1 ל־31'); }
     else if(f==='from'){ if(/^\d{4}-\d{2}$/.test(t.value)) r.from=t.value; }
     else if(f==='to'){ r.to=/^\d{4}-\d{2}$/.test(t.value)?t.value:''; }
     else if(f==='grp') r.grp=t.value;
@@ -3725,7 +3751,7 @@ function bzFcOv(){ const el=$('#bz-fcov'), ctx=bzCtx(); if(!ctx){ el.innerHTML=b
   bzDsSet('fcr',d1,w1,['הכנסות צפויות','הוצאות צפויות']); bzDsSet('fcn',top(d2,9),top(w2,9),['הכנסות צפויות','הוצאות צפויות']);
   const lo=fd.reduce((a,x)=>x.bal<a.bal?x:a,fd[0]||{bal:0,d:t0}), endB=fd.length?fd[fd.length-1].bal:0, fEnd=fd.length?fd[fd.length-1].d:t0;
   const sure=D.allIn?Math.round(D.certIn/D.allIn*100):0;
-  el.innerHTML=`${nPend?`<div class="bz-bar pink" style="margin-bottom:12px"><span><b>${CT.late.length}</b> תנועות מהתחזית לא נמצאו בבנק${CT.cm.length?` · <b>${CT.cm.length}</b> חודשי אשראי עם פער`:''}</span><button class="btn primary sm" type="button" data-ctl="1">לבדיקה</button></div>`:''}
+  el.innerHTML=`${nPend?`<div class="bz-bar pink" style="margin-bottom:12px"><span>${[CT.late.length?`<b>${CT.late.length}</b> תנועות מהתחזית לא נמצאו בבנק`:'',CT.cm.length?`<b>${CT.cm.length}</b> חודשי אשראי עם פער`:''].filter(Boolean).join(' · ')}</span><button class="btn primary sm" type="button" data-ctl="1">לבדיקה</button></div>`:''}
   <div class="bz-sum"><div><span>הכנסות צפויות</span><b class="bz-pos">${bzS(tin)}</b><span class="hint">${fmtDate(t0)} עד ${fmtDate(fEnd)}</span></div><div><span>הוצאות צפויות</span><b class="bz-neg">${bzS(-tout)}</b></div>
    <div><span>יתרה צפויה בסוף התקופה</span><b class="${endB<0?'bz-neg':'bz-pos'}">${bzS(endB)}</b><span class="hint">הנקודה הנמוכה: ${bzS(lo.bal)} ב־${fmtDate(lo.d)}</span></div><div><span>מהימנות ההכנסות</span><b>${sure}%</b><span class="hint">מגובות בצ'קים ובהוראות קבע</span></div></div>
   <div class="bz-sec" style="margin-top:6px"><h2>צפי הכנסות והוצאות לפי שורות התחזית</h2><span class="hint">${fmtDate(t0)} עד ${fmtDate(fEnd)}</span></div>
@@ -3811,25 +3837,32 @@ function bzPayees(){ const el=$('#bz-payees'), c=cur(); if(!c||!(c.tx||[]).lengt
   const q=BZ_PQ.trim();
   const L=Object.values(G).filter(g=>(BZ_PF==='all'||(BZ_PF==='in'?g.sum>0:g.sum<0))&&(!q||g.name.includes(q))).sort((a,b)=>Math.abs(b.sum)-Math.abs(a.sum));
   el.innerHTML=`<div class="tscroll" style="border:1px solid var(--bz-line)"><table class="bz-tbl"><thead><tr><th>מוטב</th><th>סוג תשלום</th><th>קטגוריה</th><th class="n">ממוצע 3 חודשים</th><th class="n">סה״כ 3 חודשים</th><th>תנועות</th><th>אחרונה</th></tr></thead><tbody>
-  ${L.map(g=>`<tr><td><b style="color:var(--bz-navy)">${esc(g.name)}</b></td><td>${esc(bzType(g.name))}</td><td>${esc(g.cat||'')}</td><td class="n ${g.sum<0?'out':'in'}">${bzM(g.sum/3)}</td><td class="n">${bzM(g.sum)}</td><td>${g.n}</td><td>${fmtDate(g.last)}</td></tr>`).join('')||'<tr><td colspan="7" class="hint">לא נמצאו מוטבים</td></tr>'}
+  ${L.map(g=>`<tr><td><b style="color:var(--bz-navy)">${esc(g.name)}</b></td><td>${esc(bzType(g.name))}</td><td>${g.cat?esc(catLabel(c,g.cat).replace(/^—$/,'')):''}</td><td class="n ${g.sum<0?'out':'in'}">${bzM(g.sum/3)}</td><td class="n">${bzM(g.sum)}</td><td>${g.n}</td><td>${fmtDate(g.last)}</td></tr>`).join('')||'<tr><td colspan="7" class="hint">לא נמצאו מוטבים</td></tr>'}
   </tbody></table></div>`; }
 
 
 /* --- צ'קים (הכנסות) --- */
 function bzCheques(){ const el=$('#bz-cheques'), ctx=bzCtx(), c=cur(), t0=todayIsoF();
-  $('#bz-hx').innerHTML=VIEW?'':`<label class="btn bz-btn-in" title="אפשר לבחור כמה צילומים יחד. כל צילום הופך לצ'ק חדש">📷 צ'קים מצילום<input type="file" accept="image/*" multiple data-chqimg="" hidden></label><button class="btn" type="button" data-bzadd="chq">צ'ק חדש</button><label class="btn" for="chq-file">העלאת דוח צ'קים לגבייה</label>`;
-  const items=ctx?(ctx.e.incItems||[]).filter(x=>x.kind==='chq'):[];
+  $('#bz-hx').innerHTML=VIEW?'':`<label class="btn bz-btn-in" title="אפשר לבחור כמה צילומים יחד. כל צילום הופך לצ'ק חדש">📷 צ'קים מצילום<input type="file" accept="image/*" multiple data-chqimg="" hidden></label><button class="btn" type="button" data-bzadd="chq">צ'ק נכנס</button><button class="btn bz-btn-out" type="button" data-bzadd="chqo">צ'ק יוצא</button><label class="btn" for="chq-file">העלאת דוח צ'קים לגבייה</label>`;
+  const items=ctx?(ctx.e.incItems||[]).filter(x=>x.kind==='chq'):[], outs=ctx?(ctx.e.incItems||[]).filter(x=>x.kind==='bank'&&x.chqOut):[];
+  const futO=[]; outs.forEach(x=>itemEvents(x).forEach(ev=>{ const m=MATCH[x.id+'#'+ev.k]; if(m&&m.st==='ok') return; futO.push({x,ev,m}); })); futO.sort((a,b)=>a.ev.date<b.ev.date?-1:1);
+  const CST={'':'בקופה',msh:'הופקד למשמרת',nik:'בניכיון'};
   const fut=[]; items.forEach(x=>itemEvents(x).forEach(ev=>{ const m=MATCH[x.id+'#'+ev.k]; if(m&&m.st==='ok') return; fut.push({x,ev,m}); }));
   fut.sort((a,b)=>a.ev.date<b.ev.date?-1:1);
   const tx=(c&&c.tx||[]).filter(t=>t.d&&dDays(t.d,t0)<=120), RET=/החזר[הת]?\s*(שיק|צ'ק|צ׳ק)|(שיק|צ'ק|צ׳ק)\s*חוזר|שיק\s*שחזר/;
-  const paid=tx.filter(t=>t.amt>0&&bzType(t.desc)==="צ'ק").sort((a,b)=>a.d<b.d?1:-1), ret=tx.filter(t=>RET.test(t.desc||'')).sort((a,b)=>a.d<b.d?1:-1);
-  const tF=fut.reduce((a,o)=>a+o.ev.amount,0), late=fut.filter(o=>o.m&&o.m.st==='late');
+  const paid=tx.filter(t=>t.amt>0&&bzType(t.desc)==="צ'ק").sort((a,b)=>a.d<b.d?1:-1), paidO=tx.filter(t=>t.amt<0&&bzType(t.desc)==="צ'ק").sort((a,b)=>a.d<b.d?1:-1), ret=tx.filter(t=>RET.test(t.desc||'')).sort((a,b)=>a.d<b.d?1:-1);
+  const nik=fut.filter(o=>o.x.cst==='nik'), msh=fut.filter(o=>o.x.cst==='msh'), sumE=L=>L.reduce((a,o)=>a+o.ev.amount,0), tO=sumE(futO);
+  const tF=fut.filter(o=>o.x.cst!=='nik').reduce((a,o)=>a+o.ev.amount,0), late=fut.filter(o=>o.m&&o.m.st==='late');
   const st=o=>o.m&&o.m.st==='late'?`<span class="pill crit">באיחור ${o.m.days} ימים</span>`:o.m&&o.m.st==='nobank'?'<span class="pill warn">טרם נבדק</span>':'<span class="hint">צפוי</span>';
-  el.innerHTML=`<div class="bz-sum"><div><span>צ'קים לפירעון</span><b class="bz-pos">${bzS(tF)}</b><span class="hint">${fut.length} צ'קים</span></div><div><span>באיחור</span><b class="${late.length?'bz-neg':''}">${late.length}</b></div><div><span>נפרעו ב־120 יום</span><b>${bzS(paid.reduce((a,t)=>a+t.amt,0))}</b><span class="hint">${paid.length} צ'קים</span></div><div><span>צ'קים שחזרו</span><b class="${ret.length?'bz-neg':''}">${ret.length}</b></div></div>
+  el.innerHTML=`<div class="bz-sum"><div><span>צ'קים נכנסים לפירעון</span><b class="bz-pos">${bzS(tF)}</b><span class="hint">${fut.length-nik.length} צ'קים${msh.length?' · '+msh.length+' במשמרת':''}</span></div><div><span>בניכיון</span><b>${bzS(sumE(nik))}</b><span class="hint">כבר נכנסו לבנק, לא בתחזית</span></div><div><span>צ'קים יוצאים</span><b class="bz-neg">${bzS(-tO)}</b><span class="hint">${futO.length} צ'קים</span></div><div><span>באיחור</span><b class="${late.length?'bz-neg':''}">${late.length}</b></div><div><span>נפרעו ב־120 יום</span><b>${bzS(paid.reduce((a,t)=>a+t.amt,0))}</b><span class="hint">${paid.length} צ'קים</span></div><div><span>צ'קים שחזרו</span><b class="${ret.length?'bz-neg':''}">${ret.length}</b></div></div>
   <div class="status" id="chq-status2">${BZ_MSG.chq||''}</div>
-  <div><div class="bz-sec"><h2>צ'קים לפירעון</h2></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>לקוח</th><th>מס׳ צ'ק</th><th>תאריך פירעון</th><th class="n">סכום</th><th>מקור</th><th>סטטוס</th>${VIEW?'':'<th>צילום</th>'}</tr></thead><tbody>
-   ${fut.map(o=>`<tr><td>${esc(o.x.cust||'')}${o.ev.n>1?` <span class="hint">(${o.ev.k+1}/${o.ev.n})</span>`:''}</td><td class="chq-num">${esc(o.x.chq&&o.x.chq.num||'')}</td><td>${fmtDate(o.ev.date)}</td><td class="n in">${bzM(o.ev.amount)}</td><td>${o.x.chq?'נקרא מצילום':o.x.src==='bankchq'?'דוח הבנק':'הוזן ידנית'}</td><td>${st(o)}</td>${VIEW?'':`<td>${o.ev.k?'':`<label class="btn ghost xs" title="Claude קורא את הצילום וממלא את הפרטים">📷 ${o.x.chq?'צילום חדש':'העלאת צילום'}<input type="file" accept="image/*" data-chqimg="${esc(o.x.id)}" hidden></label>`}</td>`}</tr>`).join('')||'<tr><td colspan="7" class="hint">אין צ\'קים לפירעון. מוסיפים בכפתור „צ\'ק חדש” או מעלים דוח צ\'קים לגבייה מהבנק.</td></tr>'}
+  <div><div class="bz-sec"><h2 class="bz-pos">צ'קים נכנסים לפירעון</h2><span class="hint">„בניכיון” = הכסף כבר התקבל מהבנק, ולכן הצ'ק לא נספר שוב בתחזית</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>לקוח</th><th>מס׳ צ'ק</th><th>תאריך פירעון</th><th class="n">סכום</th><th>מקור</th><th>מצב הצ'ק</th><th>סטטוס</th>${VIEW?'':'<th>צילום</th>'}</tr></thead><tbody>
+   ${fut.map(o=>`<tr><td>${esc(o.x.cust||'')}${o.ev.n>1?` <span class="hint">(${o.ev.k+1}/${o.ev.n})</span>`:''}</td><td class="chq-num">${esc(o.x.chq&&o.x.chq.num||'')}</td><td>${fmtDate(o.ev.date)}</td><td class="n in">${bzM(o.ev.amount)}</td><td>${o.x.chq?'נקרא מצילום':o.x.src==='bankchq'?'דוח הבנק':'הוזן ידנית'}</td><td>${VIEW?esc(CST[o.x.cst||'']):`<select data-chqst="${esc(o.x.id)}" aria-label="מצב הצ'ק">${Object.entries(CST).map(([v,l])=>`<option value="${v}"${(o.x.cst||'')===v?' selected':''}>${l}</option>`).join('')}</select>`}</td><td>${o.x.cst==='nik'?'<span class="hint">לא בתחזית</span>':st(o)}</td>${VIEW?'':`<td>${o.ev.k?'':`<label class="btn ghost xs" title="Claude קורא את הצילום וממלא את הפרטים">📷 ${o.x.chq?'צילום חדש':'העלאת צילום'}<input type="file" accept="image/*" data-chqimg="${esc(o.x.id)}" hidden></label>`}</td>`}</tr>`).join('')||'<tr><td colspan="8" class="hint">אין צ\'קים נכנסים לפירעון. מוסיפים בכפתור „צ\'ק נכנס” או מעלים דוח צ\'קים לגבייה מהבנק.</td></tr>'}
   </tbody></table></div></div>
+  <div><div class="bz-sec"><h2 class="bz-neg">צ'קים יוצאים</h2><span class="hint">צ'קים שנתתם לספקים. נכנסים לתחזית כהוצאה ביום הפירעון, ונבדקים מול הבנק</span></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>ספק</th><th>תאריך פירעון</th><th class="n">סכום</th><th>תיאור</th><th>סטטוס</th>${VIEW?'':'<th></th>'}</tr></thead><tbody>
+   ${futO.map(o=>`<tr><td>${esc(o.x.cust||'')}${o.ev.n>1?` <span class="hint">(${o.ev.k+1}/${o.ev.n})</span>`:''}</td><td>${fmtDate(o.ev.date)}</td><td class="n out">${bzM(-o.ev.amount)}</td><td>${esc(o.x.desc||'')}</td><td>${st(o)}</td>${VIEW?'':`<td>${o.ev.k?'':`<button class="btn ghost xs danger" type="button" data-chqodel="${esc(o.x.id)}">מחיקה</button>`}</td>`}</tr>`).join('')||`<tr><td colspan="6" class="hint">אין צ'קים יוצאים פתוחים. מוסיפים בכפתור „צ'ק יוצא” למעלה</td></tr>`}
+  </tbody></table></div></div>
+  ${paidO.length?`<div><div class="bz-sec"><h2>צ'קים יוצאים שנפרעו בבנק (120 יום)</h2></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך</th><th>תיאור</th><th>פירוט</th><th class="n">סכום</th></tr></thead><tbody>${paidO.map(t=>`<tr><td>${fmtDate(t.d)}</td><td>${esc(t.desc||'')}</td><td>${esc(t.det||'')}</td><td class="n out">${bzM(t.amt)}</td></tr>`).join('')}</tbody></table></div></div>`:''}
   ${ret.length?`<div><div class="bz-sec"><h2 class="bz-neg">צ'קים שחזרו</h2></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך</th><th>תיאור</th><th class="n">סכום</th></tr></thead><tbody>${ret.map(t=>`<tr><td>${fmtDate(t.d)}</td><td>${esc(t.desc||'')}</td><td class="n out">${bzM(t.amt)}</td></tr>`).join('')}</tbody></table></div></div>`:''}
   <div><div class="bz-sec"><h2>צ'קים שנפרעו בבנק (120 יום)</h2></div><div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>תאריך</th><th>תיאור</th><th>פירוט</th><th class="n">סכום</th></tr></thead><tbody>
    ${paid.map(t=>`<tr><td>${fmtDate(t.d)}</td><td>${esc(t.desc||'')}</td><td>${esc(t.det||'')}</td><td class="n in">${bzM(t.amt)}</td></tr>`).join('')||'<tr><td colspan="4" class="hint">אין הפקדות צ\'קים בתקופה</td></tr>'}
@@ -4110,11 +4143,20 @@ function bzIncOv(){ const el=$('#bz-incov'), c=cur(), ctx=bzCtx(), t0=todayIsoF(
   ${VIEW?'':`<div class="bz-sec" style="margin-top:22px"><h2>שיוך לקוחות למוצרים</h2><span class="hint">${unN?unN+' לקוחות לא משויכים':'כל הלקוחות משויכים'}. לקוח שמופיע בדוח הפריטים משויך לבד.</span></div>
   <div class="bz-box" style="padding:12px 14px"><form id="prod-add" class="actions"><input id="prod-name" maxlength="50" autocomplete="off" placeholder="שם מוצר חדש, למשל: תכנית ליווי" aria-label="שם מוצר חדש" style="flex:1;min-width:200px"><button class="btn sm primary" type="submit">הוספת מוצר</button></form>
    <div class="hint" style="margin:6px 0">מוצרים: ${PL.length?PL.map(esc).join(' · '):'עוד אין. מוסיפים כאן או מעלים דוח פריטים'}</div>
-   <div class="tscroll"><table class="bz-tbl bz-map"><thead><tr><th>לקוח</th><th>שורה בתחזית</th><th class="n">צפוי בתקופה</th><th>מוצר</th><th></th></tr></thead><tbody>
+   ${PL.length?`<div class="actions" style="margin:6px 0"><span class="hint">שיוך כמה לקוחות יחד: מסמנים בטבלה ובוחרים מוצר</span><select id="pm-bulk" aria-label="מוצר לשיוך">${PL.map(x=>`<option>${esc(x)}</option>`).join('')}</select><button class="btn sm" type="button" id="pm-apply">שיוך המסומנים</button>${CL.some(o=>!prodOf(c,o.k,auto)&&sugOf(o))?`<button class="btn sm primary" type="button" id="pm-sugall">אישור כל ההצעות (${CL.filter(o=>!prodOf(c,o.k,auto)&&sugOf(o)).length})</button>`:''}</div>`:`<div class="hint" style="margin:6px 0">כדי שהשיוך ייעשה לבד: מעלים בלשונית „אשראי קארדקום” את דוח הוראות הקבע עם עמודת „מוצר”, או כאן את דוח הפריטים. אפשר גם להוסיף מוצר ידנית ולשייך.</div>`}
+   <div class="tscroll"><table class="bz-tbl bz-map"><thead><tr><th style="width:28px"><input type="checkbox" id="pm-all" aria-label="סימון הכל" style="width:16px;height:16px"></th><th>לקוח</th><th>שורה בתחזית</th><th class="n">צפוי בתקופה</th><th>מוצר</th><th></th></tr></thead><tbody>
    ${CL.slice(0,200).map(o=>{ const man=c.prodMap&&c.prodMap[o.k], au=auto[o.k], p=man||au, sg=!p&&sugOf(o);
-     return `<tr><td>${esc(o.name)}</td><td class="hint">${esc(o.row||'')}</td><td class="n in">${bzM(o.amt)}</td><td><select data-pmap="${esc(o.k)}" aria-label="מוצר"><option value="">— לא משויך —</option>${PL.map(x=>`<option${x===p?' selected':''}>${esc(x)}</option>`).join('')}</select>${!man&&au?'<span class="hint" style="display:block">לפי דוח הפריטים</span>':''}</td><td>${sg?`<button class="btn ghost xs" type="button" data-pacc="${esc(o.k)}" data-pv="${esc(sg)}">הצעה: ${esc(sg)}</button>`:''}</td></tr>`; }).join('')||'<tr><td colspan="5" class="hint">אין לקוחות עם הכנסות צפויות בתקופה</td></tr>'}
+     return `<tr><td><input type="checkbox" data-pchk="${esc(o.k)}" data-psug="${esc(sg||'')}" aria-label="סימון" style="width:16px;height:16px"></td><td>${esc(o.name)}</td><td class="hint">${esc(o.row||'')}</td><td class="n in">${bzM(o.amt)}</td><td><select data-pmap="${esc(o.k)}" aria-label="מוצר"><option value="">— לא משויך —</option>${PL.map(x=>`<option${x===p?' selected':''}>${esc(x)}</option>`).join('')}</select>${!man&&au?'<span class="hint" style="display:block">לפי דוח הפריטים</span>':''}</td><td>${sg?`<button class="btn ghost xs" type="button" data-pacc="${esc(o.k)}" data-pv="${esc(sg)}">הצעה: ${esc(sg)}</button>`:''}</td></tr>`; }).join('')||'<tr><td colspan="6" class="hint">אין לקוחות עם הכנסות צפויות בתקופה</td></tr>'}
    </tbody></table></div></div>`}`; }
+function prodSetMany(L){ const c=cur(); c.prodMap=c.prodMap||{}; L.forEach(([k,v])=>{ if(v) c.prodMap[k]=v; }); saveSoon(); bzRender(); toast('שויכו '+L.length+' לקוחות'); }
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('#pm-apply,#pm-sugall,#pm-all'); if(!b) return;
+  if(b.id==='pm-all'){ $$('[data-pchk]').forEach(x=>x.checked=b.checked); return; }
+  if(b.id==='pm-apply'){ const v=$('#pm-bulk').value, L=$$('[data-pchk]').filter(x=>x.checked).map(x=>[x.dataset.pchk,v]); if(!L.length){ toast('מסמנים קודם לקוחות בטבלה'); return; } prodSetMany(L); }
+  else { const L=$$('[data-pchk]').filter(x=>x.dataset.psug).map(x=>[x.dataset.pchk,x.dataset.psug]); if(L.length) prodSetMany(L); } });
 function prodSet(k,v){ const c=cur(); c.prodMap=c.prodMap||{}; if(v) c.prodMap[k]=v; else delete c.prodMap[k]; if(v&&!(c.products||[]).includes(v)) c.products=[...(c.products||[]),v]; saveSoon(); bzRender(); }
+document.addEventListener('change',e=>{ const t=e.target; if(!t.dataset||t.dataset.chqst==null) return; const k=hfKey(); if(!k) return; const ed=hfEdits(k), x=(ed.incItems||[]).find(q=>q.id===t.dataset.chqst); if(!x) return;
+  if(t.value) x.cst=t.value; else delete x.cst; hfSave(k,ed); toast(t.value==='nik'?"הצ'ק סומן בניכיון, ולא נספר יותר בתחזית":t.value==='msh'?"הצ'ק סומן כמופקד למשמרת":"הצ'ק סומן בקופה"); setTimeout(()=>bzRender(),60); });
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-chqodel]'); if(!b) return; if(!armed(b,'למחוק? לחצו שוב')) return; const k=hfKey(); if(!k) return; const ed=hfEdits(k); ed.incItems=(ed.incItems||[]).filter(x=>x.id!==b.dataset.chqodel); hfSave(k,ed); toast("הצ'ק נמחק"); setTimeout(()=>bzRender(),60); });
 document.addEventListener('change',e=>{ const t=e.target;
   if(t.id==='bz-xp'){ BZ_XP=t.value; bzRender(); } else if(t.id==='bz-ip'){ BZ_IP=t.value; bzRender(); } else if(t.id==='bz-ifp'){ BZ_IFP=t.value; bzRender(); }
   else if(t.dataset&&t.dataset.pmap!=null) prodSet(t.dataset.pmap,t.value);
@@ -4218,7 +4260,7 @@ function bzDebts(){ const el=$('#bz-debts'), c=cur(), ctx=bzCtx(), t0=todayIsoF(
   const tot=L.reduce((a,g)=>a+g.total,0), old=L.filter(g=>g.oldest&&dDays(g.oldest,t0)>60);
   const syn=C&&C.synced?new Date(C.synced):null, stale=syn&&(Date.now()-syn)/864e5>7;
   el.innerHTML=`<div class="bz-sum"><div><span>סה״כ חובות פתוחים</span><b class="bz-neg">${bzS(tot)}</b></div><div><span>לקוחות עם חוב</span><b>${L.length}</b></div><div><span>חובות מעל 60 יום</span><b class="${old.length?'bz-neg':''}">${old.length}</b><span class="hint">${bzS(old.reduce((a,g)=>a+g.total,0))}</span></div></div>
-  ${syn?`<div class="bz-bar ${stale?'pink':''}"><span>${stale?'<b>שימו לב:</b> ':''}החשבונות הפתוחים נכונים ל־${syn.toLocaleDateString('he-IL')}${stale?'. החיבור לקארדקום מנותק כרגע, ולכן ייתכן שחלק מהחובות כבר שולמו.':''}</span></div>`:''}
+  ${syn?`<div class="bz-bar ${stale?'pink':''}"><span>${stale?'<b>שימו לב:</b> ':''}החשבונות הפתוחים נכונים ל־${syn.toLocaleDateString('he-IL')}${stale?'. כדאי להעלות קובץ עדכני מקארדקום, כי ייתכן שחלק מהחובות כבר שולמו.':''}</span></div>`:''}
   <div class="tscroll bz-box"><table class="bz-tbl"><thead><tr><th>לקוח</th><th class="n">סכום החוב</th><th>מסמכים</th><th>החוב הוותיק מ־</th><th>ימים</th><th>טלפון</th><th>מקור</th></tr></thead><tbody>
   ${L.map(g=>{ const dd=g.oldest?dDays(g.oldest,t0):null; return `<tr><td><b style="color:var(--bz-navy)">${esc(g.name)}</b></td><td class="n out">${bzM(g.total)}</td><td>${g.count}</td><td>${g.oldest?fmtDate(g.oldest):''}</td><td>${dd==null?'':dd>60?`<span class="pill crit">${dd}</span>`:dd>30?`<span class="pill warn">${dd}</span>`:dd}</td><td dir="ltr" style="text-align:right">${esc(g.phone||'')}</td><td>${esc([...g.src].join(', '))}</td></tr>`; }).join('')||'<tr><td colspan="7" class="hint">אין חובות פתוחים של לקוחות</td></tr>'}
   </tbody></table></div>
@@ -4241,7 +4283,7 @@ function bzPayCalc(){ const ctx=bzCtx(); const out=$('#bz-pay-res'); if(!ctx){ r
 /* --- הוספת הכנסה / הוצאה צפויה --- */
 let BZ_ADD='in';
 function bzAddOpen(dir){ BZ_ADD=dir; $('#bz-add-h').textContent=dir==='in'?'הכנסה צפויה':'הוצאה צפויה';
-  $('#bz-add-kind').innerHTML=dir==='in'?`<option value="cust">הכנסות מהבנק</option><option value="chq">הכנסות - צ'קים</option><option value="ccp">הכנסות באשראי - תשלומים</option>`:`<option value="bank">הוצאות מהבנק</option>`;
+  $('#bz-add-kind').innerHTML=dir==='in'?`<option value="cust">הכנסות מהבנק</option><option value="chq">הכנסות - צ'קים</option><option value="ccp">הכנסות באשראי - תשלומים</option>`:`<option value="bank">הוצאות מהבנק</option><option value="chqo">צ'ק יוצא (לספק)</option>`;
   $('#bz-add-name-l').firstChild.textContent=dir==='in'?'לקוח':'ספק';
   ['name','amt','desc'].forEach(k=>$('#bz-add-'+k).value=''); $('#bz-add-n').value='1'; $('#bz-add-date').value=isoToDmy(todayIsoF()); $('#bz-add-st').textContent='';
   $('#bz-add-ov').hidden=false; setTimeout(()=>$('#bz-add-name').focus(),30); }
@@ -4250,7 +4292,7 @@ function bzAddSave(){ const k=hfKey(); if(!k){ $('#bz-add-st').textContent='אי
   const err=!name?'כותבים שם':!(amt>0)?'כותבים סכום גדול מאפס':!date?'תאריך בפורמט DD/MM/YYYY':!(n>=1&&n<=60)?'מספר תשלומים בין 1 ל־60':'';
   if(err){ $('#bz-add-st').innerHTML='<span class="pill crit">'+esc(err)+'</span>'; return; }
   const kind=$('#bz-add-kind').value, ed=hfEdits(k); ed.incItems=ed.incItems||[];
-  ed.incItems.push({id:uid(),kind,cust:name,amount:amt,date,n,cat:'',desc:$('#bz-add-desc').value.trim(),method:kind==='ccp'?'כרטיס אשראי':'',saved:1});
+  ed.incItems.push({id:uid(),kind:kind==='chqo'?'bank':kind,cust:name,amount:amt,date,n,cat:'',desc:$('#bz-add-desc').value.trim(),method:kind==='ccp'?'כרטיס אשראי':kind==='chqo'?"צ'ק יוצא":'',saved:1,...(kind==='chqo'?{chqOut:1}:{})});
   hfSave(k,ed); $('#bz-add-ov').hidden=true; toast((BZ_ADD==='in'?'ההכנסה':'ההוצאה')+' נוספה לתחזית'); setTimeout(()=>bzRender(),60); }
 
 /* --- אירועים --- */
@@ -4264,7 +4306,7 @@ document.addEventListener('click',ev=>{ const t=ev.target.closest('button'); if(
   if(t.id==='bz-share'){ $('#btn-share').click(); return; }
   if(t.id==='bz-pay-x'){ $('#bz-pay-ov').hidden=true; return; } if(t.id==='bz-add-x'){ $('#bz-add-ov').hidden=true; return; }
   if(t.id==='bz-seen'){ const ctx=bzCtx(); if(ctx) bzSeen(bzAlerts(ctx).map(a=>a.id)); bzRender(); return; }
-  if(t.dataset.bzadd){ bzAddOpen(t.dataset.bzadd==='chq'?'in':t.dataset.bzadd); if(t.dataset.bzadd==='chq'){ $('#bz-add-kind').value='chq'; $('#bz-add-h').textContent="צ'ק חדש"; } return; }
+  if(t.dataset.bzadd){ const a=t.dataset.bzadd; bzAddOpen(a==='chq'?'in':a==='chqo'?'out':a); if(a==='chq'){ $('#bz-add-kind').value='chq'; $('#bz-add-h').textContent="צ'ק חדש"; } if(a==='chqo'){ $('#bz-add-kind').value='chqo'; $('#bz-add-h').textContent="צ'ק יוצא"; } return; }
   if(t.dataset.bzdm){ BZ_DMODE=t.dataset.bzdm; bzRender(); return; }
   if(t.dataset.bzrt){ BZ_RTAB=t.dataset.bzrt; bzRender(); return; }
   if(t.dataset.bzrf){ BZ_RF=t.dataset.bzrf; bzRender(); return; }
@@ -4277,10 +4319,13 @@ document.addEventListener('click',ev=>{ const t=ev.target.closest('button'); if(
     else if(t.dataset.bzm==='week'||t.dataset.bzm==='month'){ x.mv=x.mv||{}; const base=evd<todayIsoF()?todayIsoF():evd; x.mv[kk]=t.dataset.bzm==='week'?isoAddDays(base,7):isoAddMonths(base,1); toast('נדחה ל־'+fmtDate(x.mv[kk])); }
     else { x.skip=x.skip||{}; x.skip[kk]=1; toast('התשלום הוסר מהתחזית'); }
     hfSave(k,ed); setTimeout(()=>bzRender(),60); return; }
-  if(t.dataset.bzrec){ const k=hfKey(); if(!k) return; const g=bzRecurList(cur()).find(x=>(x.sign>0?'+':'-')+x.name===t.dataset.bzrec); if(!g) return;
-    const tm=thisYm(); let d=tm+'-'+String(Math.min(28,g.day)).padStart(2,'0'); if(d<todayIsoF()) d=ymAdd(tm,1)+'-'+String(Math.min(28,g.day)).padStart(2,'0');
-    const ed=hfEdits(k); recurSeed(ed); ed.recur.push({id:uid(),sec:g.sign>0?'in':'out',name:g.name,amount:g.amount,day:Math.min(31,g.day||1),from:d.slice(0,7),to:'',grp:g.sign>0?'inc3':'exp1',est:!g.fixed,rk:t.dataset.bzrec});
-    hfSave(k,ed); toast('נוסף לתחזית: '+g.name+', '+fmt(g.amount)+' ₪ בחודש'); setTimeout(()=>bzRender(),60); return; }
+  if(t.dataset.bzrec||t.id==='rc-autoall'){ const k=hfKey(); if(!k) return; const all=bzRecurList(cur());
+    const L=t.id==='rc-autoall'?all.filter(g=>g.fixed&&!g.cov):all.filter(x=>(x.sign>0?'+':'-')+x.name===t.dataset.bzrec); if(!L.length) return;
+    const ed=hfEdits(k); recurSeed(ed); let n=0;
+    L.forEach(g=>{ const rk=(g.sign>0?'+':'-')+g.name; if((ed.recur||[]).some(r=>r.rk===rk||bzNorm(r.name)===g.name)) return;
+      const tm=thisYm(); let d=tm+'-'+String(Math.min(28,g.day)).padStart(2,'0'); if(d<todayIsoF()) d=ymAdd(tm,1)+'-'+String(Math.min(28,g.day)).padStart(2,'0');
+      ed.recur.push({id:uid(),sec:g.sign>0?'in':'out',name:g.name,amount:g.amount,day:Math.min(31,g.day||1),from:d.slice(0,7),to:'',grp:g.sign>0?'inc3':'exp1',est:!g.fixed,rk}); n++; });
+    hfSave(k,ed); toast(L.length===1?'נוסף לתחזית: '+L[0].name+', '+fmt(L[0].amount)+' ₪ בחודש':'נוספו '+n+' תנועות קבועות לתחזית'); setTimeout(()=>bzRender(),60); return; }
 });
 document.addEventListener('click',ev=>{ const dr=ev.target.closest('tr[data-bzday]'); if(dr&&!ev.target.closest('button')){ const d=dr.dataset.bzday; BZ_DOPEN.has(d)?BZ_DOPEN.delete(d):BZ_DOPEN.add(d); bzRender(); } });
 document.addEventListener('change',ev=>{ const t=ev.target;

@@ -440,6 +440,11 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
 .arc-list .arc{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;font-size:13px;border-bottom:1px solid var(--line,#dde);padding:4px 0}
 .arc-list .arc .nm{flex:1 1 100%;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}.arc-list .arc .dt{flex:1}.arc-list .arc .dt{color:var(--muted,#778);font-size:12px;white-space:nowrap}
 .arc-list .arc button{padding:2px 7px;font-size:12px}
+.ln-card{margin-bottom:10px;padding:12px 14px}.ln-head{display:flex;align-items:center;gap:12px}.ln-tg{border:0;background:none;font-size:18px;cursor:pointer;padding:4px 6px;color:inherit}
+.ln-nm{flex:1;min-width:0;display:flex;flex-direction:column}.ln-nm b{font-size:16px}.ln-am{display:flex;flex-direction:column;align-items:flex-end;text-align:left}.ln-am b{font-size:20px}
+.ln-body{margin-top:12px;border-top:1px solid var(--bz-line,#dde);padding-top:12px}.ln-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 14px}
+.ln-f{display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted,#667)}.ln-f b{color:var(--ink,#123);font-size:14px}.ln-f input,.ln-f select{min-width:0}
+@media (max-width:600px){.ln-head{flex-wrap:wrap}.ln-am{align-items:flex-start;text-align:right;width:100%}}
 .rc-tbl2 tr.rc-grp td{background:var(--surface-2,#eef2f5);cursor:pointer;font-size:14px}
 .rc-tbl2 tr.clk{cursor:pointer}.rc-tbl2 tr.clk:hover td{background:rgba(45,160,150,.07)}
 .rc-tbl2 td.rc-fq .hint,.rc-tbl2 td.rc-last{font-size:12.5px}.rc-tbl2 td.rc-fq .hint{display:block}
@@ -566,6 +571,7 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
     <div class="bz-grp" data-grp="flow"><button class="bz-it" data-bzg="flow" type="button" aria-expanded="false"><span class="chev" aria-hidden="true">▾</span>תחזית עסקית<svg width="24" height="24" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 9h.01M18 15h.01"/></svg></button>
       <div class="bz-sub"><button class="bz-it" data-bz="fcov" type="button">סקירת תחזית</button><button class="bz-it" data-bz="half" type="button">תחזית חודשית</button><button class="bz-it" data-bz="daily" type="button">תזרים יומי</button><button class="bz-it" data-bz="recon" type="button">התאמות בנקים</button><button class="bz-it" data-bz="recur" type="button">תנועות קבועות</button></div></div>
     <button class="bz-it" data-bz="debts" type="button">חובות לקוחות<svg width="24" height="24" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h10l4 4v14H5z"/><path d="M15 3v4h4"/><path d="M9 12h6M9 16h4"/></svg></button>
+    <button class="bz-it" data-bz="loans" type="button">הלוואות<svg width="24" height="24" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 21h18"/></svg></button>
     <button class="bz-it" data-bz="clients" type="button">לקוחות וגיבוי<svg width="24" height="24" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/></svg></button>
   </nav>
   <div class="bz-foot">ניהולית · תזרים מזומנים</div>
@@ -607,6 +613,7 @@ body.bz #tab-cardcom #ret-card{position:absolute;width:1px;height:1px;overflow:h
   <section class="panel" id="tab-cheques" role="tabpanel" hidden><div id="bz-cheques"></div></section>
   <section class="panel" id="tab-ccexp" role="tabpanel" hidden><div id="bz-ccexp"></div></section>
   <section class="panel" id="tab-debts" role="tabpanel" hidden><div id="bz-debts"></div></section>
+  <section class="panel" id="tab-loans" role="tabpanel" hidden><div id="bz-loans"></div></section>
   <section class="panel" id="tab-fcov" role="tabpanel" hidden><div id="bz-fcov"></div></section>
   <section class="panel" id="tab-expov" role="tabpanel" hidden><div id="bz-expov"></div></section>
   <section class="panel" id="tab-incov" role="tabpanel" hidden><div id="bz-incov"></div></section>
@@ -3509,8 +3516,8 @@ on('#sh-base-save','click',async()=>{
 /* ================= עיצוב חדש: מעטפת ומסכים ================= */
 var BK_DIR='';
 const bkSeg=()=>`<div class="bz-seg" role="group" aria-label="סינון תנועות">${[['all','הכל'],['in','זכות'],['out','חובה']].map(([v,l])=>`<button type="button" data-bkdir="${v}" aria-pressed="${(BK_DIR||'all')===v}">${l}</button>`).join('')}</div>`;
-const BZKEY='cashflow-bz', BZ_TITLES={cats:'קטגוריות',overview:'סקירה כללית',half:'תחזית חודשית',daily:'תזרים יומי',recon:'התאמות בנקים',recur:'תנועות קבועות',payees:'מוטבים',bank:'חשבונות בנק',cardcom:'חשבונות סליקה',cheques:"צ'קים",ccexp:'כרטיסי אשראי',debts:'חובות לקוחות',expov:'סקירת הוצאות',incov:'סקירת הכנסות',fcov:'סקירת תחזית',clients:'לקוחות וגיבוי'};
-const BZ_NEW=new Set(['cats','overview','daily','recon','recur','payees','cheques','ccexp','debts','expov','incov','fcov']);
+const BZKEY='cashflow-bz', BZ_TITLES={loans:'הלוואות',cats:'קטגוריות',overview:'סקירה כללית',half:'תחזית חודשית',daily:'תזרים יומי',recon:'התאמות בנקים',recur:'תנועות קבועות',payees:'מוטבים',bank:'חשבונות בנק',cardcom:'חשבונות סליקה',cheques:"צ'קים",ccexp:'כרטיסי אשראי',debts:'חובות לקוחות',expov:'סקירת הוצאות',incov:'סקירת הכנסות',fcov:'סקירת תחזית',clients:'לקוחות וגיבוי'};
+const BZ_NEW=new Set(['loans','cats','overview','daily','recon','recur','payees','cheques','ccexp','debts','expov','incov','fcov']);
 let BZ=false, BZ_TAB='overview';
 BZ=true; // העיצוב החדש אושר והוא העיצוב הקבוע, גם בקישור ללקוח
 const bzM=n=>{ const v=Math.round((+n||0)*100)/100, a=Math.abs(v), i=Math.floor(a), d=Math.round((a-i)*100); return (v<0?'-':'')+i.toLocaleString('he-IL')+'<small>.'+String(d).padStart(2,'0')+'</small>'; };
@@ -3526,7 +3533,7 @@ function bzOnTab(t){ BZ_TAB=t; if(!BZ) return;
   document.body.classList.remove('bz-open');
   bzRender(t); }
 function bzRender(t){ if(!BZ) return; t=t||BZ_TAB;
-  try{ if(t==='overview') bzOverview(); else if(t==='daily') bzDaily(); else if(t==='recon') bzRecon(); else if(t==='recur') bzRecur(); else if(t==='payees') bzPayees(); else if(t==='cats') bzCats(); else if(t==='cheques') bzCheques(); else if(t==='ccexp') bzCcExp(); else if(t==='debts') bzDebts(); else if(t==='expov') bzExpOv(); else if(t==='incov') bzIncOv(); else if(t==='fcov') bzFcOv(); else if(t==='bank') bkTop(); else if(t==='cardcom') ccOrders(); }
+  try{ if(t==='overview') bzOverview(); else if(t==='daily') bzDaily(); else if(t==='recon') bzRecon(); else if(t==='recur') bzRecur(); else if(t==='payees') bzPayees(); else if(t==='cats') bzCats(); else if(t==='loans') bzLoans(); else if(t==='cheques') bzCheques(); else if(t==='ccexp') bzCcExp(); else if(t==='debts') bzDebts(); else if(t==='expov') bzExpOv(); else if(t==='incov') bzIncOv(); else if(t==='fcov') bzFcOv(); else if(t==='bank') bkTop(); else if(t==='cardcom') ccOrders(); }
   catch(err){ console.error(err); const el=$('#tab-'+t); if(el&&BZ_NEW.has(t)) el.firstElementChild.innerHTML='<div class="card"><b>משהו לא עבד בתצוגה הזו.</b><span class="hint">'+esc(err.message||'')+'</span></div>'; }
   try{ recurEnsure(); fcSnapSoon(); }catch(e){}
   const c=cur(); if(c){ const sel=$('#bz-client'); sel.innerHTML=Object.keys(DB.clients).map(id=>`<option value="${esc(id)}"${id===DB.current?' selected':''}>${esc(DB.clients[id].name||'ללא שם')}</option>`).join(''); } }
@@ -3968,6 +3975,63 @@ document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closes
   c.rows=c.rows.filter(x=>x.id!==id); if(DEFAULT_ROWS.some(d=>d.id===id)) c.rowsDel=[...new Set([...(c.rowsDel||[]),id])];
   const k=hfKey(); if(k){ const ed=hfEdits(k); let ch=false; (ed.recur||[]).forEach(x=>{ if(x.cat===id){ x.cat=to; ch=true; } }); if(ch) hfSave(k,ed); }
   CAT_DEL=''; save(); toast('הקטגוריה „'+r.label+'” נמחקה'+(mv?'. '+mv+' תנועות הועברו ל„'+catLabel(c,to)+'”':'')); bzRender(); });
+
+/* --- הלוואות: חובות של העסק לגופים אחרים ---
+   הלוואה: {id,lender,phone,address,purpose,taken,src:'bank'|'card'|'other',kw,base,baseDate,pays:[{id,d,amt,note}],skip:[keys]}
+   base = היתרה שנותרה להחזיר נכון ל־baseDate. בהלוואה מהבנק או מחברת האשראי, כל החזר שמופיע בדף הבנק או בפירוט האשראי
+   אחרי baseDate (לפי מילת הזיהוי kw) מוריד מהיתרה לבד. גם החזרים שהוזנו ידנית מורידים. שינוי ידני של היתרה מתחיל ספירה חדשה מהיום. */
+let LN_OPEN=new Set(), LN_EDIT='';
+function lnAuto(c,l){ if(!l.kw||l.src==='other') return []; const kw=String(l.kw).trim(); if(!kw) return [];
+  const has=t=>String((t.desc||'')+' '+(t.det||'')+' '+(t.m||'')).includes(kw), out=[];
+  if(l.src==='bank') (c.tx||[]).forEach(t=>{ if(t.amt<0&&t.d&&has(t)) out.push({key:'tx:'+t.id,d:t.d,amt:-t.amt,note:t.desc+(t.det?' · '+t.det:''),src:'דף הבנק'}); });
+  if(l.src==='card') ccRowsAll(c).forEach(r=>{ if(r.amt>0&&r.d&&has(r)) out.push({key:'cc:'+r.id,d:r.d,amt:+r.amt,note:r.m||'',src:'פירוט האשראי'}); });
+  return out.filter(x=>!(l.skip||[]).includes(x.key)); }
+function lnCalc(c,l){ const bd=l.baseDate||'0000', A=lnAuto(c,l), M=(l.pays||[]).map(p=>({key:'m:'+p.id,id:p.id,d:p.d,amt:+p.amt||0,note:p.note||'',src:'ידני'}));
+  const all=[...A,...M].sort((a,b)=>a.d<b.d?1:-1), after=all.filter(p=>p.d>bd), paid=after.reduce((a,p)=>a+p.amt,0);
+  return {all,paid,rem:Math.max(0,(+l.base||0)-paid),last:all[0]||null}; }
+const lnSuggest=c=>{ const S={}; (c.tx||[]).forEach(t=>{ if(t.amt<0&&/הלווא|הלוא|loan/i.test(t.desc||'')){ const k=bzNorm(t.desc); S[k]=(S[k]||0)+1; } }); return Object.entries(S).sort((a,b)=>b[1]-a[1]).map(x=>x[0]).slice(0,6); };
+function bzLoans(){ const el=$('#bz-loans'), c=cur(); if(!c){ el.innerHTML=bzNoData(); return; } c.loans=c.loans||[];
+  $('#bz-hx').innerHTML=VIEW?'':'<button class="btn primary" type="button" data-lnadd="1">+ הלוואה חדשה</button>';
+  const L=c.loans.map(l=>({l,...lnCalc(c,l)})), tot=L.reduce((a,x)=>a+x.rem,0), m30=isoAddDays(todayIsoF(),-30), paid30=L.reduce((a,x)=>a+x.all.filter(p=>p.d>=m30).reduce((s,p)=>s+p.amt,0),0);
+  const SRC={bank:'בנק',card:'חברת אשראי',other:'אחר (גוף פרטי, ספק, משפחה...)'}, sug=lnSuggest(c);
+  const fld=(l,f,lab,type,ph)=>VIEW?`<div class="ln-f"><span>${lab}</span><b>${esc(f==='taken'&&l[f]?fmtDate(l[f]):l[f]||'—')}</b></div>`:`<label class="ln-f"><span>${lab}</span><input data-lnf="${f}" ${type?`type="${type}"`:''} value="${esc(l[f]||'')}" placeholder="${esc(ph||'')}" maxlength="120"${f==='kw'?' list="ln-kw"':''}></label>`;
+  const row=x=>{ const l=x.l, open=LN_OPEN.has(l.id);
+    return `<div class="ln-card bz-box" data-lid="${esc(l.id)}">
+     <div class="ln-head"><button class="ln-tg" type="button" data-lntg="${esc(l.id)}" aria-expanded="${open}" aria-label="פתיחת פירוט">${open?'▾':'▸'}</button>
+      <div class="ln-nm"><b>${esc(l.lender||'הלוואה בלי שם')}</b><span class="hint">${esc(SRC[l.src]||'')}${l.purpose?' · '+esc(l.purpose):''}${l.taken?' · נלקחה '+fmtDate(l.taken):''}</span></div>
+      <div class="ln-am"><span class="hint">נותר להחזיר</span><b class="bz-neg">${bzS(-x.rem)}</b><span class="hint">${x.last?'החזר אחרון '+fmtDate(x.last.d)+' · '+bzS(x.last.amt):'עוד אין החזרים'}</span></div></div>
+     ${open?`<div class="ln-body">
+      <div class="ln-grid">${fld(l,'lender','שם הגוף','','למשל: בנק מזרחי טפחות')}${fld(l,'phone','טלפון','tel')}${fld(l,'address','כתובת')}${fld(l,'purpose','מטרת ההלוואה','','למשל: מימון ציוד')}${fld(l,'taken','תאריך לקיחת ההלוואה','date')}
+       ${VIEW?`<div class="ln-f"><span>מקור</span><b>${esc(SRC[l.src]||'')}</b></div>`:`<label class="ln-f"><span>מקור ההלוואה</span><select data-lnf="src">${Object.entries(SRC).map(([v,t])=>`<option value="${v}"${l.src===v?' selected':''}>${t}</option>`).join('')}</select></label>`}
+       ${VIEW?`<div class="ln-f"><span>יתרה שהוזנה</span><b>${bzS(+l.base||0)}${l.baseDate?' · '+fmtDate(l.baseDate):''}</b></div>`:`<label class="ln-f"><span>הסכום שנותר להחזיר${l.baseDate?' (נכון ל־'+fmtDate(l.baseDate)+')':''}</span><input data-lnf="base" inputmode="decimal" value="${+l.base||''}"></label>`}
+       ${l.src!=='other'?fld(l,'kw',l.src==='bank'?'איך ההחזר כתוב בדף הבנק':'איך ההחזר כתוב בפירוט האשראי','','למשל: הלוואות מזרחי'):''}</div>
+      ${l.src!=='other'?`<p class="hint" style="margin:6px 0">${l.kw?`כל החזר ש„${esc(l.kw)}” מופיע בו ${l.src==='bank'?'בדף הבנק':'בפירוט האשראי'} אחרי ${l.baseDate?fmtDate(l.baseDate):'היום'} מוריד לבד מהיתרה. ההחזר כולל גם ריבית, ולכן כדאי לעדכן מדי פעם את היתרה לפי הדוח של ${l.src==='bank'?'הבנק':'חברת האשראי'}.`:'כותבים כאן איך ההחזר מופיע בדף, והמערכת תוריד לבד מהיתרה כל החזר חדש.'}${sug.length&&!VIEW&&l.src==='bank'&&!l.kw?' הצעות מדף הבנק: '+sug.map(x=>`<button class="bz-link" type="button" data-lnkw="${esc(x)}">${esc(x)}</button>`).join(' · '):''}</p>`:''}
+      <div class="bz-sec" style="margin-top:8px"><h2 style="font-size:16px">היסטוריית תשלומים</h2><span class="hint">${x.all.length} תשלומים · שולם מאז היתרה האחרונה: ${bzS(x.paid)}</span></div>
+      <div class="tscroll"><table class="bz-tbl"><thead><tr><th>תאריך</th><th>פירוט</th><th>מקור</th><th class="n">סכום</th>${VIEW?'':'<th></th>'}</tr></thead><tbody>
+       ${x.all.map(p=>`<tr${p.d<=(l.baseDate||'')?' class="hint"':''}><td>${fmtDate(p.d)}</td><td>${esc(p.note)}</td><td>${p.src}${p.d<=(l.baseDate||'')?' <span class="hint">(לפני היתרה שהוזנה)</span>':''}</td><td class="n out">${bzM(-p.amt)}</td>${VIEW?'':`<td>${p.id?`<button class="btn ghost xs danger" type="button" data-lnpdel="${esc(p.id)}">מחיקה</button>`:`<button class="btn ghost xs" type="button" data-lnskip="${esc(p.key)}" title="התשלום הזה לא שייך להלוואה">לא שייך</button>`}</td>`}</tr>`).join('')||`<tr><td colspan="5" class="hint">עוד אין תשלומים</td></tr>`}
+      </tbody></table></div>
+      ${VIEW?'':`<form class="actions ln-pay" data-lnpay="${esc(l.id)}" style="margin-top:8px"><input name="d" type="date" value="${todayIsoF()}" aria-label="תאריך התשלום"><input name="a" inputmode="decimal" placeholder="סכום" aria-label="סכום" required style="max-width:120px"><input name="n" placeholder="הערה (לא חובה)" maxlength="80" aria-label="הערה" style="max-width:200px"><button class="btn sm" type="submit">+ תשלום ידני</button>${(l.skip||[]).length?`<button class="btn ghost xs" type="button" data-lnunskip="1">החזרת ${l.skip.length} תשלומים שסומנו „לא שייך”</button>`:''}<span style="flex:1"></span><button class="btn ghost xs danger" type="button" data-lndel="${esc(l.id)}">מחיקת ההלוואה</button></form>`}
+     </div>`:''}</div>`; };
+  el.innerHTML=`<datalist id="ln-kw">${sug.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
+   <div class="bz-sum"><div><span>סך החובות להחזיר</span><b class="bz-neg">${bzS(-tot)}</b><span class="hint">${L.length} הלוואות</span></div><div><span>הוחזר ב־30 הימים האחרונים</span><b>${bzS(paid30)}</b></div></div>
+   ${L.length?L.map(row).join(''):`<div class="bz-box" style="padding:18px"><p class="hint" style="margin:0">עוד אין הלוואות. מוסיפים בכפתור „+ הלוואה חדשה” למעלה: שם הגוף, הסכום שנותר להחזיר ואיך ההחזר מופיע בדף הבנק או בפירוט האשראי.</p></div>`}`; }
+function lnSave(){ save(); setTimeout(()=>bzRender(),40); }
+const lnOf=el=>{ const c=cur(), id=el.closest('[data-lid]')&&el.closest('[data-lid]').dataset.lid; return c&&(c.loans||[]).find(l=>l.id===id); };
+document.addEventListener('change',e=>{ const t=e.target; if(!t.dataset||t.dataset.lnf==null) return; const l=lnOf(t); if(!l) return; const f=t.dataset.lnf, v=t.value.trim();
+  if(f==='base'){ if(!v){ delete l.base; delete l.baseDate; } else { const n=parseNum(v); if(!(n>=0)){ toast('סכום לא תקין'); t.value=l.base||''; return; } l.base=Math.round(n*100)/100; l.baseDate=todayIsoF(); toast('היתרה עודכנה. מהיום כל החזר חדש יורד ממנה'); } }
+  else if(v) l[f]=v.slice(0,120); else delete l[f];
+  lnSave(); });
+document.addEventListener('submit',e=>{ const f=e.target.closest&&e.target.closest('[data-lnpay]'); if(!f) return; e.preventDefault(); const c=cur(), l=c&&(c.loans||[]).find(x=>x.id===f.dataset.lnpay); if(!l) return;
+  const a=parseNum(f.a.value); if(!(a>0)||!f.d.value){ toast('תאריך וסכום'); return; } l.pays=l.pays||[]; l.pays.push({id:uid(),d:f.d.value,amt:Math.round(a*100)/100,note:f.n.value.trim().slice(0,80)}); toast('התשלום נוסף'); lnSave(); });
+document.addEventListener('click',e=>{ const b=e.target.closest&&e.target.closest('[data-lnadd],[data-lntg],[data-lndel],[data-lnpdel],[data-lnskip],[data-lnunskip],[data-lnkw]'); if(!b) return; const c=cur(); if(!c) return; c.loans=c.loans||[];
+  if(b.dataset.lnadd){ const id=uid(); c.loans.unshift({id,lender:'',src:'bank',pays:[],skip:[]}); LN_OPEN.add(id); save(); bzRender(); setTimeout(()=>{ const i=$(`[data-lid="${id}"] [data-lnf="lender"]`); if(i) i.focus(); },80); return; }
+  if(b.dataset.lntg){ const id=b.dataset.lntg; LN_OPEN.has(id)?LN_OPEN.delete(id):LN_OPEN.add(id); bzRender(); return; }
+  const l=lnOf(b); if(!l) return;
+  if(b.dataset.lndel){ if(!armed(b,'למחוק את ההלוואה? לחצו שוב')) return; c.loans=c.loans.filter(x=>x!==l); toast('ההלוואה נמחקה'); lnSave(); }
+  else if(b.dataset.lnpdel){ if(!armed(b,'למחוק? לחצו שוב')) return; l.pays=(l.pays||[]).filter(p=>p.id!==b.dataset.lnpdel); lnSave(); }
+  else if(b.dataset.lnskip){ l.skip=[...new Set([...(l.skip||[]),b.dataset.lnskip])]; toast('התשלום הוצא מההלוואה'); lnSave(); }
+  else if(b.dataset.lnunskip){ l.skip=[]; lnSave(); }
+  else if(b.dataset.lnkw){ l.kw=b.dataset.lnkw; lnSave(); } });
 function bzPayees(){ const el=$('#bz-payees'), c=cur(); if(!c||!(c.tx||[]).length){ el.innerHTML=bzNoData('אין עדיין תנועות בנק ללקוח הזה.'); return; }
   $('#bz-hx').innerHTML=`<label class="bz-search"><input id="bz-pq" placeholder="הקלידו טקסט לחיפוש" aria-label="חיפוש" value="${esc(BZ_PQ)}"></label><div class="bz-seg" role="group" aria-label="סינון"><button type="button" data-bzpf="all" aria-pressed="${BZ_PF==='all'}">הכל</button><button type="button" data-bzpf="in" aria-pressed="${BZ_PF==='in'}">זכות</button><button type="button" data-bzpf="out" aria-pressed="${BZ_PF==='out'}">חובה</button></div>`;
   const t0=todayIsoF(), from=isoAddDays(t0,-91), G={};

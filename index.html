@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://cdnjs.cloudflare.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
 <style>[hidden]{display:none!important}body{margin:0}</style>
 <title>תזרים ניהולית</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -1018,10 +1020,11 @@ async function portalDelete(db,tok){
    ומשימה יומית מעתיקה אותו לגיטהאב. בדף בגיטהאב הלקוח מקליד את הסיסמה, והנתונים נפתחים רק אצלו. */
 const GH_URL='https://nihulitoffice2-commits.github.io/nihulit-cashflow/';
 const ghNorm=pw=>String(pw||'').toLowerCase().replace(/[^a-z0-9]/g,'');
-async function ghBits(pw,salt){ const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(ghNorm(pw)),'PBKDF2',false,['deriveBits']); return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:new TextEncoder().encode(salt),iterations:150000},base,256)); }
+async function ghBits(pw,salt){ const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(ghNorm(pw)),'PBKDF2',false,['deriveBits']); return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:new TextEncoder().encode(salt),iterations:ghNorm(pw).length>=16?600000:150000},base,256)); }
 async function ghId(pw){ const b=await ghBits(pw,'nihulit-cashflow-id'); return 'g'+[...b.slice(0,12)].map(x=>x.toString(16).padStart(2,'0')).join(''); }
 async function ghKey(pw){ return crypto.subtle.importKey('raw',await ghBits(pw,'nihulit-cashflow-key'),'AES-GCM',false,['encrypt','decrypt']); }
-function ghNewPw(){ const A='abcdefghjkmnpqrstuvwxyz23456789', r=crypto.getRandomValues(new Uint8Array(12)); let o=''; for(let i=0;i<12;i++){ o+=A[r[i]%A.length]; if(i===3||i===7) o+='-'; } return o; }
+// סיסמה חדשה: 16 תווים אקראיים (בערך 79 ביט), בלי הטיה. סיסמה של 16 תווים ומעלה נגזרת ב־600,000 סבבי PBKDF2 (ההמלצה העדכנית של OWASP); סיסמאות ישנות של 12 תווים ממשיכות לעבוד
+function ghNewPw(){ const A='abcdefghjkmnpqrstuvwxyz23456789'; let o='', n=0; while(n<16){ const r=crypto.getRandomValues(new Uint8Array(32)); for(const b of r){ if(n>=16) break; if(b>=248) continue; o+=A[b%31]; n++; if(n%4===0&&n<16) o+='-'; } } return o; }
 async function ghWrite(db,pw,obj,id){
   let bytes=new TextEncoder().encode(JSON.stringify(obj)); const z=typeof CompressionStream==='function'; if(z) bytes=await gz(bytes,'c');
   const iv=crypto.getRandomValues(new Uint8Array(12)), ct=b64u.enc(await crypto.subtle.encrypt({name:'AES-GCM',iv},await ghKey(pw),bytes));
@@ -2058,7 +2061,7 @@ function renderCardcom(){
   $('#cc-status').textContent=ccState==='loading'?'טוענת נתונים…':ccState==='none'?'הנתונים המשותפים לא זמינים בתצוגה הזו. פותחים את הדף מתוך claude.ai, מחוברים לחשבון.':ccState==='error'?'לא הצלחתי לטעון את הנתונים המשותפים. נסו לרענן את הדף.':(keys.length?'':'עוד לא הגיעו נתונים ממחשב המשרד.');
   const x=ccOf(c);
   $('#cc-synced').textContent=x&&x.synced?'עודכן מקובץ קארדקום '+new Date(x.synced).toLocaleString('he-IL'):'';
-  const auto=$('#cc-auto'); if(auto&&!VIEW){ const k=c.ccKey, has=k&&ccCred(k), fail=k&&ccAutoFail[k];
+  const auto=$('#cc-auto'); if(auto) auto.innerHTML=''; if(false){ const k=c.ccKey, has=k&&ccCred(k), fail=k&&ccAutoFail[k];
     const ls=x&&x.synced?Date.parse(x.synced):0, age=ls?(Date.now()-ls)/36e5:1e9;
     auto.innerHTML=!k?'':age<3?'<span class="pill good">✓ מעודכן מקארדקום</span> <span class="hint">הנתונים מגיעים ממחשב המשרד.</span>'
       :'<span class="pill warn">'+(ls?'עודכן לפני '+(age<48?Math.round(age)+' שעות':Math.round(age/24)+' ימים'):'עוד לא עודכן')+'</span> <span class="hint">הנתונים מקארדקום מגיעים ממחשב המשרד, והם יתעדכנו בהרצה הבאה שלו.</span>'; void has; void fail; }
@@ -2960,7 +2963,9 @@ const CC_API='https://secure.cardcom.solutions/api/v11/Documents/GetReport';
 const CC_RECEIPT=new Set([1,2,3,400,410]), CC_DEBT=new Set([301,305]), CC_OPEN=new Set([301,302,305,330]);
 const CC_TYPES={301:'חשבון עסקה',302:'חשבון עסקה (זיכוי)',305:'חשבונית מס',330:'חשבונית מס (זיכוי)'};
 const ccCredKey=k=>'cashflow-planner-ccapi-'+k;
-const ccCred=k=>{ try{ return JSON.parse(localStorage.getItem(ccCredKey(k))||'null'); }catch(e){ return null; } };
+// אבטחה: החיבור הישיר ל־API של קארדקום הוסר (הנתונים מגיעים מקבצים). פרטי התחברות שנשמרו בעבר בדפדפן נמחקים
+const ccCred=k=>null;
+try{ Object.keys(localStorage).filter(x=>x.startsWith('cashflow-planner-ccapi-')||/api.?pass|apikey|password/i.test(x)&&x.startsWith('cashflow')).forEach(x=>localStorage.removeItem(x)); }catch(e){}
 function ccNorm(d){
   const neg=d.IsNegetive?-1:1, a=v=>neg*Math.abs(v||0);
   const pay={cc:a(d.TotalCreditCardNIS),cash:a(d.TotalChashNIS),cheque:a(d.TotalChequesNIS),other:a(d.TotalCustomeTransactionNIS)};
@@ -3007,7 +3012,7 @@ function ccBuild(docs,name){
   return {synced,name,summary,lines:[debt,rec,sl],receipts};
 }
 let ccBusy=false, ccPendingKey=null;
-function ccOpenForm(k){ ccPendingKey=k; const c=ccCred(k); $('#cc-ov-name').textContent=(HF[k]&&HF[k].name)||(CC[k]&&CC[k].name)||k; $('#cc-ov-user').value=c?c.user:''; $('#cc-ov-pass').value=c?c.pass:''; $('#cc-ov').hidden=false; $('#cc-ov-user').focus(); }
+function ccOpenForm(k){ toast('החיבור הישיר לקארדקום הוסר. מעלים את הקבצים מקארדקום בלשונית „חשבונות סליקה”'); return; ccPendingKey=k; const c=ccCred(k); $('#cc-ov-name').textContent=(HF[k]&&HF[k].name)||(CC[k]&&CC[k].name)||k; $('#cc-ov-user').value=c?c.user:''; $('#cc-ov-pass').value=c?c.pass:''; $('#cc-ov').hidden=false; $('#cc-ov-user').focus(); }
 on('#cc-ov-x','click',()=>{ $('#cc-ov').hidden=true; });
 on('#cc-ov-forget','click',e=>{ if(!armed(e.currentTarget,'למחוק? לחצו שוב')) return; try{ localStorage.removeItem(ccCredKey(ccPendingKey)); }catch(err){} $('#cc-ov').hidden=true; toast('הפרטים נמחקו מהמחשב הזה'); });
 on('#cc-ov-form','submit',e=>{ e.preventDefault(); const k=ccPendingKey, user=$('#cc-ov-user').value.trim(), pass=$('#cc-ov-pass').value.trim(); if(!k||!user||!pass) return; try{ localStorage.setItem(ccCredKey(k),JSON.stringify({user,pass})); }catch(err){} $('#cc-ov').hidden=true; ccSync(k); });
@@ -4417,8 +4422,8 @@ boot();
     <h1>כניסה לצפייה בתזרים</h1>
     <p>מקלידים את הסיסמה שקיבלתם מהמשרד.</p>
     <label for="gh-pass">סיסמה</label>
-    <input id="gh-pass" dir="ltr" autocomplete="current-password" spellcheck="false" placeholder="xxxx-xxxx-xxxx" required>
-    <label class="rm"><input type="checkbox" id="gh-rem" checked> לזכור את הסיסמה במחשב הזה</label>
+    <input id="gh-pass" dir="ltr" autocomplete="current-password" spellcheck="false" placeholder="xxxx-xxxx-xxxx-xxxx" required>
+    <label class="rm"><input type="checkbox" id="gh-rem"> לזכור את הסיסמה במחשב הזה (רק במחשב אישי)</label>
     <button type="submit" id="gh-go">כניסה</button>
     <div id="gh-msg" role="status" aria-live="polite"></div>
   </form>
@@ -4442,7 +4447,7 @@ boot();
 (function(){
   const enc=new TextEncoder(), norm=pw=>String(pw||'').toLowerCase().replace(/[^a-z0-9]/g,'');
   const dec64=s=>{ s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4) s+='='; const b=atob(s); const a=new Uint8Array(b.length); for(let i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; };
-  async function bits(pw,salt){ const base=await crypto.subtle.importKey('raw',enc.encode(norm(pw)),'PBKDF2',false,['deriveBits']); return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:enc.encode(salt),iterations:150000},base,256)); }
+  async function bits(pw,salt){ const base=await crypto.subtle.importKey('raw',enc.encode(norm(pw)),'PBKDF2',false,['deriveBits']); return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:enc.encode(salt),iterations:norm(pw).length>=16?600000:150000},base,256)); }
   async function open(pw){
     const id='g'+[...(await bits(pw,'nihulit-cashflow-id')).slice(0,12)].map(x=>x.toString(16).padStart(2,'0')).join('');
     const get=async n=>{ const r=await fetch('data/'+n+'.json',{cache:'no-store'}); if(!r.ok) throw new Error(r.status===404?'nf':'net'); return r.json(); };
@@ -4452,14 +4457,18 @@ boot();
     if(d.z) b=new Uint8Array(await new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
     return JSON.parse(new TextDecoder().decode(b));
   }
-  function start(snap){ window.__CF_SNAP__=snap; document.getElementById('gh-lock').hidden=true; const s=document.createElement('script'); s.textContent=document.getElementById('app-js-src').textContent; document.body.appendChild(s); }
+  function start(snap){ window.__CF_SNAP__=snap; document.getElementById('gh-lock').hidden=true; try{ sessionStorage.removeItem('gh-locked'); }catch(e){}
+    // נעילה אוטומטית אחרי 15 דקות בלי פעילות: הנתונים נמחקים מהזיכרון ומהמסך, וצריך להקליד שוב סיסמה
+    let tm; const LOCK=15*60*1000, arm=()=>{ clearTimeout(tm); tm=setTimeout(()=>{ try{ sessionStorage.setItem('gh-locked','1'); }catch(e){} location.reload(); },LOCK); };
+    ['pointerdown','keydown','scroll','touchstart'].forEach(ev=>addEventListener(ev,arm,{passive:true})); arm(); const s=document.createElement('script'); s.textContent=document.getElementById('app-js-src').textContent; document.body.appendChild(s); }
   const f=document.getElementById('gh-form'), msg=document.getElementById('gh-msg'), go=document.getElementById('gh-go'), inp=document.getElementById('gh-pass');
   async function tryPw(pw,remember){ go.disabled=true; msg.style.color='#4a5b6a'; msg.textContent='פותחת את הנתונים…';
     try{ const snap=await open(pw); try{ if(remember) localStorage.setItem('nihulit-gh-pw',pw); else localStorage.removeItem('nihulit-gh-pw'); }catch(e){} start(snap); }
     catch(e){ go.disabled=false; msg.style.color='#b4321f'; msg.textContent=e&&e.message==='nf'?'הסיסמה לא נכונה, או שהגישה עדיין לא פעילה. בודקים את הסיסמה שהתקבלה מהמשרד.':e&&e.name==='OperationError'?'הסיסמה לא נכונה.':'לא הצלחתי לטעון את הנתונים. בודקים את החיבור לאינטרנט ומנסים שוב.'; try{ localStorage.removeItem('nihulit-gh-pw'); }catch(x){} } }
   f.addEventListener('submit',e=>{ e.preventDefault(); tryPw(inp.value,document.getElementById('gh-rem').checked); });
   let saved=null; try{ saved=localStorage.getItem('nihulit-gh-pw'); }catch(e){}
-  if(saved){ inp.value=saved; tryPw(saved,true); } else setTimeout(()=>inp.focus(),50);
+  let locked=false; try{ locked=sessionStorage.getItem('gh-locked')==='1'; }catch(e){}
+  if(saved){ inp.value=saved; document.getElementById('gh-rem').checked=true; if(locked){ msg.textContent='המסך ננעל אחרי 15 דקות בלי פעילות. לוחצים „כניסה” כדי לפתוח שוב.'; go.focus(); } else tryPw(saved,true); } else { if(locked) msg.textContent='המסך ננעל אחרי 15 דקות בלי פעילות. מקלידים שוב את הסיסמה.'; setTimeout(()=>inp.focus(),50); }
 })();
 </script>
 
